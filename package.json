@@ -1,5 +1,5 @@
 {
-  "name": "instrumental",
+  "name": "kannel",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -12,5 +12,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0"
-  }
+  },
+  "packageManager": "pnpm@9.7.0"
 }
