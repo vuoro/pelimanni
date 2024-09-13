@@ -1,0 +1,16 @@
+{
+  "name": "instrumental",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./instruments.js",
+  "exports": {
+    "./schedule.js": "./schedule.js",
+    "./instruments.js": "./instruments.js",
+    "./instrumentPresets.js": "./instrumentPresets.js",
+    "./notes.js": "./notes.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0"
+  }
+}
