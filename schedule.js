@@ -6,7 +6,7 @@ let scheduledUpTo = 0.0;
  * @typedef {{scale?: number, velocity?: number, volume?: number, vibrato?: number, transpose?: number, root?: number, alternate?: boolean, chord?: boolean}} PlayableOptions
  * @typedef {(PlayableOptions | number | Playable)[]} Playable
  * @typedef {(instrument: Instrument, playable: Playable | number, root: number, at: number, duration: number, velocity: number, volume: number, vibrato: number) => void} PlayNote
- * @param {Map<Instrument, Playable>} tracks
+ * @param {([Instrument, Playable])[]} tracks
  * @param {number} cycle
  * @param {AudioContext} audioContext
  * @param {PlayNote} playNote
@@ -29,7 +29,6 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, playAhead =
     scheduledUpTo += cycle;
 
     for (const [instrument, sequence] of tracks) {
-      if (!instrument) continue;
       schedulePart(playNote, instrument, sequence, scheduledUpTo, cycle);
     }
   }
@@ -90,15 +89,15 @@ const schedulePart = (
     const child = playable[index];
 
     if (child && typeof child === "object" && !Array.isArray(child) && !ArrayBuffer.isView(child)) {
-      alternate = child.alternate ?? alternate;
-      chord = child.chord ?? chord;
-
       scale = child.scale ?? scale;
       velocity = child.velocity ?? velocity;
       volume = child.volume ?? volume;
       vibrato = child.vibrato ?? vibrato;
       transpose = child.transpose ?? transpose;
       root = child.root ?? root;
+
+      alternate = alternate || child.alternate;
+      chord = chord || child.chord;
 
       amountOfOptions++;
     }
