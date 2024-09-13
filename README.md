@@ -1,4 +1,4 @@
-# Web Audio API musical instruments and some utilities for playing them.
+# Web Audio API musical instruments & utilities
 
 **Big disclaimer:** I'm an audio newbie! At the time of writing it's been 3 months since I first started even looking into audio, and I've never seriously played an instrument. On top of it all I'm also somewhat hearing-impaired. So please don't expect faithful recreations of timbres or even particularly great results. That said, if you're an audio pro and have suggestions for improvements, please let me know!
 
