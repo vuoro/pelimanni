@@ -88,7 +88,7 @@ Now you can start composing sequences. The main idea is to use arrays to subdivi
 ```js
 [0];        // will play note 0 for 0.2s, every 0.2s
 [0, 1];     // 0 for 0.1s, then 1 for 0.1s, every 0.2s
-[0, [1, 2]] // 0 for 0.1s, then 1 for 0.05s, then 1 for 0.05s, every 0.2s
+[0, [1, 2]] // 0 for 0.1s, then 1 for 0.05s, then 2 for 0.05s, every 0.2s
 ```
 
 You can add pauses by adding `null`s to the arrays.
@@ -111,7 +111,7 @@ You can also add configuration objects to the ends of the arrays, for more contr
 [0, 5, 7, { chord: true }]; // 0, 5, 7 at the same time for 0.2s
 
 // Multiplies the duration of each note (can cause them to overlap!)
-[0, x, { scale: 2 }] // 0 for (0.1 * 2)s, every 0.2s
+[0, x, { scale: 2 }]    // 0 for (0.1 * 2)s, every 0.2s
 [0, x, { scale: 0.75 }] // 0 for (0.1 * 0.75)s, every 0.2s
 
 // These are passed through to the playNote function (see below)
@@ -122,10 +122,10 @@ You can also add configuration objects to the ends of the arrays, for more contr
 [0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, root: 0 }]
 
 // Multiple objects are ok: later ones will be merged over earlier ones
-[0, x, { transpose: 1, scale: 2 }, { transpose: 2 }] // becomes [0, x, { transpose: 2, scale: 2 }]
+[0, x, { transpose: 1, scale: 2 }, { transpose: 2 }] // same as [0, x, { transpose: 2, scale: 2 }]
 ```
 
-Now that we've got some sequences, we can combine pair them up with instruments into tracks.
+Now that we've got some sequences, we can pair them up with instruments into tracks.
 
 ```js
 const alternate = true;
@@ -139,7 +139,7 @@ const tracks = [
 ];
 ```
 
-Now we start using `scheduleMusic` to make our tracks play. It will take care of the timekeeping, but we will have to create our own `playNote` function.
+Now we can start using `scheduleMusic` to make our tracks play. It will take care of the timekeeping, but we will have to create our own `playNote` function.
 
 `playNote` will receive the instrument preset, note, and other data required for playing it. Below is a _simple_ implementation of it: it does not support polyphony (playing multiple sounds from the same instrument at once, like chords) or cleaning up unused instruments.
 
@@ -162,7 +162,7 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
 }
 ```
 
-And finally, we just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of our tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. It some kind of lagspike still manages to stall the scheduler so that there's no more time to play a `cycle`, it will just skip the `cycle`.
+And finally, we just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of our tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler so that there's no more time to play a `cycle`, it will just skip the `cycle`.
 
 Below I'm calling it on `requestAnimationFrame`, and also on a 1000ms `setInterval`. This combination should let music play accurately while the page is visible, and as accurately as possible when it isn't.
 
