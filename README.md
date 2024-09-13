@@ -4,9 +4,15 @@
 
 Demo: https://music.vuoro.dev/
 
-# Contents
+# Usage
 
 This readme is a combination of tutorial, examples, and documentation. It'd be better to keep them separate, but this is all I have time for, sadly.
+
+## Installation
+
+```bash
+npm install @vuoro/pelimanni
+```
 
 ## Instruments
 
@@ -23,13 +29,13 @@ The following are all the instrument presets currently implemented. You can twea
     violin, viola, cello, contrabass, // bowed strings
     pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
     hammeredDulcimer // string percussion (missing the hammer blow noise, for now)
-  } from "@vuoro/kannel/instrumentPresets.js";
+  } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, and call `playInstrument` with it.
 
 ```js
-  import {createInstrument, playInstrument, destroyInstrument} from "@vuoro/kannel/instruments.js";
+  import {createInstrument, playInstrument, destroyInstrument} from "@vuoro/pelimanni/instruments.js";
 
   // Create an AudioContext and an instrument
   const audioContext = new AudioContext();
@@ -63,7 +69,7 @@ destroyInstrument(violaPlucker);
 In both functions note 0 is C4. I think this deviates from the midi number standard, but it's nicer this way.
 
 ```js
-import { midiToFrequency } from "@vuoro/kannel/notes.js";
+import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
 
 const tuning = 440.0; // optional
 
@@ -175,7 +181,7 @@ The required parameters are:
 - your `playNote` function from above
 
 ```js
-import { scheduleMusic } from "@vuoro/kannel/schedule.js";
+import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 
 const playAhead = 0.04; // optional, schedules an additional 40ms into the future to make dropped cycles less likely.
 
