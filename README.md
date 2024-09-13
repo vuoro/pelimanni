@@ -16,7 +16,7 @@ npm install @vuoro/pelimanni
 
 ## Instruments
 
-A set of pretend classical instruments, made with subtractive synthesis methods.
+A set of monophonic pretend classical instruments, made with subtractive synthesis methods.
 
 The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`;
 
@@ -91,7 +91,7 @@ First choose a `cycle` duration: this is how long the outermost note or array of
 const cycle = 0.2; // in seconds
 ```
 
-Now you can start composing sequences. The main idea is to use arrays to subdivide time. I first saw this concept in the very cool music live programming framework [Strudel](https://strudel.cc).
+Now you can start composing sequences. The main idea is to use arrays to subdivide time. (I first saw this concept in the very cool music live programming framework [Strudel](https://strudel.cc).)
 
 ```js
 [0];        // will play note 0 for 0.2s, every 0.2s
@@ -136,7 +136,7 @@ You can also add configuration objects to the ends of the arrays, for more contr
 [0, x, { transpose: 2, scale: 2 }];
 ```
 
-Now that we've got some sequences, we can pair them up with instruments into tracks.
+Now that you've got some sequences, you can pair them up with instruments into tracks.
 
 ```js
 const alternate = true;
@@ -150,9 +150,9 @@ const tracks = [
 ];
 ```
 
-And now you can start using `scheduleMusic` to make our tracks play. It will take care of the timekeeping, but you will have to create your own `playNote` function.
+And now you can start using `scheduleMusic` to make the tracks play. It will take care of the timekeeping, but you will have to create your own `playNote` function.
 
-`playNote` will receive the instrument preset, note, and other data required for playing it. Below is a _simple_ implementation of it: it does not support polyphony (playing multiple sounds from the same instrument at once, like chords) or cleaning up unused instruments.
+`playNote` will receive the instrument preset, note number, and other data required for playing it. Below is a _simple_ implementation of it: it does not support polyphony (playing multiple sounds from the same instrument at once, like chords) or cleaning up unused instruments.
 
 ```js
 const instruments = new Map();
@@ -173,7 +173,7 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
 }
 ```
 
-And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of our tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler, so that there's no more time to play a `cycle`, it will just skip the `cycle`.
+And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of your tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler, so that there's no more time to play a `cycle`, it will just skip the `cycle`.
 
 Below I'm calling it on `requestAnimationFrame`, and also on a 1000ms `setInterval`. This combination should let music play accurately while the page is visible, and as accurately as possible when it isn't.
 
@@ -217,7 +217,7 @@ Internally each instrument uses the following:
 6. 1–4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-There should be no object allocation happening when notes are scheduled or instruments are played, to minimise garbage collection pauses.
+I've tried to avoid object allocation when notes are scheduled or instruments are played, to minimise garbage collection pauses.
 
 # Inspirations and resources that helped me figure all of this out
 
