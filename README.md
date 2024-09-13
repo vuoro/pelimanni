@@ -118,19 +118,22 @@ You can also add configuration objects to the ends of the arrays, for more contr
 // Plays all notes at once, instead of subdividing time
 [0, 5, 7, { chord: true }]; // 0, 5, 7 at the same time for 0.2s
 
-// Multiplies the duration of each note (can cause them to overlap!)
-[0, x, { scale: 2 }]    // 0 for (0.1 * 2)s, every 0.2s
-[0, x, { scale: 0.75 }] // 0 for (0.1 * 0.75)s, every 0.2s
+// Multiplies the duration of each note
+// Warning: scaling up can easily cause notes to overlap, so be sure to create space for them.
+[0, x, 1, x { scale: 2 }] // double-duration 0, then double-duration 1
+[0, 1 { scale: 0.5 }]     // half-duration 0, then half-duration 1
 
 // These are passed through to the playNote function (see below)
-// ´velocity` affects various aspects of how the note is played, but not the volume: best stay between 0–1
+// ´velocity` is how strongly the note is played, but does not affect the volume: best stay between 0–1
 // `volume` is how loud it should be: don't go above 1.0
 // `vibrato` makes most of the note waver: off at 0.0, very aggressive at 1.0
 // `root` is used for `midiToJustFrequency` (see earlier above)
 [0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, root: 0 }]
 
-// Multiple objects are ok: later ones will be merged over earlier ones
-[0, x, { transpose: 1, scale: 2 }, { transpose: 2 }] // same as [0, x, { transpose: 2, scale: 2 }]
+// Multiple objects are ok: later ones will be merged over earlier ones.
+// Both of these end up the same:
+[0, x, { transpose: 1, scale: 2 }, { transpose: 2 }]
+[0, x, { transpose: 2, scale: 2 }];
 ```
 
 Now that we've got some sequences, we can pair them up with instruments into tracks.
@@ -147,7 +150,7 @@ const tracks = [
 ];
 ```
 
-Now we can start using `scheduleMusic` to make our tracks play. It will take care of the timekeeping, but we will have to create our own `playNote` function.
+And now you can start using `scheduleMusic` to make our tracks play. It will take care of the timekeeping, but you will have to create your own `playNote` function.
 
 `playNote` will receive the instrument preset, note, and other data required for playing it. Below is a _simple_ implementation of it: it does not support polyphony (playing multiple sounds from the same instrument at once, like chords) or cleaning up unused instruments.
 
@@ -170,7 +173,7 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
 }
 ```
 
-And finally, we just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of our tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler so that there's no more time to play a `cycle`, it will just skip the `cycle`.
+And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of our tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler, so that there's no more time to play a `cycle`, it will just skip the `cycle`.
 
 Below I'm calling it on `requestAnimationFrame`, and also on a 1000ms `setInterval`. This combination should let music play accurately while the page is visible, and as accurately as possible when it isn't.
 
