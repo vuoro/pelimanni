@@ -331,12 +331,12 @@ export const playInstrument = (
       lowPassFilter.frequency.setTargetAtTime(
         mix(pitch, lowPassTarget, dynamicSustain),
         decayAt,
-        dynamicDecay / dynamicLowPassSpeed,
+        dynamicDecay * dynamicLowPassSpeed,
       );
       highPassFilter.frequency.setTargetAtTime(
         mix(pitch, highPassTarget, dynamicSustain),
         decayAt,
-        dynamicDecay / dynamicHighPassSpeed,
+        dynamicDecay * dynamicHighPassSpeed,
       );
     }
   }
@@ -345,8 +345,8 @@ export const playInstrument = (
   for (const { gainNode } of oscillators) {
     gainNode.gain.setTargetAtTime(0.0, endAt, dynamicRelease);
   }
-  lowPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease / dynamicLowPassSpeed);
-  highPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease / dynamicHighPassSpeed);
+  lowPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicLowPassSpeed);
+  highPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicHighPassSpeed);
 
   vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endAt, dynamicRelease);
   vibratoLowPassGain?.gain.setTargetAtTime(0.0, endAt, dynamicRelease);
@@ -394,7 +394,7 @@ class PulseOscillatorNode extends OscillatorNode {
   }
 
   // FIXME: dunno how to type these bloody things correctly
-  // using .call instead didn't seem to work, because args were not truly undefined
+  // using .call instead didn't seem to work, because args were not truly undefined?
   /** @param {Parameters<WaveShaperNode["connect"]>} args */
   connect(...args) {
     return this.waveShaper.connect.apply(this.waveShaper, args);
