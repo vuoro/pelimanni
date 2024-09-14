@@ -48,8 +48,8 @@ export const flute = {
   lowPassFrequency: 2349.312,
   lowPassSpeedMultiplier: 0.764,
   highPassSpeedMultiplier: 0.91,
-  vibratoEffectOnLowPass: 900,
-  vibratoEffectOnVolume: 0.013,
+  vibratoEffectOnLowPass: 1200,
+  vibratoEffectOnVolume: 0.008,
   peakingFilters: [{ frequency: 810, gain: 2, q: 3.0 }],
 };
 
@@ -76,7 +76,7 @@ export const oboe = {
   highPassSpeedMultiplier: 0.91,
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
-  vibratoEffectOnLowPass: 900.0,
+  vibratoEffectOnLowPass: 1200.0,
   vibratoEffectOnVolume: 0.008,
   peakingFilters: [
     { frequency: 1400, gain: 2, q: 3.0 },
@@ -121,7 +121,7 @@ export const clarinet = {
   highPassSpeedMultiplier: 0.91,
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
-  vibratoEffectOnLowPass: 900.0,
+  vibratoEffectOnLowPass: 1200.0,
   vibratoEffectOnVolume: 0.008,
   peakingFilters: [
     { frequency: 1180, gain: 2, q: 3.0 },
@@ -146,7 +146,7 @@ export const saxophone = {
   highPassSpeedMultiplier: 0.618,
   highPassFrequency: 233.08,
   lowPassFrequency: 1567.968,
-  vibratoEffectOnLowPass: 900.0,
+  vibratoEffectOnLowPass: 1200.0,
   peakingFilters: [
     { frequency: 1100, gain: 2.0, q: 2.0 },
     { frequency: 1900, gain: 2.0, q: 1.0 },
@@ -171,7 +171,7 @@ export const trumpet = {
   lowPassPitchTracking: -0.056,
   lowPassSpeedMultiplier: 0.91,
   highPassSpeedMultiplier: 0.618,
-  vibratoEffectOnLowPass: 500,
+  vibratoEffectOnLowPass: 700,
   vibratoEffectOnVolume: 0.021,
   peakingFilters: [
     { frequency: 1200, gain: 2.0, q: 3.0 },

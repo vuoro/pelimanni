@@ -87,7 +87,7 @@ export const createInstrument = (preset, audioContext) => {
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
   const idleVibratoFrequency = 13 / 60;
-  const idleVibratoLowPassTarget = 200;
+  const idleVibratoLowPassTarget = 400;
   const idleVibratoPitchTarget = 3;
   const idleVibratoVolumeTarget = 0.021;
 
