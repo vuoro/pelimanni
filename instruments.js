@@ -55,13 +55,7 @@ export const createInstrument = (preset, audioContext) => {
   const oscillators = [];
   const baseVolume = 1.0 / maxPeak;
 
-  for (const {
-    type,
-    pulseWidth = 0.5,
-    pitchMultiplier = 1.0,
-    gain = 1.0,
-    glide = 0.0001,
-  } of oscillatorTypes) {
+  for (const { type, pulseWidth = 0.5, pitchMultiplier = 1.0, gain = 1.0, glide = 0.0001 } of oscillatorTypes) {
     const oscillatorNode =
       type === "pulse"
         ? new PulseOscillatorNode(audioContext, { type, pulseWidth, frequency: 440 })
@@ -205,8 +199,7 @@ export const playInstrument = (
   const shortness = 1.0 - longness;
 
   // NOTE: this will only work if the instrument is played sequentially
-  const pitchSameness =
-    (0.995 - lowPitchness * 0.005) ** Math.abs(pitch - liveInstrument.previousPitch);
+  const pitchSameness = (0.995 - lowPitchness * 0.005) ** Math.abs(pitch - liveInstrument.previousPitch);
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
@@ -215,9 +208,15 @@ export const playInstrument = (
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
 
   const attackDynamics =
-    (0.764 + 0.236 * 2.618 * longness * lowPitchness * dynamicSlowness) * situationalDynamics;
+    (0.764 + 0.236 * 3.0 * longness) *
+    (0.854 + 0.146 * 2.0 * lowPitchness) *
+    (0.854 + 0.146 * 2.0 * dynamicSlowness) *
+    situationalDynamics;
   const releaseDynamics =
-    (0.764 + 0.236 * 2.618 * longness * lowPitchness * dynamicVelocity) * situationalDynamics;
+    (0.764 + 0.236 * 3.0 * longness) *
+    (0.854 + 0.146 * 2.0 * lowPitchness) *
+    (0.854 + 0.146 * 2.0 * dynamicVelocity) *
+    situationalDynamics;
 
   const dynamicAttack = attack * attackDynamics;
   const dynamicRelease = release * releaseDynamics;
@@ -228,28 +227,16 @@ export const playInstrument = (
   const lowPassAttack = dynamicAttack * dynamicLowPassSpeed;
   const highPassAttack = dynamicAttack * dynamicHighPassSpeed;
 
-  const highPassTarget = mix(
-    highPassFrequency,
-    pitch,
-    highPassPitchTracking * (1.0 - lowPitchness * lowPitchness),
-  );
-  const lowPassTarget = mix(
-    lowPassFrequency,
-    pitch,
-    lowPassPitchTracking * (1.0 - highPitchness * highPitchness),
-  );
+  const highPassTarget = mix(highPassFrequency, pitch, highPassPitchTracking * (1.0 - lowPitchness * lowPitchness));
+  const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = shouldVibrato
     ? baseVibratoFrequency * (0.764 + highPitchness * dynamicVelocity * 0.618)
     : idleVibratoTarget;
 
-  const vibratoLowPassTarget = shouldVibrato
-    ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass
-    : idleVibratoLowPassTarget;
-  const vibratoPitchTarget = shouldVibrato
-    ? vibratoAmount * vibratoEffectOnPitch
-    : idleVibratoPitchTarget;
+  const vibratoLowPassTarget = shouldVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
+  const vibratoPitchTarget = shouldVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
   const vibratoVolumeTarget =
     (shouldVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
@@ -310,8 +297,7 @@ export const playInstrument = (
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0) {
     const decayDelay = dynamicAttack * 4.0;
-    const decayDynamics =
-      Math.max(0.382, (duration - decayDelay) * 0.382) * (1.236 - 0.236 * dynamicVelocity);
+    const decayDynamics = Math.max(0.382, (duration - decayDelay) * 0.382) * (1.236 - 0.236 * dynamicVelocity);
 
     const dynamicDecay = decay * decayDynamics;
     const decayAt = startAt + decayDelay;
@@ -319,8 +305,7 @@ export const playInstrument = (
     if (decayAt < endAt) {
       if (isPolyphonic) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
 
-      const dynamicSustain =
-        sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.382);
+      const dynamicSustain = sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.382);
 
       // Oscillators
       for (const { gainNode, gainTarget } of oscillators) {
