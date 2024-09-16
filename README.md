@@ -177,7 +177,7 @@ And finally, you just have to call `scheduleMusic` at the appropriate time inter
 
 A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.04–0.5 seconds should be a good choice.
 
-Below I'm calling it on an interval twice as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
+Below I'm calling it on an interval 4 times as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
 
 The required parameters are:
 - your `tracks`: array of `[instrumentPreset, sequence]`
@@ -191,7 +191,7 @@ import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 const playAhead = 0.1;
 const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, playNote, playAhead);
 
-setInterval(callScheduleMusic, playAhead / 2.0 * 1000.0);
+setInterval(callScheduleMusic, playAhead / 4.0 * 1000.0);
 document.addEventListener("visibilitychange", tryToScheduleMusic);
 ```
 
