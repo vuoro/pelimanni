@@ -241,7 +241,7 @@ export const playInstrument = (
     (shouldVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
   // Start and end
-  const startAt = at - dynamicAttack * 0.146;
+  const startAt = Math.max(0.0, at - dynamicAttack * 0.146);
   let endAt = at + Math.max(duration * 0.618, duration - dynamicRelease);
 
   const instabilityStopsAt =
