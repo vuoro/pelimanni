@@ -11,47 +11,62 @@ let scheduledUpTo = 0.0;
  * @param {AudioContext} audioContext
  * @param {PlayNote} playNote
  */
-export const scheduleMusic = (tracks, cycle, audioContext, playNote, playAhead = 0.04) => {
-  const { currentTime, baseLatency } = audioContext;
-  const safetyMargin = Math.max(0.0, playAhead - baseLatency);
+export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargin = 0.2) => {
+  const { currentTime } = audioContext;
+  if (audioContext.state !== "running") return;
 
-  // Fast-forward to current time if needed
-  if (scheduledUpTo < currentTime + safetyMargin) {
-    const fastForwardBy = Math.ceil((currentTime - scheduledUpTo) / cycle) * cycle;
-    scheduledUpTo += fastForwardBy;
+  // TODO: use baseLatency to better with sounds with visuals?
+
+  // Skip to current time if needed
+  if (scheduledUpTo < currentTime) {
+    scheduledUpTo += currentTime + safetyMargin - scheduledUpTo;
   }
 
-  const scheduleAheadBy = (document.hidden ? 1.0 + safetyMargin : safetyMargin) + cycle;
+  const scheduleAheadBy = document.hidden ? 1.0 + safetyMargin : safetyMargin;
 
-  // Schedule new cycles
-  // TODO: could schedule multiple cycles here in one go, instead of using the while loop
-  while (scheduledUpTo < currentTime + scheduleAheadBy) {
-    scheduledUpTo += cycle;
+  if (scheduledUpTo < currentTime + scheduleAheadBy) {
+    const from = scheduledUpTo;
+    const to = currentTime + scheduleAheadBy;
+    scheduledUpTo = to;
 
+    const cycleStartedAt = Math.floor(from / cycle) * cycle;
+    const cycleEndsAt = (Math.floor(from / cycle) + 1.0) * cycle;
+    const period = cycleStartedAt / cycle;
+
+    // Schedule as much of the ongoing cycle as we can reach
     for (const [instrument, sequence] of tracks) {
-      schedulePart(playNote, instrument, sequence, scheduledUpTo, cycle);
+      schedulePart(playNote, instrument, sequence, cycleStartedAt, cycle, period, from, to);
+    }
+
+    // Also schedule the start of the next cycle, if it's within reach
+    if (to > cycleEndsAt) {
+      for (const [instrument, sequence] of tracks) {
+        schedulePart(playNote, instrument, sequence, cycleStartedAt + cycle, cycle, period + 1.0, from, to);
+      }
     }
   }
 };
 
 /**
-  @param {PlayNote} playNote
-  @param {Instrument} instrument
-  @param {Playable | number} playable
-  @param {number} scaleFromParent
-  @param {number} velocityFromParent
-  @param {number} volumeFromParent
-  @param {number} vibratoFromParent
-  @param {number} transposeFromParent
-  @param {number} rootFromParent
-*/
+   @param {PlayNote} playNote
+   @param {Instrument} instrument
+   @param {Playable | number} playable
+   @param {number} scaleFromParent
+   @param {number} velocityFromParent
+   @param {number} volumeFromParent
+   @param {number} vibratoFromParent
+   @param {number} transposeFromParent
+   @param {number} rootFromParent
+ */
 const schedulePart = (
   playNote,
   instrument,
   playable,
   at = 0.0,
   duration = 0.0,
-  period = at / duration,
+  period = 0.0,
+  from = 0.0,
+  to = 0.0,
   scaleFromParent = undefined,
   velocityFromParent = undefined,
   volumeFromParent = undefined,
@@ -59,7 +74,11 @@ const schedulePart = (
   transposeFromParent = undefined,
   rootFromParent = undefined,
 ) => {
+  if (at > to) return;
+
   if (typeof playable === "number") {
+    if (at < from) return;
+
     return playNote(
       instrument,
       playable + (transposeFromParent ?? 0),
@@ -118,6 +137,8 @@ const schedulePart = (
       at,
       duration,
       childPeriod,
+      from,
+      to,
       scale,
       velocity,
       volume,
@@ -138,6 +159,8 @@ const schedulePart = (
         at,
         duration,
         period,
+        from,
+        to,
         scale,
         (velocity ?? 1.0) / length,
         volume,
@@ -164,6 +187,8 @@ const schedulePart = (
       childAt,
       childDuration,
       period,
+      from,
+      to,
       scale,
       velocity,
       volume,

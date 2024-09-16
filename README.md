@@ -173,9 +173,11 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
 }
 ```
 
-And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to 1 `cycle` of your tracks. If the page is hidden, it will schedule as many `cycle`s as would start in the next 1000ms, since that's as often as you can call any timer in an inactive browser tab. If some kind of lagspike still manages to stall the scheduler, so that there's no more time to play a `cycle`, it will just skip the `cycle`.
+And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
-Below I'm calling it on `requestAnimationFrame`, and also on a 1000ms `setInterval`. This combination should let music play accurately while the page is visible, and as accurately as possible when it isn't.
+A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.04–0.5 seconds should be a good choice.
+
+Below I'm calling it on an interval twice as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
 
 The required parameters are:
 - your `tracks`: array of `[instrumentPreset, sequence]`
@@ -186,21 +188,11 @@ The required parameters are:
 ```js
 import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 
-const playAhead = 0.04; // optional, schedules an additional 40ms into the future to make dropped cycles less likely.
+const playAhead = 0.1;
+const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, playNote, playAhead);
 
-// For when the page is visible
-const onFrame = () => {
-  scheduleMusic(tracks, cycle, audioContext, playNote, playAhead);
-  requestAnimationFrame(onFrame);
-}
-
-requestAnimationFrame(onFrame);
-
-// For when the page is hidden
-setInterval(
-  () => scheduleMusic(tracks, cycle, audioContext, playNote, playAhead),
-  1000
-);
+setInterval(callScheduleMusic, playAhead / 2.0 * 1000.0);
+document.addEventListener("visibilitychange", tryToScheduleMusic);
 ```
 
 # Performance
