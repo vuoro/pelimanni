@@ -285,7 +285,7 @@ export const playInstrument = (
   }
 
   // Fire up vibrato
-  const vibratoAttack = dynamicAttack * 0.056;
+  const vibratoAttack = dynamicAttack * 0.09;
   const vibratoGainAttack = dynamicAttack * 0.236;
 
   vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);

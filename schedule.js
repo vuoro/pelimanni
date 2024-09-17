@@ -1,10 +1,10 @@
-let scheduledUpTo = 0.0;
+const schedules = new WeakMap();
 
 /**
  *
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
  * @typedef {{scale?: number, velocity?: number, volume?: number, vibrato?: number, transpose?: number, root?: number, alternate?: boolean, chord?: boolean}} PlayableOptions
- * @typedef {(PlayableOptions | number | Playable)[]} Playable
+ * @typedef {(PlayableOptions | number | undefined | Playable)[]} Playable
  * @typedef {(instrument: Instrument, playable: Playable | number, root: number, at: number, duration: number, velocity: number, volume: number, vibrato: number) => void} PlayNote
  * @param {([Instrument, Playable])[]} tracks
  * @param {number} cycle
@@ -15,33 +15,58 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
   const { currentTime } = audioContext;
   if (audioContext.state !== "running") return;
 
+  // TODO: type pendingNote
+  const schedule =
+    schedules.get(audioContext) ||
+    schedules
+      .set(audioContext, {
+        scheduledUpTo: 0.0,
+        pendingNote: Object.seal({
+          pending: false,
+          instrument: null,
+          note: 0,
+          root: 0,
+          at: 0,
+          duration: 0,
+          velocity: 0,
+          volume: 0,
+          vibrato: 0,
+        }),
+      })
+      .get(audioContext);
+
   // TODO: use baseLatency to better with sounds with visuals?
 
   // Skip to current time if needed
-  if (scheduledUpTo < currentTime) {
-    scheduledUpTo += currentTime + safetyMargin - scheduledUpTo;
+  if (schedule.scheduledUpTo < currentTime) {
+    schedule.scheduledUpTo += currentTime + safetyMargin - schedule.scheduledUpTo;
   }
 
   const scheduleAheadBy = document.hidden ? 1.0 + safetyMargin : safetyMargin;
 
-  if (scheduledUpTo < currentTime + scheduleAheadBy) {
-    const from = scheduledUpTo;
+  if (schedule.scheduledUpTo < currentTime + scheduleAheadBy) {
+    const from = schedule.scheduledUpTo;
     const to = currentTime + scheduleAheadBy;
-    scheduledUpTo = to;
+    schedule.scheduledUpTo = to;
 
-    const cycleStartedAt = Math.floor(from / cycle) * cycle;
     const cycleEndsAt = (Math.floor(from / cycle) + 1.0) * cycle;
-    const period = cycleStartedAt / cycle;
+    const cyclesToCheck = to > cycleEndsAt ? 2 : 1;
 
     // Schedule as much of the ongoing cycle as we can reach
     for (const [instrument, sequence] of tracks) {
-      schedulePart(playNote, instrument, sequence, cycleStartedAt, cycle, period, from, to);
-    }
+      let checkedCycles = 0;
 
-    // Also schedule the start of the next cycle, if it's within reach
-    if (to > cycleEndsAt) {
-      for (const [instrument, sequence] of tracks) {
-        schedulePart(playNote, instrument, sequence, cycleStartedAt + cycle, cycle, period + 1.0, from, to);
+      while (checkedCycles < cyclesToCheck || schedule.pendingNote.pending) {
+        const cycleStartedAt = (Math.floor(from / cycle) + checkedCycles) * cycle;
+        const period = cycleStartedAt / cycle;
+
+        schedulePart(schedule.pendingNote, playNote, instrument, sequence, cycleStartedAt, cycle, period, from, to);
+
+        checkedCycles++;
+        if (checkedCycles > 64)
+          throw new Error(
+            "scheduleMusic tried to loop way too many times: either the cycle is too short or the tracks are messed up",
+          );
       }
     }
   }
@@ -50,8 +75,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
 /**
    @param {PlayNote} playNote
    @param {Instrument} instrument
-   @param {Playable | number} playable
-   @param {number} scaleFromParent
+   @param {Playable | number | undefined} playable
    @param {number} velocityFromParent
    @param {number} volumeFromParent
    @param {number} vibratoFromParent
@@ -59,6 +83,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
    @param {number} rootFromParent
  */
 const schedulePart = (
+  pendingNote,
   playNote,
   instrument,
   playable,
@@ -67,37 +92,91 @@ const schedulePart = (
   period = 0.0,
   from = 0.0,
   to = 0.0,
-  scaleFromParent = undefined,
   velocityFromParent = undefined,
   volumeFromParent = undefined,
   vibratoFromParent = undefined,
   transposeFromParent = undefined,
   rootFromParent = undefined,
 ) => {
-  if (at > to) return;
+  if (at > to && !pendingNote.pending) return;
 
   if (typeof playable === "number") {
     if (at < from) return;
 
-    return playNote(
-      instrument,
-      playable + (transposeFromParent ?? 0),
-      rootFromParent || 0,
-      at,
-      duration * (scaleFromParent ?? 1.0),
-      velocityFromParent,
-      volumeFromParent,
-      vibratoFromParent,
-    );
+    // End pending note, if there is one
+    if (pendingNote.pending) {
+      pendingNote.pending = false;
+      // console.log(pendingNote.note, "end from note");
+      playNote(
+        pendingNote.instrument,
+        pendingNote.note,
+        pendingNote.root,
+        pendingNote.at,
+        pendingNote.duration,
+        pendingNote.velocity,
+        pendingNote.volume,
+        pendingNote.vibrato,
+      );
+    }
+
+    // Start a new note if it's within reach
+    if (at > to) return;
+
+    const note = playable + (transposeFromParent ?? 0);
+    const root = rootFromParent || 0;
+    const velocity = velocityFromParent;
+    const volume = volumeFromParent;
+    const vibrato = vibratoFromParent;
+
+    // console.log(note, "start");
+
+    pendingNote.instrument = instrument;
+    pendingNote.note = note;
+    pendingNote.root = root;
+    pendingNote.at = at;
+    pendingNote.duration = duration;
+    pendingNote.velocity = velocity;
+    pendingNote.volume = volume;
+    pendingNote.vibrato = vibrato;
+
+    pendingNote.pending = true;
+    return;
   }
 
-  if (!playable || !Array.isArray(playable)) return;
+  // Skip nulls, but also make them end pending notes
+  if (playable === null) {
+    if (pendingNote.pending) {
+      pendingNote.pending = false;
+      // console.log(pendingNote.note, "end from pause");
+      playNote(
+        pendingNote.instrument,
+        pendingNote.note,
+        pendingNote.root,
+        pendingNote.at,
+        pendingNote.duration,
+        pendingNote.velocity,
+        pendingNote.volume,
+        pendingNote.vibrato,
+      );
+    }
+    return;
+  }
 
+  // If extender, extend pending note
+  if (playable === undefined && pendingNote.pending) {
+    // console.log(pendingNote.note, "extend");
+    pendingNote.duration += duration;
+    return;
+  }
+
+  // Skip unknowns
+  if (!Array.isArray(playable)) return;
+
+  // Merge options
   let amountOfOptions = 0;
   let alternate = false;
   let chord = false;
 
-  let scale = scaleFromParent;
   let velocity = velocityFromParent;
   let volume = volumeFromParent;
   let vibrato = vibratoFromParent;
@@ -108,7 +187,6 @@ const schedulePart = (
     const child = playable[index];
 
     if (child && typeof child === "object" && !Array.isArray(child) && !ArrayBuffer.isView(child)) {
-      scale = child.scale ?? scale;
       velocity = child.velocity ?? velocity;
       volume = child.volume ?? volume;
       vibrato = child.vibrato ?? vibrato;
@@ -124,22 +202,23 @@ const schedulePart = (
 
   const length = playable.length - amountOfOptions;
 
+  // Alternators pick 1 playable, based on the current period
   if (alternate) {
     const index = Math.round(period) % length;
     const child = playable[index];
     const childPeriod = (period - index) / length;
 
     return schedulePart(
+      pendingNote,
       playNote,
       instrument,
-      // FIXME: recursive types… I don't understand.
+      // FIXME: recursive types…
       child,
       at,
       duration,
       childPeriod,
       from,
       to,
-      scale,
       velocity,
       volume,
       vibrato,
@@ -148,11 +227,13 @@ const schedulePart = (
     );
   }
 
+  // Chord play all playables on top of each other
   if (chord) {
     for (let index = 0; index < length; index++) {
       const child = playable[index];
 
       schedulePart(
+        pendingNote,
         playNote,
         instrument,
         child,
@@ -161,8 +242,7 @@ const schedulePart = (
         period,
         from,
         to,
-        scale,
-        (velocity ?? 1.0) / length,
+        velocity,
         volume,
         vibrato,
         transpose,
@@ -173,7 +253,7 @@ const schedulePart = (
     return;
   }
 
-  // Sequence
+  // Normal sequences subdivide time
   const childDuration = duration / length;
 
   for (let index = 0; index < length; index++) {
@@ -181,6 +261,7 @@ const schedulePart = (
     const childAt = at + index * childDuration;
 
     schedulePart(
+      pendingNote,
       playNote,
       instrument,
       child,
@@ -189,7 +270,6 @@ const schedulePart = (
       period,
       from,
       to,
-      scale,
       velocity,
       volume,
       vibrato,

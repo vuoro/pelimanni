@@ -103,7 +103,14 @@ You can add pauses by adding `null`s to the arrays.
 
 ```js
 const x = null;
-[0, [x, 0]]; // 0 for 0.1s, then pause for 0.05s, then 0 for 0.05s
+[0, [x, 2]]; // 0 for 0.1s, then pause for 0.05s, then 2 for 0.05s, every 0.2s
+```
+
+Similarly, you can extend notes by adding `undefined`s.
+
+```js
+const e = undefined;
+[0, [e, 2]]; // 0 for 0.1 + 0.5s, then 2 for 0.05s, every 0.2s
 ```
 
 You can also add configuration objects to the ends of the arrays, for more control. There can be any number of them, to make spreading arrays easier.
@@ -118,11 +125,6 @@ You can also add configuration objects to the ends of the arrays, for more contr
 // Plays all notes at once, instead of subdividing time
 [0, 5, 7, { chord: true }]; // 0, 5, 7 at the same time for 0.2s
 
-// Multiplies the duration of each note
-// Warning: scaling up can easily cause notes to overlap, so be sure to create space for them.
-[0, x, 1, x { scale: 2 }] // double-duration 0, then double-duration 1
-[0, 1 { scale: 0.5 }]     // half-duration 0, then half-duration 1
-
 // These are passed through to the playNote function (see below)
 // ´velocity` is how strongly the note is played, but does not affect the volume: best stay between 0–1
 // `volume` is how loud it should be: don't go above 1.0
@@ -132,8 +134,13 @@ You can also add configuration objects to the ends of the arrays, for more contr
 
 // Multiple objects are ok: later ones will be merged over earlier ones.
 // Both of these end up the same:
-[0, x, { transpose: 1, scale: 2 }, { transpose: 2 }]
-[0, x, { transpose: 2, scale: 2 }];
+[0, x, { transpose: 1, vibrato: 0.5 }, { transpose: 2 }]
+[0, x, { transpose: 2, vibrato: 0.5 }];
+
+// If all these inline objects are getting messy or repetitive, consider defining them beforehand:
+const v0 = [0, { vibrato: 0.5 }];
+[5, 4, 0, 2, v0, e, e, e];
+[2, 4, 5, 2, v0, e, e, e];
 ```
 
 Now that you've got some sequences, you can pair them up with instruments into tracks.
