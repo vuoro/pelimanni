@@ -297,7 +297,7 @@ export const playInstrument = (
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0) {
     const decayDelay = dynamicAttack * 4.0;
-    const decayDynamics = Math.max(0.382, (duration - decayDelay) * 0.333333) * (1.146 - 0.236 * dynamicVelocity);
+    const decayDynamics = Math.max(1.0, duration - decayDelay) * 0.333333;
 
     const dynamicDecay = decay * decayDynamics;
     const decayAt = startAt + decayDelay;
@@ -314,15 +314,16 @@ export const playInstrument = (
       }
 
       // Filters
+      const dynamicFilterDecay = dynamicDecay * (1.146 - 0.382 * dynamicVelocity);
       lowPassFilter.frequency.setTargetAtTime(
         mix(pitch, lowPassTarget, dynamicSustain),
         decayAt,
-        dynamicDecay * dynamicLowPassSpeed,
+        dynamicFilterDecay * dynamicLowPassSpeed,
       );
       highPassFilter.frequency.setTargetAtTime(
         mix(pitch, highPassTarget, dynamicSustain),
         decayAt,
-        dynamicDecay * dynamicHighPassSpeed,
+        dynamicFilterDecay * dynamicHighPassSpeed,
       );
     }
   }
