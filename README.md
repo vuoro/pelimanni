@@ -6,7 +6,7 @@ Demo: https://music.vuoro.dev/
 
 # Usage
 
-This readme is a combination of tutorial, examples, and documentation. It'd be better to keep them separate, but this is all I have time for, sadly.
+This readme is a combination of tutorial, examples, and documentation. It'd be nicer to keep them separate, but this is all I have time for, sadly. Also, working with audio is rather complex and can even be dangerous (see the warnings about connecting instruments later on), so this kind of format may be the safest option.
 
 ## Installation
 
@@ -18,7 +18,7 @@ npm install @vuoro/pelimanni
 
 A set of monophonic pretend classical instruments, made with subtractive synthesis methods.
 
-The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`;
+The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`. See `genericInstrument` in `instrumentPresets.js` for all the available options.
 
 ```js
   import {
@@ -32,7 +32,7 @@ The following are all the instrument presets currently implemented. You can twea
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
-To play the instruments, you must create an `AudioContext`, resume it, create the instrument, and call `playInstrument` with it.
+To play the instruments, you must create an `AudioContext`, resume it, create the instrument, connect it, and call `playInstrument` with it.
 
 ```js
   import {createInstrument, playInstrument, destroyInstrument} from "@vuoro/pelimanni/instruments.js";
@@ -40,6 +40,15 @@ To play the instruments, you must create an `AudioContext`, resume it, create th
   // Create an AudioContext and an instrument
   const audioContext = new AudioContext();
   const violaPlucker = createInstrument(pluckedViola, audioContext);
+
+  // Connect them
+  // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
+  // Otherwise bugs you cause may literally cause **PHYSICAL PAIN** to yourself or your users.
+  // Yeah. Working with audio is a bit scary. :|
+  // I use the following, but I'm uncertain if they're enough for every possible scenario.
+  // 1. A DynamicsCompressor to guard against super high volumes.
+  // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
+  violaPlucker.connect(audioContext.destination);
 
   // Play the instrument
   // Note: in reality you need to first call audioContext.resume() from a user gesture event handler.
@@ -172,6 +181,15 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
   if (!instrument) {
     instrument = createInstrument(instrumentPreset, audioContext);
     instruments.set(instrumentPreset, instrument);
+
+    // And connect it
+    // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
+    // Otherwise bugs you cause may literally cause **PHYSICAL PAIN** to yourself or your users.
+    // Yeah. Working with audio is a bit scary. :|
+    // I use the following, but I'm uncertain if they're enough for every possible scenario.
+    // 1. A DynamicsCompressor to guard against super high volumes.
+    // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
+    instrument.connect(audioContext.destination);
   }
 
   // Play it

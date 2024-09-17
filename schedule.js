@@ -1,9 +1,15 @@
 const schedules = new WeakMap();
 
 /**
- *
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
- * @typedef {{scale?: number, velocity?: number, volume?: number, vibrato?: number, transpose?: number, root?: number, alternate?: boolean, chord?: boolean}} PlayableOptions
+ * @typedef {object} PlayableOptions
+ * @property {number=} velocity - how strongly the note is played (does not affect volume)
+ * @property {number=} volume - how loud the note is
+ * @property {number=} vibrato - amount of vibrato
+ * @property {number=} transpose - added to the note's midi number
+ * @property {number=} root - used with `midiToJustFrequency`
+ * @property {boolean=} alternate - sequentially pick just one entry, instead of subdividing time
+ * @property {boolean=} chord - play all entries at the same time, instead of subdividing time
  * @typedef {(PlayableOptions | number | undefined | Playable)[]} Playable
  * @typedef {(instrument: Instrument, playable: Playable | number, root: number, at: number, duration: number, velocity: number, volume: number, vibrato: number) => void} PlayNote
  * @param {([Instrument, Playable])[]} tracks

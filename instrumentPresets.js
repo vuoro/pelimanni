@@ -1,35 +1,73 @@
 /** @typedef {typeof genericInstrument} Instrument */
-export const genericInstrument = Object.seal({
-  /** @type {{type: OscillatorType | "pulse", pulseWidth?: number, pitchMultiplier?: number, gain?: number, glide?: number}[]} */
-  oscillators: [{ type: "triangle" }],
-  /** @type {OscillatorType} */
-  vibratoType: "triangle",
-  initialInstability: 0.0,
-  isPolyphonic: false,
 
+export const genericInstrument = Object.seal({
+  /**
+   * @typedef {object} Oscillator - creates the sound of the note
+   * @property {OscillatorType | "pulse"} type - any of `OscillatorNode` types or `pulse`
+   * @property {number=} pulseWidth - only used when `type` is `pulse`
+   * @property {number=} pitchMultiplier - multiplies the frequency of the note for this oscillator
+   * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
+   * @property {number=} glide - how slowly the oscillator moves to new note frequencies
+   */
+  /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
+  oscillators: [{ type: "triangle" }],
+
+  /** @type {OscillatorType} the type of the oscillator for vibrato, LFO effects, and initialInstability */
+  vibratoType: "triangle",
+  /** @type {number} brass instrument style initial note vibration amount: causes the "braaap" */
+  initialInstability: 0.0,
+
+  isPolyphonic: false, // TODO
+
+  // These are all `timeConstant`s passed to `setTargetAtTime`.
+  // They will be dynamically adjusted based on things like note frequency, duration etc.
+  /** @type {number} for how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   attack: 0.09,
+  /** @type {number} for how long before the note reaches the `sustain` level after finishing its `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   decay: 0.0,
+  /** @type {number} for how loud the rest of note is compared to the `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   sustain: 1.0,
+  /** @type {number} for how long the note takes to "fade out": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   release: 0.056,
 
+  // Controls the maximum and minimum frequencies of the notes and their harmonics.
+  // I've taken my values from these sources:
   // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/orchins.html
   // https://alexiy.nl/eq_chart/
   // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
   // https://euphonics.org/5-3-signature-modes-and-formants/
   // https://sengpielaudio.com/VowelDiagram.htm
+  /** @type {number} maximum note and harmonics frequency */
   lowPassFrequency: 2100.0,
+  /** @type {number} minimum note and harmonics frequency */
   highPassFrequency: 247.0,
+
+  /** @type {number} how much to move lowPassFrequency towards the currently played note */
   lowPassPitchTracking: 0.034,
+  /** @type {number} how much to move highPassFrequency towards the currently played note */
   highPassPitchTracking: 0.034,
 
+  /** @type {number} how slowly the lowpass filter should `attack`, `decay`, and `release`, compared to the note itself. */
   lowPassSpeedMultiplier: 1.0,
+  /** @type {number} how slowly the highpass filter should `attack`, `decay`, and `release`, compared to the note itself. */
   highPassSpeedMultiplier: 1.0,
 
+  /** @type {number} how quickly vibrato should… vibrate */
   baseVibratoFrequency: 5.0,
-  vibratoEffectOnLowPass: 0.0, // in cents
-  vibratoEffectOnPitch: 0.0, // in cents
+  /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
+  vibratoEffectOnLowPass: 0.0,
+  /** @type {number} how much vibrato should affect the note frequency (in cents) */
+  vibratoEffectOnPitch: 0.0,
+  /** @type {number} how much vibrato should affect volume (in gain) */
   vibratoEffectOnVolume: 0.0,
 
+  /**
+   * @typedef {object} PeakingFilter - a `peaking` type `BiquadFilterNode` that shapes the instrument's timbre
+   * @property {BiquadFilterNode["frequency"]["value"]} frequency
+   * @property {BiquadFilterNode["gain"]["value"]} gain
+   * @property {BiquadFilterNode["Q"]["value"]} Q
+   */
+  /** @type {PeakingFilter[]} A set of `peaking` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate for the highest `gain` filter. */
   peakingFilters: [],
 });
 
@@ -50,7 +88,7 @@ export const flute = {
   highPassSpeedMultiplier: 0.91,
   vibratoEffectOnLowPass: 1200,
   vibratoEffectOnVolume: 0.008,
-  peakingFilters: [{ frequency: 810, gain: 1.618, q: 2.0 }],
+  peakingFilters: [{ frequency: 810, gain: 1.618, Q: 2.0 }],
 };
 
 /** @type {Instrument} */
@@ -58,7 +96,7 @@ export const piccolo = {
   ...flute,
   highPassFrequency: 587.328,
   lowPassFrequency: 4185.984,
-  peakingFilters: [{ frequency: 900, gain: 1.618, q: 2.0 }],
+  peakingFilters: [{ frequency: 900, gain: 1.618, Q: 2.0 }],
 };
 
 /** @type {Instrument} */
@@ -79,8 +117,8 @@ export const oboe = {
   vibratoEffectOnLowPass: 1200.0,
   vibratoEffectOnVolume: 0.008,
   peakingFilters: [
-    { frequency: 1400, gain: 1.618, q: 2.0 },
-    { frequency: 2950, gain: 2.0, q: 2.0 },
+    { frequency: 1400, gain: 1.618, Q: 2.0 },
+    { frequency: 2950, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -90,8 +128,8 @@ export const bassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
   peakingFilters: [
-    { frequency: 440, gain: 1.618, q: 2.0 },
-    { frequency: 1180, gain: 2.0, q: 2.0 },
+    { frequency: 440, gain: 1.618, Q: 2.0 },
+    { frequency: 1180, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -101,8 +139,8 @@ export const contrabassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 466.16,
   peakingFilters: [
-    { frequency: 250, gain: 1.618, q: 2.0 },
-    { frequency: 450, gain: 1.618, q: 2.0 },
+    { frequency: 250, gain: 1.618, Q: 2.0 },
+    { frequency: 450, gain: 1.618, Q: 2.0 },
   ],
 };
 
@@ -124,8 +162,8 @@ export const clarinet = {
   vibratoEffectOnLowPass: 1200.0,
   vibratoEffectOnVolume: 0.008,
   peakingFilters: [
-    { frequency: 1180, gain: 1.618, q: 2.0 },
-    { frequency: 2700, gain: 2.0, q: 2.0 },
+    { frequency: 1180, gain: 1.618, Q: 2.0 },
+    { frequency: 2700, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -148,9 +186,9 @@ export const saxophone = {
   lowPassFrequency: 1567.968,
   vibratoEffectOnLowPass: 1200.0,
   peakingFilters: [
-    { frequency: 1100, gain: 1.618, q: 2.0 },
-    { frequency: 1900, gain: 2.0, q: 1.0 },
-    { frequency: 3100, gain: 2.0, q: 1.0 },
+    { frequency: 1100, gain: 1.618, Q: 2.0 },
+    { frequency: 1900, gain: 2.0, Q: 1.0 },
+    { frequency: 3100, gain: 2.0, Q: 1.0 },
   ],
 };
 
@@ -174,8 +212,8 @@ export const trumpet = {
   vibratoEffectOnLowPass: 700,
   vibratoEffectOnVolume: 0.021,
   peakingFilters: [
-    { frequency: 1200, gain: 1.618, q: 2.0 },
-    { frequency: 2200, gain: 2.0, q: 2.0 },
+    { frequency: 1200, gain: 1.618, Q: 2.0 },
+    { frequency: 2200, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -185,8 +223,8 @@ export const trombone = {
   highPassFrequency: 82.406,
   lowPassFrequency: 698.464,
   peakingFilters: [
-    { frequency: 520, gain: 1.618, q: 2.0 },
-    { frequency: 1500, gain: 2.0, q: 2.0 },
+    { frequency: 520, gain: 1.618, Q: 2.0 },
+    { frequency: 1500, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -196,8 +234,8 @@ export const bassTrombone = {
   highPassFrequency: 58.27,
   lowPassFrequency: 466.16,
   peakingFilters: [
-    { frequency: 370, gain: 1.618, q: 2.0 },
-    { frequency: 720, gain: 2.0, q: 2.0 },
+    { frequency: 370, gain: 1.618, Q: 2.0 },
+    { frequency: 720, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -206,7 +244,7 @@ export const frenchHorn = {
   ...bassTrombone,
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
-  peakingFilters: [{ frequency: 450, gain: 1.618, q: 2.0 }],
+  peakingFilters: [{ frequency: 450, gain: 1.618, Q: 2.0 }],
 };
 
 /** @type {Instrument} */
@@ -215,8 +253,8 @@ export const tuba = {
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
   peakingFilters: [
-    { frequency: 230, gain: 1.618, q: 2.0 },
-    { frequency: 400, gain: 1.618, q: 2.0 },
+    { frequency: 230, gain: 1.618, Q: 2.0 },
+    { frequency: 400, gain: 1.618, Q: 2.0 },
   ],
 };
 
