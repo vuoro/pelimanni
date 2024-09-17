@@ -384,8 +384,8 @@ export const hammeredDulcimer = {
 
   attack: 0.013,
   decay: 1.0,
-  sustain: 0.0,
-  release: 0.0,
+  sustain: 0.056,
+  release: 0.056,
 
   lowPassPitchTracking: 0.236,
   highPassPitchTracking: 0.034,
