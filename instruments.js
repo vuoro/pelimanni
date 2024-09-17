@@ -137,19 +137,19 @@ export const createInstrument = (preset, audioContext) => {
     lowPassFilter,
     highPassFilter,
     output,
-    willPlayUntil: 0,
-    previousPitch: 440,
     idleVibratoFrequency,
     idleVibratoLowPassTarget,
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
     baseVolume,
     preset,
+    willPlayUntil: 0,
+    previousPitch: 440,
   };
 };
 
 export const playInstrument = (
-  /** @type {ReturnType<typeof createInstrument>} */ liveInstrument,
+  /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ pitch,
   /** @type {number} */ at,
   /** @type {number} */ duration,
@@ -170,7 +170,7 @@ export const playInstrument = (
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
     preset,
-  } = liveInstrument;
+  } = instrument;
 
   const {
     initialInstability,
@@ -188,7 +188,6 @@ export const playInstrument = (
     vibratoEffectOnLowPass,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
-    isPolyphonic,
   } = preset;
 
   const shouldVibrato = vibratoAmount > 0.0;
@@ -199,7 +198,7 @@ export const playInstrument = (
   const shortness = 1.0 - longness;
 
   // NOTE: this will only work if the instrument is played sequentially
-  const pitchSameness = (0.995 - lowPitchness * 0.005) ** Math.abs(pitch - liveInstrument.previousPitch);
+  const pitchSameness = (0.995 - lowPitchness * 0.005) ** Math.abs(pitch - instrument.previousPitch);
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
@@ -243,6 +242,7 @@ export const playInstrument = (
   // Start and end
   const startAt = Math.max(0.0, at - dynamicAttack * 0.146);
   let endAt = at + Math.max(duration * 0.618, duration - dynamicRelease);
+  const endVibratoAt = endAt;
 
   const instabilityStopsAt =
     initialInstability > 0.0
@@ -297,13 +297,14 @@ export const playInstrument = (
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0) {
     const decayDelay = dynamicAttack * 4.0;
-    const decayDynamics = Math.max(0.382, (duration - decayDelay) * 0.382) * (1.236 - 0.236 * dynamicVelocity);
+    const decayDynamics = Math.max(0.382, (duration - decayDelay) * 0.333333) * (1.146 - 0.236 * dynamicVelocity);
 
     const dynamicDecay = decay * decayDynamics;
     const decayAt = startAt + decayDelay;
 
+    // Only decay if it starts before release
     if (decayAt < endAt) {
-      if (isPolyphonic) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
+      endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0); // extend release past decay
 
       const dynamicSustain = sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.382);
 
@@ -333,14 +334,14 @@ export const playInstrument = (
   lowPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicLowPassSpeed);
   highPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicHighPassSpeed);
 
-  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endAt, dynamicRelease);
-  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endAt, dynamicRelease);
-  vibratoPitchGain?.gain.setTargetAtTime(0.0, endAt, dynamicRelease);
-  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endAt, dynamicRelease);
+  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endVibratoAt, dynamicRelease);
+  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
+  vibratoPitchGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
+  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
 
   // Metadata
-  liveInstrument.willPlayUntil = endAt;
-  liveInstrument.previousPitch = pitch;
+  instrument.willPlayUntil = endAt;
+  instrument.previousPitch = pitch;
 };
 
 /** @param {ReturnType<typeof createInstrument>} obj */

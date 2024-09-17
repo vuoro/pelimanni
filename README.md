@@ -48,7 +48,7 @@ To play the instruments, you must create an `AudioContext`, resume it, create th
   // I use the following, but I'm uncertain if they're enough for every possible scenario.
   // 1. A DynamicsCompressor to guard against super high volumes.
   // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-  violaPlucker.connect(audioContext.destination);
+  violaPlucker.output.connect(audioContext.destination);
 
   // Play the instrument
   // Note: in reality you need to first call audioContext.resume() from a user gesture event handler.
@@ -189,7 +189,7 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
     // I use the following, but I'm uncertain if they're enough for every possible scenario.
     // 1. A DynamicsCompressor to guard against super high volumes.
     // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-    instrument.connect(audioContext.destination);
+    instrument.output.connect(audioContext.destination);
   }
 
   // Play it

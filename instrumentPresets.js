@@ -17,8 +17,6 @@ export const genericInstrument = Object.seal({
   /** @type {number} brass instrument style initial note vibration amount: causes the "braaap" */
   initialInstability: 0.0,
 
-  isPolyphonic: false, // TODO
-
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
   /** @type {number} for how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
@@ -329,7 +327,6 @@ export const contrabass = {
 };
 
 const plucked = {
-  isPolyphonic: true,
   /** @type {Instrument["oscillators"]} */
   oscillators: [
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
@@ -372,7 +369,6 @@ export const pluckedContrabass = {
 /** @type {Instrument} */
 export const hammeredDulcimer = {
   ...genericInstrument,
-  isPolyphonic: true,
   oscillators: [
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
