@@ -32,6 +32,8 @@ The following are all the instrument presets currently implemented. You can twea
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
+The presets define the instrument's timbre. They also, at runtime, combine with various simple heuristics to make each instrument play a little differently depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound more natural.
+
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, connect it, and call `playInstrument` with it.
 
 ```js

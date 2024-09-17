@@ -246,7 +246,7 @@ export const playInstrument = (
 
   const instabilityStopsAt =
     initialInstability > 0.0
-      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 1.5) - Number.EPSILON * 2.0
+      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness) - Number.EPSILON * 2.0
       : startAt;
   const vibratoAt = Math.min(endAt, instabilityStopsAt + dynamicAttack) - Number.EPSILON;
 
@@ -275,7 +275,7 @@ export const playInstrument = (
   if (initialInstability > 0.0) {
     const instabilityTarget = 78 + 4 * highPitchness;
     // TODO: maybe this should be (lowPassTarget - pitch) / instabilityTarget, in cents?
-    const instabilityEffect = initialInstability * 600 * lowPitchness * pitchDifferentness;
+    const instabilityEffect = initialInstability * 600 * pitchDifferentness;
 
     vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, 0.146);
     vibratoLowPassGain?.gain.setTargetAtTime(instabilityEffect, startAt, 0.056);
