@@ -197,8 +197,9 @@ export const playInstrument = (
   const longness = 1.0 - 0.382 ** duration;
   const shortness = 1.0 - longness;
 
-  // NOTE: this will only work if the instrument is played sequentially
-  const pitchSameness = (0.995 - lowPitchness * 0.005) ** Math.abs(pitch - instrument.previousPitch);
+  // NOTE: these will only work if the instrument is played sequentially
+  const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
+  const pitchSameness = 0.034 ** Math.abs(Math.log(pitch) - Math.log(instrument.previousPitch)) * franticness;
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
