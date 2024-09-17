@@ -336,10 +336,13 @@ const plucked = {
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.004 * Math.SQRT1_2 },
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
   ],
+  maxInstances: 8,
+
   attack: 0.013,
   decay: 1.0,
   sustain: 0.0,
   release: 0.0,
+
   vibratoEffectOnPitch: 0.0,
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnLowpass: 0.0,
@@ -377,6 +380,8 @@ export const hammeredDulcimer = {
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008 },
   ],
+  maxInstances: 8,
+
   attack: 0.013,
   decay: 1.0,
   sustain: 0.0,
