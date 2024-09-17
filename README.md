@@ -16,32 +16,35 @@ npm install @vuoro/pelimanni
 
 ## Instruments
 
-A set of monophonic pretend classical instruments, made with subtractive synthesis methods.
+A set of pretend classical instruments, made with subtractive synthesis methods.
 
 The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`. See `genericInstrument` in `instrumentPresets.js` for all the available options.
 
 ```js
   import {
-    flute, piccolo, // open-ended woodwinds
-    oboe, bassoon, contrabassoon, // double-reed woodwinds
-    clarinet, saxophone, // single-reed woodwinds
-    trumpet, trombone, bassTrombone, frenchHorn, tuba, // brass
-    violin, viola, cello, contrabass, // bowed strings
-    pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
-    hammeredDulcimer // string percussion (missing the hammer blow noise, for now)
+    flute, piccolo, // open-ended woodwinds (monophonic)
+    oboe, bassoon, contrabassoon, // double-reed woodwinds (monophonic)
+    clarinet, saxophone, // single-reed woodwinds (monophonic)
+    trumpet, trombone, bassTrombone, frenchHorn, tuba, // brass (monophonic)
+    violin, viola, cello, contrabass, // bowed strings (monophonic)
+    pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings (polyphonic)
+    hammeredDulcimer // string percussion: missing the hammer blow noise, for now (polyphonic)
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
 The presets define the instrument's timbre. They also, at runtime, combine with various simple heuristics to make each instrument play a little differently depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound more natural.
 
-To play the instruments, you must create an `AudioContext`, resume it, create the instrument, connect it, and call `playInstrument` with it.
+To play the instruments, you must create an `AudioContext`, resume it, create the instrument, create an instance of it, connect it, and call `playInstrument` with it.
+
+The instances are necessary because of some instruments needing the ability to play multiple sounds at once (polyphony).
 
 ```js
-  import {createInstrument, playInstrument, destroyInstrument} from "@vuoro/pelimanni/instruments.js";
+  import {createInstrument, createInstance, playInstance, destroyInstance} from "@vuoro/pelimanni/instruments.js";
 
-  // Create an AudioContext and an instrument
+  // Create an AudioContext, an instrument, and an instance
   const audioContext = new AudioContext();
-  const violaPlucker = createInstrument(pluckedViola, audioContext);
+  const violaInstrument = createInstrument(pluckedViola);
+  const violaInstance = createInstance(violaInstrument, audioContext);
 
   // Connect them
   // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
@@ -50,7 +53,7 @@ To play the instruments, you must create an `AudioContext`, resume it, create th
   // I use the following, but I'm uncertain if they're enough for every possible scenario.
   // 1. A DynamicsCompressor to guard against super high volumes.
   // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-  violaPlucker.output.connect(audioContext.destination);
+  violaInstance.output.connect(audioContext.destination);
 
   // Play the instrument
   // Note: in reality you need to first call audioContext.resume() from a user gesture event handler.
@@ -62,13 +65,13 @@ To play the instruments, you must create an `AudioContext`, resume it, create th
   const volume = 0.5; // optional
   const vibratoAmount = 0.0; // optional
 
-  playInstrument(violaPlucker, frequency, at, duration, velocity, volume, vibratoAmount);
+  playInstance(violaInstance, frequency, at, duration, velocity, volume, vibratoAmount);
 ```
 
-When you don't need the instrument anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
+When you don't need the instrument anymore you can destroy its instance(s), to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
 
 ```js
-destroyInstrument(violaPlucker);
+destroyInstance(violaInstance);
 ```
 
 ## Note number to frequency conversion
@@ -85,11 +88,11 @@ import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
 const tuning = 440.0; // optional
 
 const frequency = midiToFrequency(0, tuning);
-playInstrument(violaPlucker, frequency, at, duration);
+playInstance(violaInstance, frequency, at, duration);
 
 const root = 0; // optional
 const niceFrequency = midiToFrequency(0, root, tuning);
-playInstrument(violaPlucker, niceFrequency, at + 1.0, duration);
+playInstance(violaInstance, niceFrequency, at + 1.0, duration);
 ```
 
 ## Sequencing notes into music
@@ -163,26 +166,41 @@ const violaSequence = [[0, 2, 4, 5], [5, 4, 2, 0], { alternate }];
 const celloSequence = [0, 2, 4, 5, { alternate, vibrato: 0.5 }];
 
 const tracks = [
-  [pluckedViola, violaSequence],
-  [pluckedCello, celloSequence],
+  [createInstrument(pluckedViola), violaSequence],
+  [createInstrument(pluckedCello), celloSequence],
 ];
 ```
 
 And now you can start using `scheduleMusic` to make the tracks play. It will take care of the timekeeping, but you will have to create your own `playNote` function.
 
-`playNote` will receive the instrument preset, note number, and other data required for playing it. Below is a _simple_ implementation of it: it does not support polyphony (playing multiple sounds from the same instrument at once, like chords) or cleaning up unused instruments.
+`playNote` will receive the instrument, note number, and other data required for playing it. Below is a simple-ish implementation of it. It does not support cleaning up unused instrument instances, because how that should work is highly dependent on how the app you're building works.
 
 ```js
-const instruments = new Map();
+const instrumentInstanceSets = new Map();
 
-const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, vibrato) => {
-  // Get the created instrument, if it exists
-  let instrument = instruments.get(instrumentPreset);
+const playNote = (instrument, noteNumber, at, duration, velocity, volume, vibrato) => {
+  if (!instrument) return;
 
-  // Create the instrument, if it doesn't exist yet
-  if (!instrument) {
-    instrument = createInstrument(instrumentPreset, audioContext);
-    instruments.set(instrumentPreset, instrument);
+  // Get or create the set of instances for this instrument
+  const instrumentInstances =
+    instrumentInstanceSets.get(instrument) || instrumentInstanceSets.set(instrument, new Set()).get(instrument);
+
+  // Find the least recently played instance, if there is one
+  let instance = null;
+  let instanceWillPlayUntil = Number.POSITIVE_INFINITY;
+
+  for (const instrumentInstance of instrumentInstances) {
+    if (instrumentInstance.willPlayUntil < instanceWillPlayUntil) {
+      instanceWillPlayUntil = instrumentInstance.willPlayUntil;
+      instance = instrumentInstance;
+    }
+  }
+
+  // If no instance was found, or if the instance will play until after our note,
+  // try to create a new one instead, if the instrument's preset allows for more instances
+  if (!instance || (instanceWillPlayUntil > at && instrumentInstances.size < instrument.preset.maxInstances)) {
+    instance = createInstance(instrument, audioContext);
+    instrumentInstances.add(instance);
 
     // And connect it
     // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
@@ -191,16 +209,19 @@ const playNote = (instrumentPreset, noteNumber, at, duration, velocity, volume, 
     // I use the following, but I'm uncertain if they're enough for every possible scenario.
     // 1. A DynamicsCompressor to guard against super high volumes.
     // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-    instrument.output.connect(audioContext.destination);
+    instance.output.connect(audioContext.destination);
   }
 
-  // Play it
+  // Finally, play it
   const frequency = midiToFrequency(noteNumber);
-  playInstrument(instrument, frequency, at, duration, velocity, vibrato);
+  playInstance(instance, frequency, at, duration, velocity, vibrato);
+
+  // TODO: figure out how to destroy instrument instances after they're no longer needed
+  // destroyInstance(instance);
 }
 ```
 
-And finally, you just have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
+After all that, you still have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
 A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.04–0.5 seconds should be a good choice.
 
@@ -236,7 +257,7 @@ Internally each instrument uses the following:
 6. 1–4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-I've tried to avoid object allocation when notes are scheduled or instruments are played, to minimise garbage collection pauses.
+I've tried to avoid all object allocation when notes are scheduled or instruments are played, to minimise garbage collection pauses.
 
 # Inspirations and resources that helped me figure all of this out
 

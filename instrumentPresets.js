@@ -17,13 +17,16 @@ export const genericInstrument = Object.seal({
   /** @type {number} brass instrument style initial note vibration amount: causes the "braaap" */
   initialInstability: 0.0,
 
+  /** @type {number}  */
+  maxInstances: 1,
+
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
   /** @type {number} for how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   attack: 0.09,
   /** @type {number} for how long before the note reaches the `sustain` level after finishing its `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   decay: 0.0,
-  /** @type {number} for how loud the rest of note is compared to the `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {number} How loud the rest of note is compared to the `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime`. Also enables "sustain pedal" emulation: notes will try to decay for their entire duration. */
   sustain: 1.0,
   /** @type {number} for how long the note takes to "fade out": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   release: 0.056,
@@ -334,9 +337,9 @@ const plucked = {
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
   ],
   attack: 0.013,
-  decay: 0.91,
-  sustain: 0.034,
-  release: 0.056,
+  decay: 1.0,
+  sustain: 0.0,
+  release: 0.0,
   vibratoEffectOnPitch: 0.0,
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnLowpass: 0.0,
@@ -376,8 +379,8 @@ export const hammeredDulcimer = {
   ],
   attack: 0.013,
   decay: 1.0,
-  sustain: 0.034,
-  release: 0.056,
+  sustain: 0.0,
+  release: 0.0,
 
   lowPassPitchTracking: 0.236,
   highPassPitchTracking: 0.034,

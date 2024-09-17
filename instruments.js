@@ -1,8 +1,15 @@
 /**
   @param {import ("./instrumentPresets.js").Instrument} preset
+*/
+export const createInstrument = (preset) => {
+  return { preset };
+};
+
+/**
+  @param {ReturnType<typeof createInstrument>} instrument
   @param {AudioContext} audioContext
 */
-export const createInstrument = (preset, audioContext) => {
+export const createInstance = ({ preset }, audioContext) => {
   const {
     oscillators: oscillatorTypes,
     vibratoType,
@@ -147,7 +154,7 @@ export const createInstrument = (preset, audioContext) => {
   };
 };
 
-export const playInstrument = (
+export const playInstance = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ pitch,
   /** @type {number} */ at,
@@ -297,7 +304,8 @@ export const playInstrument = (
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0) {
     const decayDelay = dynamicAttack * 4.0;
-    const decayDynamics = Math.max(1.0, duration - decayDelay) * 0.333333;
+    const hasSustainPedal = sustain > 0.0;
+    const decayDynamics = hasSustainPedal ? Math.max(1.0, duration - decayDelay) * 0.333333 : 0.333333;
 
     const dynamicDecay = decay * decayDynamics;
     const decayAt = startAt + decayDelay;
@@ -345,8 +353,8 @@ export const playInstrument = (
   instrument.previousPitch = pitch;
 };
 
-/** @param {ReturnType<typeof createInstrument>} obj */
-export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
+/** @param {ReturnType<typeof createInstance>} obj */
+export const destroyInstance = ({ output, oscillators, vibratoMain }) => {
   // TODO: Is this all that's needed?
   // Or do all nodes need to be disconnected?
   output.disconnect();
