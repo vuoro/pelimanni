@@ -38,7 +38,7 @@ export const createInstrument = (preset, audioContext) => {
 
   if (peakingFilters.length > 0) {
     for (const { frequency, gain, Q } of peakingFilters) {
-      maxPeak = Math.max(maxPeak, Math.log2(gain));
+      maxPeak = Math.max(maxPeak, gain ** 0.764);
       const peakFilter = new BiquadFilterNode(audioContext, {
         type: "peaking",
         frequency: frequency,
@@ -141,7 +141,6 @@ export const createInstrument = (preset, audioContext) => {
     idleVibratoLowPassTarget,
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
-    baseVolume,
     preset,
     willPlayUntil: 0,
     previousPitch: 440,
