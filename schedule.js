@@ -71,7 +71,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, safe
     // Destroy inactive instrument instances, and remove instruments with no instances remaining
     for (const [preset, instrument] of schedule.instruments) {
       for (const instance of instrument.instances) {
-        if (schedule.scheduledUpTo - instance.willPlayUntil > 10.0) {
+        if (schedule.scheduledUpTo - instance.willPlayUntil > cycle * 2.0) {
           destroyInstance(instance, instrument);
         }
       }
