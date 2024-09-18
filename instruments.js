@@ -221,7 +221,7 @@ export const playInstance = (
   const attackDynamics =
     (0.764 + 0.236 * 3.0 * longness) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (0.854 + 0.146 * 2.0 * dynamicSlowness) *
+    (0.854 + 0.146 * 2.0 * dynamicVelocity) *
     situationalDynamics;
   const releaseDynamics =
     (0.764 + 0.236 * 3.0 * longness) *
@@ -309,7 +309,11 @@ export const playInstance = (
 
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0 && decayAt < endAt) {
-    const dynamicDecay = mix(decay, (endAt - decayAt) * 0.333333, 0.382);
+    const dynamicDecay = mix(
+      decay * (0.854 + 0.146 * 2.0 * lowPitchness) * (0.854 + 0.146 * 2.0 * dynamicSlowness),
+      (endAt - decayAt) * 0.333333,
+      0.333333,
+    );
 
     const decayDuration = dynamicDecay * 3.0;
     if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + decayDuration);
