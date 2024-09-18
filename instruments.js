@@ -304,36 +304,33 @@ export const playInstance = (
   // Decay if needed
   if (decay > 0.0 && sustain !== 1.0) {
     const decayDelay = dynamicAttack * 4.0;
-    const hasSustainPedal = sustain > 0.0;
-    const decayDynamics = hasSustainPedal ? Math.max(1.0, duration - decayDelay) * 0.333333 : 0.333333;
-
-    const dynamicDecay = decay * decayDynamics;
     const decayAt = startAt + decayDelay;
 
-    // Only decay if it starts before release
-    if (decayAt < endAt) {
-      endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0); // extend release past decay
+    const hasSustainPedal = sustain > 0.0;
+    const decayTime = hasSustainPedal ? Math.max(decay, decayAt - endAt) : decay;
 
-      const dynamicSustain = sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.382);
+    endAt = Math.max(endAt, decayAt + decayTime); // extend release past decay
 
-      // Oscillators
-      for (const { gainNode, gainTarget } of oscillators) {
-        gainNode.gain.setTargetAtTime(gainTarget * volume * dynamicSustain, decayAt, dynamicDecay);
-      }
+    const dynamicDecay = decayTime * 0.333333;
+    const dynamicSustain = sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.236);
 
-      // Filters
-      const dynamicFilterDecay = dynamicDecay * (1.146 - 0.382 * dynamicVelocity);
-      lowPassFilter.frequency.setTargetAtTime(
-        mix(pitch, lowPassTarget, dynamicSustain),
-        decayAt,
-        dynamicFilterDecay * dynamicLowPassSpeed,
-      );
-      highPassFilter.frequency.setTargetAtTime(
-        mix(pitch, highPassTarget, dynamicSustain),
-        decayAt,
-        dynamicFilterDecay * dynamicHighPassSpeed,
-      );
+    // Oscillators
+    for (const { gainNode, gainTarget } of oscillators) {
+      gainNode.gain.setTargetAtTime(gainTarget * volume * dynamicSustain, decayAt, dynamicDecay);
     }
+
+    // Filters
+    const dynamicFilterDecay = dynamicDecay * (1.146 - 0.382 * dynamicVelocity);
+    lowPassFilter.frequency.setTargetAtTime(
+      mix(pitch, lowPassTarget, dynamicSustain),
+      decayAt,
+      dynamicFilterDecay * dynamicLowPassSpeed,
+    );
+    highPassFilter.frequency.setTargetAtTime(
+      mix(pitch, highPassTarget, dynamicSustain),
+      decayAt,
+      dynamicFilterDecay * dynamicHighPassSpeed,
+    );
   }
 
   // Release
