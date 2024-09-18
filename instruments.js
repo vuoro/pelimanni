@@ -240,6 +240,7 @@ export const playInstance = (
 
   const vibratoAttack = dynamicAttack * 0.09;
   const vibratoGainAttack = dynamicAttack * 0.236;
+  const vibratoRelease = dynamicRelease * 0.09;
 
   const highPassTarget = mix(highPassFrequency, pitch, highPassPitchTracking * (1.0 - lowPitchness * lowPitchness));
   const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
@@ -262,7 +263,7 @@ export const playInstance = (
 
   const instabilityStopsAt =
     initialInstability > 0.0
-      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.618) -
+      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.382) -
         Number.EPSILON * 2.0
       : startAt;
   const vibratoAt = Math.min(endAt, instabilityStopsAt + dynamicAttack) - Number.EPSILON;
@@ -346,10 +347,10 @@ export const playInstance = (
   lowPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicLowPassSpeed);
   highPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicHighPassSpeed);
 
-  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endVibratoAt, dynamicRelease);
-  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
-  vibratoPitchGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
-  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endVibratoAt, dynamicRelease);
+  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endVibratoAt, vibratoRelease);
+  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
+  vibratoPitchGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
+  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
 
   // Metadata
   instrument.willPlayUntil = endAt;

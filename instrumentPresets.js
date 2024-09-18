@@ -77,7 +77,7 @@ export const flute = {
   ...genericInstrument,
   oscillators: [
     { type: "triangle", gain: 1 / 2 },
-    { type: "triangle", gain: 1 / 2, glide: 0.005 },
+    { type: "triangle", gain: 1 / 2, glide: 0.004 },
   ],
   attack: 0.09,
   decay: 0.236,
@@ -88,7 +88,7 @@ export const flute = {
   lowPassSpeedMultiplier: 0.764,
   highPassSpeedMultiplier: 0.91,
   vibratoEffectOnLowPass: 900.0,
-  peakingFilters: [{ frequency: 810, gain: 1.618, Q: 2.0 }],
+  peakingFilters: [{ frequency: 810, gain: 2.0, Q: 3.0 }],
 };
 
 /** @type {Instrument} */
@@ -96,7 +96,7 @@ export const piccolo = {
   ...flute,
   highPassFrequency: 587.328,
   lowPassFrequency: 4185.984,
-  peakingFilters: [{ frequency: 900, gain: 1.618, Q: 2.0 }],
+  peakingFilters: [{ frequency: 900, gain: 2.0, Q: 3.0 }],
 };
 
 /** @type {Instrument} */
@@ -116,8 +116,8 @@ export const oboe = {
   lowPassFrequency: 1760.0,
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
-    { frequency: 1400, gain: 1.618, Q: 2.0 },
-    { frequency: 2950, gain: 2.0, Q: 2.0 },
+    { frequency: 1400, gain: 2.0, Q: 3.0 },
+    { frequency: 2950, gain: 3.0, Q: 2.0 },
   ],
 };
 
@@ -127,8 +127,8 @@ export const bassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
   peakingFilters: [
-    { frequency: 440, gain: 1.618, Q: 2.0 },
-    { frequency: 1180, gain: 2.0, Q: 2.0 },
+    { frequency: 440, gain: 2.0, Q: 3.0 },
+    { frequency: 1180, gain: 2.0, Q: 3.0 },
   ],
 };
 
@@ -138,8 +138,8 @@ export const contrabassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 466.16,
   peakingFilters: [
-    { frequency: 250, gain: 1.618, Q: 2.0 },
-    { frequency: 450, gain: 1.618, Q: 2.0 },
+    { frequency: 250, gain: 2.0, Q: 3.0 },
+    { frequency: 450, gain: 2.0, Q: 3.0 },
   ],
 };
 
@@ -160,8 +160,8 @@ export const clarinet = {
   lowPassFrequency: 2092.992,
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
-    { frequency: 1180, gain: 1.618, Q: 2.0 },
-    { frequency: 2700, gain: 2.0, Q: 2.0 },
+    { frequency: 1180, gain: 2.0, Q: 3.0 },
+    { frequency: 2700, gain: 3.0, Q: 2.0 },
   ],
 };
 
@@ -184,9 +184,9 @@ export const saxophone = {
   lowPassFrequency: 1567.968,
   vibratoEffectOnPitch: 30,
   peakingFilters: [
-    { frequency: 1100, gain: 1.618, Q: 2.0 },
-    { frequency: 1900, gain: 2.0, Q: 1.0 },
-    { frequency: 3100, gain: 2.0, Q: 1.0 },
+    { frequency: 1100, gain: 2.0, Q: 3.0 },
+    { frequency: 1900, gain: 3.0, Q: 3.0 },
+    { frequency: 3100, gain: 3.0, Q: 2.0 },
   ],
 };
 
@@ -211,8 +211,8 @@ export const trumpet = {
   vibratoEffectOnPitch: 30,
 
   peakingFilters: [
-    { frequency: 1200, gain: 1.618, Q: 2.0 },
-    { frequency: 2200, gain: 2.0, Q: 2.0 },
+    { frequency: 1200, gain: 2.0, Q: 3.0 },
+    { frequency: 2200, gain: 3.0, Q: 3.0 },
   ],
 };
 
@@ -222,8 +222,8 @@ export const trombone = {
   highPassFrequency: 82.406,
   lowPassFrequency: 698.464,
   peakingFilters: [
-    { frequency: 520, gain: 1.618, Q: 2.0 },
-    { frequency: 1500, gain: 2.0, Q: 2.0 },
+    { frequency: 520, gain: 2.0, Q: 3.0 },
+    { frequency: 1500, gain: 3.0, Q: 3.0 },
   ],
 };
 
@@ -233,8 +233,8 @@ export const bassTrombone = {
   highPassFrequency: 58.27,
   lowPassFrequency: 466.16,
   peakingFilters: [
-    { frequency: 370, gain: 1.618, Q: 2.0 },
-    { frequency: 720, gain: 2.0, Q: 2.0 },
+    { frequency: 370, gain: 2.0, Q: 3.0 },
+    { frequency: 720, gain: 3.0, Q: 3.0 },
   ],
 };
 
@@ -243,7 +243,7 @@ export const frenchHorn = {
   ...bassTrombone,
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
-  peakingFilters: [{ frequency: 450, gain: 1.618, Q: 2.0 }],
+  peakingFilters: [{ frequency: 450, gain: 2.0, Q: 3.0 }],
 };
 
 /** @type {Instrument} */
@@ -252,8 +252,8 @@ export const tuba = {
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
   peakingFilters: [
-    { frequency: 230, gain: 1.618, Q: 2.0 },
-    { frequency: 400, gain: 1.618, Q: 2.0 },
+    { frequency: 230, gain: 2.0, Q: 3.0 },
+    { frequency: 400, gain: 2.0, Q: 3.0 },
   ],
 };
 
@@ -397,7 +397,7 @@ export const hammeredDulcimer = {
     { frequency: 400, gain: 2.0, Q: 3.0 },
     { frequency: 700, gain: 2.0, Q: 3.0 },
     { frequency: 900, gain: 2.0, Q: 3.0 },
-    { frequency: 1300, gain: 2.0, Q: 2.0 },
+    { frequency: 1300, gain: 2.0, Q: 3.0 },
     { frequency: 2700, gain: 3.0, Q: 2.0 },
     { frequency: 4000, gain: 3.0, Q: 2.0 },
   ],
