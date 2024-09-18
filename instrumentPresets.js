@@ -13,7 +13,7 @@ export const genericInstrument = Object.seal({
   oscillators: [{ type: "triangle" }],
 
   /** @type {OscillatorType} the type of the oscillator for vibrato, LFO effects, and initialInstability */
-  vibratoType: "sine",
+  vibratoType: "triangle",
   /** @type {number} brass instrument style initial note vibration amount: causes the "braaap" */
   initialInstability: 0.0,
 
@@ -87,7 +87,7 @@ export const flute = {
   lowPassFrequency: 2349.312,
   lowPassSpeedMultiplier: 0.764,
   highPassSpeedMultiplier: 0.91,
-  vibratoEffectOnLowPass: 1000.0,
+  vibratoEffectOnLowPass: 900.0,
   peakingFilters: [{ frequency: 810, gain: 1.618, Q: 2.0 }],
 };
 
@@ -114,7 +114,7 @@ export const oboe = {
   highPassSpeedMultiplier: 0.91,
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
-  vibratoEffectOnLowPass: 1000.0,
+  vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
     { frequency: 1400, gain: 1.618, Q: 2.0 },
     { frequency: 2950, gain: 2.0, Q: 2.0 },
@@ -158,7 +158,7 @@ export const clarinet = {
   highPassSpeedMultiplier: 0.91,
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
-  vibratoEffectOnLowPass: 1000.0,
+  vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
     { frequency: 1180, gain: 1.618, Q: 2.0 },
     { frequency: 2700, gain: 2.0, Q: 2.0 },
@@ -182,7 +182,7 @@ export const saxophone = {
   highPassSpeedMultiplier: 0.618,
   highPassFrequency: 233.08,
   lowPassFrequency: 1567.968,
-  vibratoEffectOnLowPass: 1000.0,
+  vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1100, gain: 1.618, Q: 2.0 },
     { frequency: 1900, gain: 2.0, Q: 1.0 },
@@ -208,7 +208,6 @@ export const trumpet = {
   lowPassSpeedMultiplier: 0.91,
   highPassSpeedMultiplier: 0.618,
 
-  vibratoType: "triangle",
   vibratoEffectOnPitch: 30,
 
   peakingFilters: [
@@ -273,7 +272,6 @@ export const violin = {
   highPassFrequency: 196.0,
   lowPassFrequency: 4186.01,
 
-  vibratoType: "triangle",
   vibratoEffectOnPitch: 30,
 
   lowPassSpeedMultiplier: 0.854,

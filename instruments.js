@@ -246,7 +246,7 @@ export const playInstance = (
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = shouldVibrato
-    ? baseVibratoFrequency * (0.764 + highPitchness * dynamicVelocity * 0.618)
+    ? baseVibratoFrequency * (0.854 + highPitchness * dynamicVelocity * 0.382)
     : idleVibratoTarget;
 
   const vibratoLowPassTarget = shouldVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
@@ -262,7 +262,7 @@ export const playInstance = (
 
   const instabilityStopsAt =
     initialInstability > 0.0
-      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.5) -
+      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.618) -
         Number.EPSILON * 2.0
       : startAt;
   const vibratoAt = Math.min(endAt, instabilityStopsAt + dynamicAttack) - Number.EPSILON;
