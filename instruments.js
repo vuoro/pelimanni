@@ -96,9 +96,9 @@ export const createInstance = ({ preset, instances }, audioContext) => {
   const idleVibratoFrequency = 13 / 60;
   const idleVibratoLowPassTarget = 400;
   const idleVibratoPitchTarget = 3;
-  const idleVibratoVolumeTarget = 0.021;
+  const idleVibratoVolumeTarget = 0.021 * baseVolume;
 
-  // TODO: no need for this if there's no vibrato at all
+  // TODO: no need for this if there's no vibrato or instability at all?
   const vibratoMain = new OscillatorNode(audioContext, {
     type: vibratoType,
     frequency: idleVibratoFrequency,
@@ -238,6 +238,9 @@ export const playInstance = (
   const lowPassAttack = dynamicAttack * dynamicLowPassSpeed;
   const highPassAttack = dynamicAttack * dynamicHighPassSpeed;
 
+  const vibratoAttack = dynamicAttack * 0.09;
+  const vibratoGainAttack = dynamicAttack * 0.236;
+
   const highPassTarget = mix(highPassFrequency, pitch, highPassPitchTracking * (1.0 - lowPitchness * lowPitchness));
   const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
 
@@ -259,7 +262,8 @@ export const playInstance = (
 
   const instabilityStopsAt =
     initialInstability > 0.0
-      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness) - Number.EPSILON * 2.0
+      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.5) -
+        Number.EPSILON * 2.0
       : startAt;
   const vibratoAt = Math.min(endAt, instabilityStopsAt + dynamicAttack) - Number.EPSILON;
 
@@ -287,22 +291,18 @@ export const playInstance = (
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
     const instabilityTarget = 78 + 4 * highPitchness;
-    // TODO: maybe this should be (lowPassTarget - pitch) / instabilityTarget, in cents?
-    const instabilityEffect = initialInstability * 600 * pitchDifferentness;
+    // TODO: maybe this should be (lowPassTarget - pitch), in cents?
+    const instabilityEffect = initialInstability * 600 * pitchDifferentness ** 0.5;
 
-    vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, 0.146);
-    vibratoLowPassGain?.gain.setTargetAtTime(instabilityEffect, startAt, 0.056);
+    vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, vibratoAttack);
+    vibratoLowPassGain?.gain.setTargetAtTime(instabilityEffect, startAt, vibratoGainAttack);
 
-    vibratoMain.frequency.setTargetAtTime(vibratoTarget, instabilityStopsAt, 0.001);
-    vibratoLowPassGain?.gain.setTargetAtTime(vibratoLowPassTarget, instabilityStopsAt, 0.001);
+    vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityStopsAt, 0.001);
+    vibratoLowPassGain?.gain.setTargetAtTime(0.0, instabilityStopsAt, 0.001);
   }
 
   // Fire up vibrato
-  const vibratoAttack = dynamicAttack * 0.09;
-  const vibratoGainAttack = dynamicAttack * 0.236;
-
   vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
-
   vibratoLowPassGain?.gain.setTargetAtTime(vibratoLowPassTarget, vibratoAt, vibratoGainAttack);
   vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
