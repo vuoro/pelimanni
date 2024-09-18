@@ -36,7 +36,7 @@ The presets define the instrument's timbre. They also, at runtime, combine with 
 
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, create an instance of it, connect it, and call `playInstrument` with it.
 
-The instances are necessary because of some instruments needing the ability to play multiple sounds at once (polyphony).
+Each instance is monophonic (it can only play 1 sound at a time), but you can combine multiple instances to play them as if they're polyphonic.
 
 ```js
   import {createInstrument, createInstance, playInstance, destroyInstance} from "@vuoro/pelimanni/instruments.js";
@@ -68,7 +68,7 @@ The instances are necessary because of some instruments needing the ability to p
   playInstance(violaInstance, frequency, at, duration, velocity, volume, vibratoAmount);
 ```
 
-When you don't need the instrument anymore you can destroy its instance(s), to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
+When you don't need an instrument's instance anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
 
 ```js
 destroyInstance(violaInstance);
@@ -171,73 +171,42 @@ const tracks = [
 ];
 ```
 
-And now you can start using `scheduleMusic` to make the tracks play. It will take care of the timekeeping, but you will have to create your own `playNote` function.
+## Scheduling track playback
 
-`playNote` will receive the instrument, note number, and other data required for playing it. Below is a simple-ish implementation of it. It does not support cleaning up unused instrument instances, because how that should work is highly dependent on how the app you're building works.
+If you have tracks as explained above, you can use `scheduleMusic` to make play them.
+
+It will take care of timekeeping, managing instrument instances, and playing them, but you will have to provide your own `connectInstance` function, to let it connect the instances to your audio system.
 
 ```js
-const instrumentInstanceSets = new Map();
-
-const playNote = (instrument, noteNumber, at, duration, velocity, volume, vibrato) => {
-  if (!instrument) return;
-
-  // Get or create the set of instances for this instrument
-  const instrumentInstances =
-    instrumentInstanceSets.get(instrument) || instrumentInstanceSets.set(instrument, new Set()).get(instrument);
-
-  // Find the least recently played instance, if there is one
-  let instance = null;
-  let instanceWillPlayUntil = Number.POSITIVE_INFINITY;
-
-  for (const instrumentInstance of instrumentInstances) {
-    if (instrumentInstance.willPlayUntil < instanceWillPlayUntil) {
-      instanceWillPlayUntil = instrumentInstance.willPlayUntil;
-      instance = instrumentInstance;
-    }
-  }
-
-  // If no instance was found, or if the instance will play until after our note,
-  // try to create a new one instead, if the instrument's preset allows for more instances
-  if (!instance || (instanceWillPlayUntil > at && instrumentInstances.size < instrument.preset.maxInstances)) {
-    instance = createInstance(instrument, audioContext);
-    instrumentInstances.add(instance);
-
-    // And connect it
-    // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
-    // Otherwise bugs you cause may literally cause **PHYSICAL PAIN** to yourself or your users.
-    // Yeah. Working with audio is a bit scary. :|
-    // I use the following, but I'm uncertain if they're enough for every possible scenario.
-    // 1. A DynamicsCompressor to guard against super high volumes.
-    // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-    instance.output.connect(audioContext.destination);
-  }
-
-  // Finally, play it
-  const frequency = midiToFrequency(noteNumber);
-  playInstance(instance, frequency, at, duration, velocity, vibrato);
-
-  // TODO: figure out how to destroy instrument instances after they're no longer needed
-  // destroyInstance(instance);
+const connectInstance = (instrumentInstance) => {
+  // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
+  // Otherwise bugs you cause may literally cause **PHYSICAL PAIN** to yourself or your users.
+  // Yeah. Working with audio is a bit scary. :|
+  // I use the following, but I'm uncertain if they're enough for every possible scenario.
+  // 1. A DynamicsCompressor to guard against super high volumes.
+  // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
+  instance.output.connect(audioContext.destination);
 }
 ```
 
-After all that, you still have to call `scheduleMusic` at the appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
+Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
 A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.04–0.5 seconds should be a good choice.
 
 Below I'm calling it on an interval 4 times as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
 
-The required parameters are:
+The parameters are:
 - your `tracks`: array of `[instrumentPreset, sequence]`
 - your `cycle` from earlier above
 - your `AudioContext`
-- your `playNote` function from above
+- your `connectInstance` function from above
+- (optional) `playAhead` in seconds: `0.2` by default
 
 ```js
 import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 
-const playAhead = 0.1;
-const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, playNote, playAhead);
+const playAhead = 0.2;
+const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstance, playAhead);
 
 setInterval(callScheduleMusic, playAhead / 4.0 * 1000.0);
 document.addEventListener("visibilitychange", tryToScheduleMusic);
@@ -257,7 +226,9 @@ Internally each instrument uses the following:
 6. 1–4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-I've tried to avoid all object allocation when notes are scheduled or instruments are played, to minimise garbage collection pauses.
+I try to avoid object allocation as much as possible in the scheduler and instruments playing functions, to minimise garbage collection pauses.
+
+`scheduleMusic` has to loop through the `tracks` arrays a few times whenever it's called, which means very large sets of tracks might spend a fair amount of main thread CPU time.
 
 # Inspirations and resources that helped me figure all of this out
 

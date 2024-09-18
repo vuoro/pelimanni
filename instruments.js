@@ -2,7 +2,7 @@
   @param {import ("./instrumentPresets.js").Instrument} preset
 */
 export const createInstrument = (preset) => {
-  return { preset };
+  return { preset, instances: new Set() };
 };
 
 /**
@@ -350,10 +350,17 @@ export const playInstance = (
   instrument.previousPitch = pitch;
 };
 
-/** @param {ReturnType<typeof createInstance>} obj */
-export const destroyInstance = ({ output, oscillators, vibratoMain }) => {
+/**
+  @param {ReturnType<typeof createInstance>} instance
+  @param {ReturnType<typeof createInstrument>} instrument
+*/
+export const destroyInstance = (instance, instrument) => {
+  instrument.instances.delete(instance);
+
   // TODO: Is this all that's needed?
   // Or do all nodes need to be disconnected?
+  const { output, oscillators, vibratoMain } = instance;
+
   output.disconnect();
   for (const { oscillatorNode } of oscillators) {
     oscillatorNode.stop();

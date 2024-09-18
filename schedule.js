@@ -1,38 +1,5 @@
-const schedules = new WeakMap();
-
-const createSchedule = () => ({
-  scheduledUpTo: 0.0,
-  pendingNote: Object.seal({
-    pending: false,
-    instrument: null,
-    note: 0,
-    root: 0,
-    at: 0,
-    duration: 0,
-    velocity: 0,
-    volume: 0,
-    vibrato: 0,
-  }),
-});
-
-/**
- * @param {PlayNote} playNote
- * @typedef {(ReturnType<typeof createSchedule>)["pendingNote"]} PendingNote
- * @param {PendingNote} pendingNote
- */
-const playPendingNote = (playNote, pendingNote) => {
-  pendingNote.pending = false;
-  playNote(
-    pendingNote.instrument,
-    pendingNote.note,
-    pendingNote.root,
-    pendingNote.at,
-    pendingNote.duration,
-    pendingNote.velocity,
-    pendingNote.volume,
-    pendingNote.vibrato,
-  );
-};
+import { createInstance, createInstrument, destroyInstance, playInstance } from "./instruments.js";
+import { midiToJustFrequency } from "./notes.js";
 
 /**
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
@@ -45,20 +12,21 @@ const playPendingNote = (playNote, pendingNote) => {
  * @property {boolean=} alternate - sequentially pick just one entry, instead of subdividing time
  * @property {boolean=} chord - play all entries at the same time, instead of subdividing time
  * @typedef {(PlayableOptions | number | undefined | Playable)[]} Playable
- * @typedef {(instrument: Instrument, playable: Playable | number, root: number, at: number, duration: number, velocity: number, volume: number, vibrato: number) => void} PlayNote
+ * @typedef {(instrument: ReturnType<typeof createInstance>) => void} ConnectInstance
  * @param {([Instrument, Playable])[]} tracks
  * @param {number} cycle
  * @param {AudioContext} audioContext
- * @param {PlayNote} playNote
+ * @param {ConnectInstance} connectInstance
  */
-export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargin = 0.2) => {
+export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, safetyMargin = 0.2) => {
   const { currentTime } = audioContext;
   if (audioContext.state !== "running") return;
 
-  // TODO: type pendingNote
-  const schedule = schedules.get(audioContext) || schedules.set(audioContext, createSchedule()).get(audioContext);
+  const schedule =
+    schedules.get(audioContext) ||
+    schedules.set(audioContext, createSchedule(audioContext, connectInstance)).get(audioContext);
 
-  // TODO: use baseLatency to better with sounds with visuals?
+  // TODO: use baseLatency to better align with sounds with visuals?
 
   // Skip to current time if needed
   if (schedule.scheduledUpTo < currentTime) {
@@ -75,15 +43,22 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
     const cycleEndsAt = (Math.floor(from / cycle) + 1.0) * cycle;
     const cyclesToCheck = to > cycleEndsAt ? 2 : 1;
 
-    // Schedule as much of the ongoing cycle as we can reach
-    for (const [instrument, sequence] of tracks) {
+    // Start scheduling the tracks
+    for (const [preset, sequence] of tracks) {
+      if (!preset) continue;
+
       let checkedCycles = 0;
 
+      // Get or create the instrument
+      const instrument =
+        schedule.instruments.get(preset) || schedule.instruments.set(preset, createInstrument(preset)).get(preset);
+
+      // Schedule the cycles within reach, and keep going if a note is pending
       while (checkedCycles < cyclesToCheck || schedule.pendingNote.pending) {
         const cycleStartedAt = (Math.floor(from / cycle) + checkedCycles) * cycle;
         const period = cycleStartedAt / cycle;
 
-        schedulePart(schedule.pendingNote, playNote, instrument, sequence, cycleStartedAt, cycle, period, from, to);
+        schedulePart(schedule, instrument, sequence, cycleStartedAt, cycle, period, from, to);
 
         checkedCycles++;
         if (checkedCycles > 64)
@@ -92,12 +67,47 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
           );
       }
     }
+
+    // Destroy inactive instrument instances, and remove instruments with no instances remaining
+    for (const [preset, instrument] of schedule.instruments) {
+      for (const instance of instrument.instances) {
+        if (schedule.scheduledUpTo - instance.willPlayUntil > 10.0) {
+          destroyInstance(instance, instrument);
+        }
+      }
+
+      if (instrument.instances.size === 0) schedule.instruments.delete(preset);
+    }
   }
 };
 
+const schedules = new WeakMap();
+
 /**
- * @param {PendingNote} pendingNote
- * @param {PlayNote} playNote
+  @param {AudioContext} audioContext
+  @param {(instrument: ReturnType<typeof createInstance>) => void} connectInstance
+*/
+const createSchedule = (audioContext, connectInstance) => ({
+  scheduledUpTo: 0.0,
+  instruments: new Map(),
+  audioContext,
+  connectInstance,
+  pendingNote: Object.seal({
+    pending: false,
+    instrument: null,
+    note: 0,
+    root: 0,
+    at: 0,
+    duration: 0,
+    velocity: 0,
+    volume: 0,
+    vibrato: 0,
+  }),
+});
+
+/**
+ * @typedef {ReturnType<typeof createSchedule>} Schedule
+ * @param {Schedule} schedule
  * @param {Instrument} instrument
  * @param {Playable | number | undefined} playable
  * @param {number} velocityFromParent
@@ -107,8 +117,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
  * @param {number} rootFromParent
  */
 const schedulePart = (
-  pendingNote,
-  playNote,
+  schedule,
   instrument,
   playable,
   at = 0.0,
@@ -122,13 +131,13 @@ const schedulePart = (
   transposeFromParent = undefined,
   rootFromParent = undefined,
 ) => {
-  if (at > to && !pendingNote.pending) return;
+  if (at > to && !schedule.pendingNote.pending) return;
 
   if (typeof playable === "number") {
     if (at < from) return;
 
     // End pending note, if there is one
-    if (pendingNote.pending) playPendingNote(playNote, pendingNote);
+    if (schedule.pendingNote.pending) playPendingNote(schedule);
 
     // Start a new note if it's within reach
     if (at > to) return;
@@ -139,30 +148,28 @@ const schedulePart = (
     const volume = volumeFromParent;
     const vibrato = vibratoFromParent;
 
-    // console.log(note, "start");
+    schedule.pendingNote.instrument = instrument;
+    schedule.pendingNote.note = note;
+    schedule.pendingNote.root = root;
+    schedule.pendingNote.at = at;
+    schedule.pendingNote.duration = duration;
+    schedule.pendingNote.velocity = velocity;
+    schedule.pendingNote.volume = volume;
+    schedule.pendingNote.vibrato = vibrato;
 
-    pendingNote.instrument = instrument;
-    pendingNote.note = note;
-    pendingNote.root = root;
-    pendingNote.at = at;
-    pendingNote.duration = duration;
-    pendingNote.velocity = velocity;
-    pendingNote.volume = volume;
-    pendingNote.vibrato = vibrato;
-
-    pendingNote.pending = true;
-    return;
+    schedule.pendingNote.pending = true;
+    return schedule;
   }
 
   // Skip nulls, but also make them end pending notes
   if (playable === null) {
-    if (pendingNote.pending) playPendingNote(playNote, pendingNote);
+    if (schedule.pendingNote.pending) playPendingNote(schedule);
     return;
   }
 
   // If extender, extend pending note
   if (playable === undefined) {
-    if (pendingNote.pending) pendingNote.duration += duration;
+    if (schedule.pendingNote.pending) schedule.pendingNote.duration += duration;
     return;
   }
 
@@ -206,8 +213,7 @@ const schedulePart = (
     const childPeriod = (period - index) / length;
 
     return schedulePart(
-      pendingNote,
-      playNote,
+      schedule,
       instrument,
       // FIXME: recursive types…
       child,
@@ -230,8 +236,7 @@ const schedulePart = (
       const child = playable[index];
 
       schedulePart(
-        pendingNote,
-        playNote,
+        schedule,
         instrument,
         child,
         at,
@@ -258,8 +263,7 @@ const schedulePart = (
     const childAt = at + index * childDuration;
 
     schedulePart(
-      pendingNote,
-      playNote,
+      schedule,
       instrument,
       child,
       childAt,
@@ -274,4 +278,32 @@ const schedulePart = (
       root,
     );
   }
+};
+
+/**
+ @param {Schedule} schedule
+ */
+const playPendingNote = ({ connectInstance, pendingNote, audioContext }) => {
+  pendingNote.pending = false;
+
+  const { instrument, note, root, at, duration, velocity, volume, vibrato } = pendingNote;
+
+  // Find a free instance
+  let instance = null;
+
+  for (const potentialInstance of instrument.instances) {
+    if (potentialInstance.willPlayUntil <= at) {
+      instance = potentialInstance;
+      break;
+    }
+  }
+
+  // If one wasn't found, create it
+  if (!instance) {
+    instance = createInstance(instrument, audioContext);
+    connectInstance(instance);
+  }
+
+  // Play the note
+  playInstance(instance, midiToJustFrequency(note, root), at, duration, velocity, volume, vibrato);
 };
