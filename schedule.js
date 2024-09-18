@@ -1,5 +1,39 @@
 const schedules = new WeakMap();
 
+const createSchedule = () => ({
+  scheduledUpTo: 0.0,
+  pendingNote: Object.seal({
+    pending: false,
+    instrument: null,
+    note: 0,
+    root: 0,
+    at: 0,
+    duration: 0,
+    velocity: 0,
+    volume: 0,
+    vibrato: 0,
+  }),
+});
+
+/**
+ * @param {PlayNote} playNote
+ * @typedef {(ReturnType<typeof createSchedule>)["pendingNote"]} PendingNote
+ * @param {PendingNote} pendingNote
+ */
+const playPendingNote = (playNote, pendingNote) => {
+  pendingNote.pending = false;
+  playNote(
+    pendingNote.instrument,
+    pendingNote.note,
+    pendingNote.root,
+    pendingNote.at,
+    pendingNote.duration,
+    pendingNote.velocity,
+    pendingNote.volume,
+    pendingNote.vibrato,
+  );
+};
+
 /**
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
  * @typedef {object} PlayableOptions
@@ -22,24 +56,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
   if (audioContext.state !== "running") return;
 
   // TODO: type pendingNote
-  const schedule =
-    schedules.get(audioContext) ||
-    schedules
-      .set(audioContext, {
-        scheduledUpTo: 0.0,
-        pendingNote: Object.seal({
-          pending: false,
-          instrument: null,
-          note: 0,
-          root: 0,
-          at: 0,
-          duration: 0,
-          velocity: 0,
-          volume: 0,
-          vibrato: 0,
-        }),
-      })
-      .get(audioContext);
+  const schedule = schedules.get(audioContext) || schedules.set(audioContext, createSchedule()).get(audioContext);
 
   // TODO: use baseLatency to better with sounds with visuals?
 
@@ -79,14 +96,15 @@ export const scheduleMusic = (tracks, cycle, audioContext, playNote, safetyMargi
 };
 
 /**
-   @param {PlayNote} playNote
-   @param {Instrument} instrument
-   @param {Playable | number | undefined} playable
-   @param {number} velocityFromParent
-   @param {number} volumeFromParent
-   @param {number} vibratoFromParent
-   @param {number} transposeFromParent
-   @param {number} rootFromParent
+ * @param {PendingNote} pendingNote
+ * @param {PlayNote} playNote
+ * @param {Instrument} instrument
+ * @param {Playable | number | undefined} playable
+ * @param {number} velocityFromParent
+ * @param {number} volumeFromParent
+ * @param {number} vibratoFromParent
+ * @param {number} transposeFromParent
+ * @param {number} rootFromParent
  */
 const schedulePart = (
   pendingNote,
@@ -110,20 +128,7 @@ const schedulePart = (
     if (at < from) return;
 
     // End pending note, if there is one
-    if (pendingNote.pending) {
-      pendingNote.pending = false;
-      // console.log(pendingNote.note, "end from note");
-      playNote(
-        pendingNote.instrument,
-        pendingNote.note,
-        pendingNote.root,
-        pendingNote.at,
-        pendingNote.duration,
-        pendingNote.velocity,
-        pendingNote.volume,
-        pendingNote.vibrato,
-      );
-    }
+    if (pendingNote.pending) playPendingNote(playNote, pendingNote);
 
     // Start a new note if it's within reach
     if (at > to) return;
@@ -151,27 +156,13 @@ const schedulePart = (
 
   // Skip nulls, but also make them end pending notes
   if (playable === null) {
-    if (pendingNote.pending) {
-      pendingNote.pending = false;
-      // console.log(pendingNote.note, "end from pause");
-      playNote(
-        pendingNote.instrument,
-        pendingNote.note,
-        pendingNote.root,
-        pendingNote.at,
-        pendingNote.duration,
-        pendingNote.velocity,
-        pendingNote.volume,
-        pendingNote.vibrato,
-      );
-    }
+    if (pendingNote.pending) playPendingNote(playNote, pendingNote);
     return;
   }
 
   // If extender, extend pending note
-  if (playable === undefined && pendingNote.pending) {
-    // console.log(pendingNote.note, "extend");
-    pendingNote.duration += duration;
+  if (playable === undefined) {
+    if (pendingNote.pending) pendingNote.duration += duration;
     return;
   }
 
