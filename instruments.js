@@ -201,7 +201,7 @@ export const playInstance = (
     vibratoEffectOnVolume,
   } = preset;
 
-  const shouldVibrato = vibratoAmount > 0.0;
+  const hasVibrato = vibratoAmount > 0.0;
 
   const lowPitchness = highPassFrequency / pitch;
   const highPitchness = pitch / lowPassFrequency;
@@ -246,27 +246,29 @@ export const playInstance = (
   const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
-  const vibratoTarget = shouldVibrato
+  const vibratoTarget = hasVibrato
     ? baseVibratoFrequency * (0.854 + highPitchness * dynamicVelocity * 0.382)
     : idleVibratoTarget;
 
-  const vibratoLowPassTarget = shouldVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
-  const vibratoPitchTarget = shouldVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
-  const vibratoVolumeTarget =
-    (shouldVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
+  const vibratoLowPassTarget = hasVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
+  const vibratoPitchTarget = hasVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
+  const vibratoVolumeTarget = (hasVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
   // Start and end
   const startAt = Math.max(0.0, at - dynamicAttack * 0.146);
   const decayAt = startAt + dynamicAttack * 4.0;
   let endAt = at + Math.max(duration * 0.618, duration - dynamicRelease);
-  const endVibratoAt = endAt;
 
   const instabilityStopsAt =
     initialInstability > 0.0
-      ? Math.min(endAt, startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.382) -
-        Number.EPSILON * 2.0
+      ? Math.min(
+          endAt - Number.EPSILON * 2.0,
+          startAt + (lowPassAttack + highPassAttack) * 2.0 * pitchDifferentness ** 0.382,
+        )
       : startAt;
-  const vibratoAt = Math.min(endAt, instabilityStopsAt + dynamicAttack) - Number.EPSILON;
+  const vibratoAt = Math.min(endAt - Number.EPSILON, instabilityStopsAt + dynamicAttack);
+
+  const shouldDecay = decay > 0.0 && sustain !== 1.0 && decayAt < endAt;
 
   // Cancel pending events
   lowPassFilter.frequency.cancelAndHoldAtTime(startAt);
@@ -302,14 +304,14 @@ export const playInstance = (
     vibratoLowPassGain?.gain.setTargetAtTime(0.0, instabilityStopsAt, 0.001);
   }
 
-  // Fire up vibrato
+  // Fire up vibrato: idle or not
   vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
   vibratoLowPassGain?.gain.setTargetAtTime(vibratoLowPassTarget, vibratoAt, vibratoGainAttack);
   vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
 
   // Decay if needed
-  if (decay > 0.0 && sustain !== 1.0 && decayAt < endAt) {
+  if (shouldDecay) {
     const dynamicDecay = mix(
       decay * (0.854 + 0.146 * 2.0 * lowPitchness) * (0.854 + 0.146 * 2.0 * dynamicSlowness),
       (endAt - decayAt) * 0.333333,
@@ -347,10 +349,10 @@ export const playInstance = (
   lowPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicLowPassSpeed);
   highPassFilter.frequency.setTargetAtTime(pitch, endAt, dynamicRelease * dynamicHighPassSpeed);
 
-  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endVibratoAt, vibratoRelease);
-  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
-  vibratoPitchGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
-  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endVibratoAt, vibratoRelease);
+  vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endAt, vibratoRelease);
+  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endAt, vibratoRelease);
+  vibratoPitchGain?.gain.setTargetAtTime(0.0, endAt, vibratoRelease);
+  vibratoVolumeGain?.gain.setTargetAtTime(0.0, endAt, vibratoRelease);
 
   // Metadata
   instrument.willPlayUntil = endAt;
