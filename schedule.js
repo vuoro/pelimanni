@@ -284,9 +284,8 @@ const schedulePart = (
  @param {Schedule} schedule
  */
 const playPendingNote = ({ connectInstance, pendingNote, audioContext }) => {
-  pendingNote.pending = false;
-
   const { instrument, note, root, at, duration, velocity, volume, vibrato } = pendingNote;
+  pendingNote.pending = false;
 
   // Find a free instance
   let instance = null;

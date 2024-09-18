@@ -9,7 +9,7 @@ export const createInstrument = (preset) => {
   @param {ReturnType<typeof createInstrument>} instrument
   @param {AudioContext} audioContext
 */
-export const createInstance = ({ preset }, audioContext) => {
+export const createInstance = ({ preset, instances }, audioContext) => {
   const {
     oscillators: oscillatorTypes,
     vibratoType,
@@ -135,7 +135,7 @@ export const createInstance = ({ preset }, audioContext) => {
 
   vibratoMain.start(audioContext.currentTime);
 
-  return {
+  const instance = {
     oscillators,
     vibratoMain,
     vibratoLowPassGain,
@@ -152,6 +152,10 @@ export const createInstance = ({ preset }, audioContext) => {
     willPlayUntil: 0,
     previousPitch: 440,
   };
+
+  instances.add(instance);
+
+  return instance;
 };
 
 export const playInstance = (
