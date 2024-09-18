@@ -183,6 +183,7 @@ export const playInstance = (
   } = instrument;
 
   const {
+    decayExtendsDuration,
     initialInstability,
     attack,
     decay,
@@ -252,6 +253,7 @@ export const playInstance = (
 
   // Start and end
   const startAt = Math.max(0.0, at - dynamicAttack * 0.146);
+  const decayAt = startAt + dynamicAttack * 4.0;
   let endAt = at + Math.max(duration * 0.618, duration - dynamicRelease);
   const endVibratoAt = endAt;
 
@@ -306,16 +308,12 @@ export const playInstance = (
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
 
   // Decay if needed
-  if (decay > 0.0 && sustain !== 1.0) {
-    const decayDelay = dynamicAttack * 4.0;
-    const decayAt = startAt + decayDelay;
+  if (decay > 0.0 && sustain !== 1.0 && decayAt < endAt) {
+    const dynamicDecay = mix(decay, (endAt - decayAt) * 0.333333, 0.382);
 
-    const hasSustainPedal = sustain > 0.0;
-    const decayTime = hasSustainPedal ? Math.max(decay, decayAt - endAt) : decay;
+    const decayDuration = dynamicDecay * 3.0;
+    if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + decayDuration);
 
-    endAt = Math.max(endAt, decayAt + decayTime); // extend release past decay
-
-    const dynamicDecay = decayTime * 0.333333;
     const dynamicSustain = sustain ** (1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.236);
 
     // Oscillators

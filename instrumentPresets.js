@@ -19,14 +19,17 @@ export const genericInstrument = Object.seal({
 
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
-  /** @type {number} for how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {number} how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   attack: 0.09,
-  /** @type {number} for how long before the note reaches the `sustain` level after finishing its `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {number} how long before the note reaches the `sustain` level after finishing its `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   decay: 0.0,
-  /** @type {number} How loud the rest of note is compared to the `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime`. Also enables "sustain pedal" emulation: notes will try to decay for their entire duration. */
+  /** @type {number} how loud the note after it has fully decayed */
   sustain: 1.0,
-  /** @type {number} for how long the note takes to "fade out": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {number} how long the note takes to "fade out": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
   release: 0.056,
+
+  /** @type {boolean} lets decay phase duration extend the note out of its boundaries: good for truly polyphonic instruments like percussion and plucked strings */
+  decayExtendsDuration: false,
 
   // Controls the maximum and minimum frequencies of the notes and their harmonics.
   // I've taken my values from these sources:
@@ -77,7 +80,7 @@ export const flute = {
     { type: "triangle", gain: 1 / 2, glide: 0.005 },
   ],
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.91,
   release: 0.056,
   highPassFrequency: 261.624,
@@ -105,7 +108,7 @@ export const oboe = {
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 2, glide: 0.004 },
   ],
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.91,
   release: 0.056,
   lowPassSpeedMultiplier: 0.764,
@@ -150,7 +153,7 @@ export const clarinet = {
     { type: "pulse", pulseWidth: 0.4, gain: 1 / 2, glide: 0.003 },
   ],
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.91,
   release: 0.056,
   lowPassSpeedMultiplier: 0.764,
@@ -175,7 +178,7 @@ export const saxophone = {
   // kind of halfway between woodwind and brass
   initialInstability: 0.764,
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.8,
   release: 0.056,
   lowPassSpeedMultiplier: 0.854,
@@ -199,7 +202,7 @@ export const trumpet = {
   ],
   initialInstability: 1.0,
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.8,
   release: 0.056,
   lowPassFrequency: 1174.656,
@@ -264,7 +267,7 @@ export const violin = {
     { type: "sawtooth", gain: 1 / 2, glide: 0.004 },
   ],
   attack: 0.09,
-  decay: 0.382,
+  decay: 0.236,
   sustain: 0.854,
   release: 0.056,
 
@@ -333,9 +336,10 @@ const plucked = {
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.004 * Math.SQRT1_2 },
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
   ],
+  decayExtendsDuration: true,
 
   attack: 0.013,
-  decay: 1.0,
+  decay: 0.382,
   sustain: 0.0,
   release: 0.0,
 
@@ -376,9 +380,10 @@ export const hammeredDulcimer = {
     { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008 },
   ],
+  decayExtendsDuration: true,
 
   attack: 0.013,
-  decay: 1.0,
+  decay: 0.5,
   sustain: 0.056,
   release: 0.056,
 
