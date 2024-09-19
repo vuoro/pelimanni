@@ -1,4 +1,4 @@
-**Pelimanni: Web Audio API musical instruments & utilities.**
+**Pelimanni: Web Audio API subtractive-synthesised classical instruments and utilities for making dynamically looping music with them.**
 
 Demo: https://music.vuoro.dev/
 
