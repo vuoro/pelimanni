@@ -1,5 +1,7 @@
 import { createInstance, createInstrument, destroyInstance, playInstance } from "./instruments.js";
-import { midiToJustFrequency } from "./notes.js";
+import { midiToFrequency } from "./notes.js";
+
+const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
 
 /**
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
@@ -18,22 +20,28 @@ import { midiToJustFrequency } from "./notes.js";
  * @param {AudioContext} audioContext
  * @param {ConnectInstance} connectInstance
  */
-export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, safetyMargin = 0.2) => {
+export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, options = defaultOptions) => {
+  const playAhead = options.playAhead ?? defaultOptions.playAhead;
+  const numberToFrequency = options.numberToFrequency || defaultOptions.numberToFrequency;
+
   const { currentTime } = audioContext;
   if (audioContext.state !== "running") return;
 
+  /** @type {Schedule} */
   const schedule =
-    schedules.get(audioContext) ||
-    schedules.set(audioContext, createSchedule(audioContext, connectInstance)).get(audioContext);
+    schedules.get(audioContext) || schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
 
-  // TODO: use baseLatency to better align with sounds with visuals?
+  schedule.connectInstance = connectInstance;
+  schedule.numberToFrequency = numberToFrequency;
+
+  // TODO: use baseLatency to better align sounds with visuals?
 
   // Skip to current time if needed
   if (schedule.scheduledUpTo < currentTime) {
-    schedule.scheduledUpTo += currentTime + safetyMargin - schedule.scheduledUpTo;
+    schedule.scheduledUpTo += currentTime + playAhead - schedule.scheduledUpTo;
   }
 
-  const scheduleAheadBy = document.hidden ? 1.0 + safetyMargin : safetyMargin;
+  const scheduleAheadBy = document.hidden ? 1.0 + playAhead : playAhead;
 
   if (schedule.scheduledUpTo < currentTime + scheduleAheadBy) {
     const from = schedule.scheduledUpTo;
@@ -85,25 +93,26 @@ const schedules = new WeakMap();
 
 /**
   @param {AudioContext} audioContext
-  @param {(instrument: ReturnType<typeof createInstance>) => void} connectInstance
 */
-const createSchedule = (audioContext, connectInstance) => ({
-  scheduledUpTo: 0.0,
-  instruments: new Map(),
-  audioContext,
-  connectInstance,
-  pendingNote: Object.seal({
-    pending: false,
-    instrument: null,
-    note: 0,
-    root: 0,
-    at: 0,
-    duration: 0,
-    velocity: 0,
-    volume: 0,
-    vibrato: 0,
-  }),
-});
+const createSchedule = (audioContext) =>
+  Object.seal({
+    scheduledUpTo: 0.0,
+    instruments: new Map(),
+    audioContext,
+    connectInstance: (_) => console.warn("Missing `connectInstance` parameter in `scheduleMusic`"),
+    numberToFrequency: midiToFrequency,
+    pendingNote: Object.seal({
+      pending: false,
+      instrument: null,
+      note: 0,
+      root: 0,
+      at: 0,
+      duration: 0,
+      velocity: 0,
+      volume: 0,
+      vibrato: 0,
+    }),
+  });
 
 /**
  * @typedef {ReturnType<typeof createSchedule>} Schedule
@@ -283,7 +292,7 @@ const schedulePart = (
 /**
  @param {Schedule} schedule
  */
-const playPendingNote = ({ connectInstance, pendingNote, audioContext }) => {
+const playPendingNote = ({ connectInstance, numberToFrequency, pendingNote, audioContext }) => {
   const { instrument, note, root, at, duration, velocity, volume, vibrato } = pendingNote;
   pendingNote.pending = false;
 
@@ -304,5 +313,5 @@ const playPendingNote = ({ connectInstance, pendingNote, audioContext }) => {
   }
 
   // Play the note
-  playInstance(instance, midiToJustFrequency(note, root), at, duration, velocity, volume, vibrato);
+  playInstance(instance, numberToFrequency(note, root), at, duration, velocity, volume, vibrato);
 };
