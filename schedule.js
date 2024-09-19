@@ -22,7 +22,7 @@ const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
  */
 export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, options = defaultOptions) => {
   const playAhead = options.playAhead ?? defaultOptions.playAhead;
-  const numberToFrequency = options.numberToFrequency || defaultOptions.numberToFrequency;
+  const numberToFrequency = options.numberToFrequency ?? defaultOptions.numberToFrequency;
 
   const { currentTime } = audioContext;
   if (audioContext.state !== "running") return;
@@ -99,7 +99,10 @@ const createSchedule = (audioContext) =>
     scheduledUpTo: 0.0,
     instruments: new Map(),
     audioContext,
-    connectInstance: (_) => console.warn("Missing `connectInstance` parameter in `scheduleMusic`"),
+    /** @type {ConnectInstance} */
+    connectInstance: () => {
+      throw new Error("Missing `connectInstance` parameter in `scheduleMusic`");
+    },
     numberToFrequency: midiToFrequency,
     pendingNote: Object.seal({
       pending: false,
@@ -313,5 +316,5 @@ const playPendingNote = ({ connectInstance, numberToFrequency, pendingNote, audi
   }
 
   // Play the note
-  playInstance(instance, numberToFrequency(note, root), at, duration, velocity, volume, vibrato);
+  playInstance(instance, numberToFrequency(note, undefined, root), at, duration, velocity, volume, vibrato);
 };

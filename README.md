@@ -91,7 +91,7 @@ const frequency = midiToFrequency(0, tuning);
 playInstance(violaInstance, frequency, at, duration);
 
 const root = 0; // optional
-const niceFrequency = midiToFrequency(0, root, tuning);
+const niceFrequency = midiToFrequency(0, tuning, root);
 playInstance(violaInstance, niceFrequency, at + 1.0, duration);
 ```
 
