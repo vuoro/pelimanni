@@ -83,16 +83,16 @@ destroyInstance(violaInstance);
 In both functions note 0 is C4. I think this deviates from the midi number standard, but it's nicer this way.
 
 ```js
-import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
+import { midiToFrequency, midiToJustFrequency } from "@vuoro/pelimanni/notes.js";
 
 const tuning = 440.0; // optional
 
-const frequency = midiToFrequency(0, tuning);
+const frequency = midiToFrequency(5, tuning);
 playInstance(violaInstance, frequency, at, duration);
 
 const root = 0; // optional
-const niceFrequency = midiToFrequency(0, tuning, root);
-playInstance(violaInstance, niceFrequency, at + 1.0, duration);
+const nicerFrequency = midiToJustFrequency(5, tuning, root);
+playInstance(violaInstance, nicerFrequency, at + 1.0, duration);
 ```
 
 ## Sequencing notes into music
