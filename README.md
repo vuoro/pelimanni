@@ -1,12 +1,12 @@
-# Web Audio API musical instruments & utilities
-
-**Big disclaimer:** I'm an audio newbie! At the time of writing it's been 3 months since I first started even looking into audio, and I've never seriously played an instrument. On top of it all I'm also somewhat hearing-impaired. So please don't expect faithful recreations of timbres or even particularly great results. That said, if you're an audio pro and have suggestions for improvements, please let me know!
+**Pelimanni: Web Audio API musical instruments & utilities.**
 
 Demo: https://music.vuoro.dev/
 
 # Usage
 
 This readme is a combination of tutorial, examples, and documentation. It'd be nicer to keep them separate, but this is all I have time for, sadly. Also, working with audio is rather complex and can even be dangerous (see the warnings about connecting instruments later on), so this kind of format may be the safest option.
+
+**Big disclaimer:** I'm an audio newbie! At the time of writing it's been 3 months since I first started even looking into audio, and I've never seriously played an instrument. On top of it all I'm also somewhat hearing-impaired. So please don't expect faithful recreations of instrument timbres or splendid musicality. That said, if you're an audio pro and have suggestions for improvements, please let me know!
 
 ## Installation
 
@@ -22,21 +22,21 @@ The following are all the instrument presets currently implemented. You can twea
 
 ```js
   import {
-    flute, piccolo, // open-ended woodwinds (monophonic)
-    oboe, bassoon, contrabassoon, // double-reed woodwinds (monophonic)
-    clarinet, saxophone, // single-reed woodwinds (monophonic)
-    trumpet, trombone, bassTrombone, frenchHorn, tuba, // brass (monophonic)
-    violin, viola, cello, contrabass, // bowed strings (monophonic)
-    pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings (polyphonic)
-    hammeredDulcimer // string percussion: missing the hammer blow noise, for now (polyphonic)
+    flute, piccolo, // flutes
+    oboe, bassoon, contrabassoon, // double-reed woodwinds
+    clarinet, saxophone, // single-reed woodwinds
+    trumpet, trombone, bassTrombone, frenchHorn, tuba, // brass
+    violin, viola, cello, contrabass, // bowed strings
+    pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
+    hammeredDulcimer // string percussion: missing the hammer blow noise, for now
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
-The presets define the instrument's timbre. They also, at runtime, combine with various simple heuristics to make each instrument play a little differently depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound more natural.
+The presets define the instrument's timbre. They also combine at runtime with various simple heuristics to make each instrument play a little differently, depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound less artificial.
 
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, create an instance of it, connect it, and call `playInstrument` with it.
 
-Each instance is monophonic (it can only play 1 sound at a time), but you can combine multiple instances to play them as if they're polyphonic.
+Each instance is monophonic (it can only play 1 sound at a time), but you can combine multiple instances to play them as if they're polyphonic (the scheduler further below does this automatically).
 
 ```js
   import {createInstrument, createInstance, playInstance, destroyInstance} from "@vuoro/pelimanni/instruments.js";
@@ -76,7 +76,7 @@ destroyInstance(violaInstance);
 
 ## Note number to frequency conversion
 
-`midiToFrequency` converts numbers to notes using the standard "12 note equal temperament" system: every note is slightly out of tune, but sounds fine.
+`midiToFrequency` converts numbers to note frequencies using the western standard "12 note equal temperament" system: every note interval is slightly out of tune, but sounds fine.
 
 `midiToJustFrequency` uses a "12 note 5-limit just intonation" system instead. Some note intervals are more in tune, and some are less. Especially helps make bowed strings sound better. It takes an additional `root` parameter, which is a note number used as a basis of the frequency ratios. I think the closer your notes are to the root, the better they will sound. I'm not sure though, because this stuff is a bit out of my league.
 
@@ -166,16 +166,16 @@ const violaSequence = [[0, 2, 4, 5], [5, 4, 2, 0], { alternate }];
 const celloSequence = [0, 2, 4, 5, { alternate, vibrato: 0.5 }];
 
 const tracks = [
-  [createInstrument(pluckedViola), violaSequence],
-  [createInstrument(pluckedCello), celloSequence],
+  [pluckedViola, violaSequence],
+  [pluckedCello, celloSequence],
 ];
 ```
 
 ## Scheduling track playback
 
-If you have tracks as explained above, you can use `scheduleMusic` to make play them.
+If you have tracks as explained above, you can use `scheduleMusic` to play them in a loop.
 
-It will take care of timekeeping, managing instrument instances, and playing them, but you will have to provide your own `connectInstance` function, to let it connect the instances to your audio system.
+The scheduler will take care of timekeeping, managing instrument instances, and playing them. You just have to provide your own `connectInstance` function, to let it connect the instrument instances it creates to your audio system.
 
 ```js
 const connectInstance = (instrumentInstance) => {
@@ -185,50 +185,50 @@ const connectInstance = (instrumentInstance) => {
   // I use the following, but I'm uncertain if they're enough for every possible scenario.
   // 1. A DynamicsCompressor to guard against super high volumes.
   // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-  instance.output.connect(audioContext.destination);
+  instrumentInstance.output.connect(audioContext.destination);
 }
 ```
 
-Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule up to `playAhead` seconds of your tracks. If the page is hidden, it will add 1 second to `playAhead`, since 1s is as often as you can call any loop in an inactive browser tab. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
+Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule any notes that start in the next `playAhead`, from each of your tracks. If the page is hidden, it will add 1 second to the `playAhead`, since 1s is as often as you can call any loop on a hidden page. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
-A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.04–0.5 seconds should be a good choice.
+A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.05–1.0 seconds should be a good choice.
 
-Below I'm calling it on an interval 4 times as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
+Below I'm calling `scheduleMusic` on an interval 4 times as fast as the `playAhead`, and also whenever the page's visibility changes. This combination should let music play gaplessly.
 
 The parameters are:
 - your `tracks`: array of `[instrumentPreset, sequence]`
 - your `cycle` from earlier above
 - your `AudioContext`
 - your `connectInstance` function from above
-- (optional) `playAhead` in seconds: `0.2` by default
+- (optional) options: `{ playAhead: 0.2 }`
 
 ```js
 import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 
-const playAhead = 0.2;
-const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstance, playAhead);
+const options = { playAhead: 0.2 };
+const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstance, options);
 
-setInterval(callScheduleMusic, playAhead / 4.0 * 1000.0);
+setInterval(callScheduleMusic, options.playAhead / 4.0 * 1000.0);
 document.addEventListener("visibilitychange", tryToScheduleMusic);
 ```
 
 # Performance
 
-Performance has not been tested properly, but seems tolerable: on a M2 Mac Studio I can play at least 32 instruments concurrently without any glitching. Web Audio API seems to handle all of them on a single CPU core, so that's probably something to adjust expectations around.
+Performance has not been tested extensively, but seems tolerable: on a M2 Mac Studio I can play at least 32 instruments concurrently without any glitching. The Web Audio API seems to handle all of them on a single CPU core, so that's probably something to adjust expectations around.
 
 Internally each instrument uses the following:
 
-1. 1–3 main `OscillatorNode`s to make the sound.
+1. Up to 3 main `OscillatorNode`s to make the sound.
 2. Another `OscillatorNode`: shared for vibrato, LFO effects, and brass-style initial note instability.
 3. A `WaveShaperNode` for each pulse oscillator the instrument may have.
 4. A low-pass and a high-pass `BiquadfilterNode`.
-5. 1–6 peaking `BiquadfilterNode`s for shaping the timbre.
-6. 1–4 `GainNode`s.
+5. Up to 6 peaking `BiquadfilterNode`s for shaping the timbre.
+6. Up to 4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-I try to avoid object allocation as much as possible in the scheduler and instruments playing functions, to minimise garbage collection pauses.
+I try to avoid object allocation as much as possible in the scheduler and instruments playback, to minimise garbage collection pauses.
 
-`scheduleMusic` has to loop through the `tracks` arrays a few times whenever it's called, which means very large sets of tracks might spend a fair amount of main thread CPU time.
+`scheduleMusic` has to loop through the `tracks` arrays once or twice whenever it's called, which means very large sets of tracks might spend a fair amount of main thread CPU time.
 
 # Inspirations and resources that helped me figure all of this out
 
