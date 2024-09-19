@@ -1,6 +1,6 @@
 **Pelimanni** 
 
-Web Audio API subtractive-synthesised classical instruments and utilities for making dynamically looping music with them.
+Subtractive-synthesised Web Audio classical instruments and utilities for making dynamically looping music with them.
 
 Demo: https://music.vuoro.dev/
 
