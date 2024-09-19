@@ -20,7 +20,7 @@ npm install @vuoro/pelimanni
 
 A set of pretend classical instruments, made with subtractive synthesis methods.
 
-The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`. See `genericInstrument` in `instrumentPresets.js` for all the available options.
+The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola.attack * 2.0}`. See `genericInstrument` in `instrumentPresets.js` for all the available options.
 
 ```js
   import {
