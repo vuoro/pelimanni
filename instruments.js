@@ -269,10 +269,10 @@ export const playInstance = (
   const shouldDecay = defaultDecay > 0.0 && defaultSustain !== 1.0 && decayAt < endAt;
 
   // Cancel pending events
-  lowPassFilter.frequency.cancelAndHoldAtTime(startAt);
-  highPassFilter.frequency.cancelAndHoldAtTime(startAt);
-  vibratoMain.frequency.cancelAndHoldAtTime(startAt);
-  vibratoLowPassGain?.gain.cancelAndHoldAtTime(startAt);
+  lowPassFilter.frequency.cancelScheduledValues(startAt);
+  highPassFilter.frequency.cancelScheduledValues(startAt);
+  vibratoMain.frequency.cancelScheduledValues(startAt);
+  vibratoLowPassGain?.gain.cancelScheduledValues(startAt);
 
   for (const {
     oscillatorNode,
@@ -282,8 +282,8 @@ export const playInstance = (
     glide = defaultGlide,
     pitchMultiplier,
   } of oscillators) {
-    oscillatorNode.frequency.cancelAndHoldAtTime(startAt);
-    gainNode.gain.cancelAndHoldAtTime(startAt);
+    oscillatorNode.frequency.cancelScheduledValues(startAt);
+    gainNode.gain.cancelScheduledValues(startAt);
 
     // and also fire up oscillators
     oscillatorNode.frequency.setTargetAtTime(pitch * pitchMultiplier, startAt, glide * glideDynamics);
