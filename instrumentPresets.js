@@ -1,5 +1,13 @@
 /** @typedef {typeof genericInstrument} Instrument */
 
+/**
+ * @typedef {number} Attack - a `timeConstant`: how long the note takes to "fade in"
+ * @typedef {number} Decay - a `timeConstant`: how long before the note reaches the `sustain` level after finishing its `attack`
+ * @typedef {number} Sustain - a `timeConstant`: how loud the note after it has fully decayed
+ * @typedef {number} Release - a `timeConstant`: how long the note takes to "fade out"
+ * @typedef {number} Glide - a `timeConstant`: how slowly the oscillator moves to new note frequencies
+ */
+
 export const genericInstrument = Object.seal({
   /**
    * @typedef {object} Oscillator - creates the sound of the note
@@ -7,7 +15,11 @@ export const genericInstrument = Object.seal({
    * @property {number=} pulseWidth - only used when `type` is `pulse`
    * @property {number=} pitchMultiplier - multiplies the frequency of the note for this oscillator
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
-   * @property {number=} glide - how slowly the oscillator moves to new note frequencies
+   * @property {Attack=} attack
+   * @property {Decay=} decay
+   * @property {Sustain=} sustain
+   * @property {Release=} release
+   * @property {Glide=} glide
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
   oscillators: [{ type: "triangle" }],
@@ -19,14 +31,25 @@ export const genericInstrument = Object.seal({
 
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
-  /** @type {number} how long the note takes to "fade in": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {Attack} */
   attack: 0.09,
-  /** @type {number} how long before the note reaches the `sustain` level after finishing its `attack`: a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {Decay} */
   decay: 0.0,
-  /** @type {number} how loud the note after it has fully decayed */
+  /** @type {Sustain} */
   sustain: 1.0,
-  /** @type {number} how long the note takes to "fade out": a `timeConstant` that is dynamically modified and passed to `setTargetAtTime` */
+  /** @type {Release} */
   release: 0.056,
+  /** @type {Glide} */
+  glide: 0.0,
+
+  /** @type {Attack} */
+  filterAttack: undefined,
+  /** @type {Decay} */
+  filterDecay: undefined,
+  /** @type {Sustain} */
+  filterSustain: undefined,
+  /** @type {Release} */
+  filterRelease: undefined,
 
   /** @type {boolean} lets decay phase duration extend the note out of its boundaries: good for truly polyphonic instruments like percussion and plucked strings */
   decayExtendsDuration: false,
@@ -47,11 +70,6 @@ export const genericInstrument = Object.seal({
   lowPassPitchTracking: 0.034,
   /** @type {number} how much to move highPassFrequency towards the currently played note */
   highPassPitchTracking: 0.034,
-
-  /** @type {number} how slowly the lowpass filter should `attack`, `decay`, and `release`, compared to the note itself. */
-  lowPassSpeedMultiplier: 1.0,
-  /** @type {number} how slowly the highpass filter should `attack`, `decay`, and `release`, compared to the note itself. */
-  highPassSpeedMultiplier: 1.0,
 
   /** @type {number} how quickly vibrato should… vibrate */
   baseVibratoFrequency: 5.0,
@@ -79,14 +97,18 @@ export const flute = {
     { type: "triangle", gain: 1 / 2 },
     { type: "triangle", gain: 1 / 2, glide: 0.004 },
   ],
+
   attack: 0.09,
+  filterAttack: 0.056,
   decay: 0.236,
+  filterDecay: 0.146,
   sustain: 0.91,
+  filterSustain: 0.854,
   release: 0.056,
+  filterRelease: 0.09,
+
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
-  lowPassSpeedMultiplier: 0.764,
-  highPassSpeedMultiplier: 0.91,
   vibratoEffectOnLowPass: 900.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 3.0 }],
 };
@@ -103,15 +125,19 @@ export const piccolo = {
 export const oboe = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2, glide: 0.004 },
+    { type: "pulse", pulseWidth: 0.15, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.15, gain: 1 / 2, glide: 0.004 },
   ],
+
   attack: 0.09,
-  decay: 0.236,
+  filterAttack: 0.056,
+  decay: 0.146,
+  filterDecay: 0.236,
   sustain: 0.91,
+  filterSustain: 0.854,
   release: 0.056,
-  lowPassSpeedMultiplier: 0.764,
-  highPassSpeedMultiplier: 0.91,
+  filterRelease: 0.09,
+
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
   vibratoEffectOnLowPass: 700.0,
@@ -147,15 +173,19 @@ export const contrabassoon = {
 export const clarinet = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.4, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.4, gain: 1 / 2, glide: 0.003 },
+    { type: "square", gain: 1 / 2 },
+    { type: "square", gain: 1 / 2, glide: 0.004 },
   ],
+
   attack: 0.09,
+  filterAttack: 0.056,
   decay: 0.236,
+  filterDecay: 0.236,
   sustain: 0.91,
+  filterSustain: 1.0,
   release: 0.056,
-  lowPassSpeedMultiplier: 0.764,
-  highPassSpeedMultiplier: 0.91,
+  filterRelease: 0.09,
+
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
   vibratoEffectOnLowPass: 700.0,
@@ -174,12 +204,16 @@ export const saxophone = {
   ],
   // kind of halfway between woodwind and brass
   initialInstability: 0.764,
+
   attack: 0.09,
+  filterAttack: 0.034,
   decay: 0.236,
+  filterDecay: 0.382,
   sustain: 0.8,
+  filterSustain: 0.8,
   release: 0.056,
-  lowPassSpeedMultiplier: 0.854,
-  highPassSpeedMultiplier: 0.618,
+  filterRelease: 0.146,
+
   highPassFrequency: 233.08,
   lowPassFrequency: 1567.968,
   vibratoEffectOnPitch: 30,
@@ -198,18 +232,20 @@ export const trumpet = {
     { type: "sawtooth", gain: 1 / 2, glide: 0.004 },
   ],
   initialInstability: 1.0,
+
   attack: 0.09,
+  filterAttack: 0.034,
   decay: 0.236,
+  filterDecay: 0.382,
   sustain: 0.8,
+  filterSustain: 0.8,
   release: 0.056,
+  filterRelease: 0.146,
+
   lowPassFrequency: 1174.656,
   highPassFrequency: 184.996,
   lowPassPitchTracking: -0.056,
-  lowPassSpeedMultiplier: 0.91,
-  highPassSpeedMultiplier: 0.618,
-
   vibratoEffectOnPitch: 30,
-
   peakingFilters: [
     { frequency: 1200, gain: 2.0, Q: 3.0 },
     { frequency: 2200, gain: 3.0, Q: 3.0 },
@@ -264,19 +300,19 @@ export const violin = {
     { type: "sawtooth", gain: 1 / 2 },
     { type: "sawtooth", gain: 1 / 2, glide: 0.004 },
   ],
+
   attack: 0.09,
+  filterAttack: 0.146,
   decay: 0.236,
+  filterDecay: 0.146,
   sustain: 0.854,
+  filterSustain: 0.854,
   release: 0.056,
+  filterRelease: 0.034,
 
   highPassFrequency: 196.0,
   lowPassFrequency: 4186.01,
-
   vibratoEffectOnPitch: 30,
-
-  lowPassSpeedMultiplier: 0.854,
-  highPassSpeedMultiplier: 0.618,
-
   peakingFilters: [
     { frequency: 300, gain: 3, Q: 3.5 },
     { frequency: 700, gain: 4, Q: 3.5 },
@@ -336,7 +372,9 @@ const plucked = {
   decayExtendsDuration: true,
 
   attack: 0.013,
+  filterAttack: 0.021,
   decay: 0.382,
+  filterDecay: 0.236,
   sustain: 0.0,
   release: 0.0,
 
@@ -380,18 +418,19 @@ export const hammeredDulcimer = {
   decayExtendsDuration: true,
 
   attack: 0.013,
+  filterAttack: 0.034,
   decay: 0.5,
+  filterDecay: 0.382,
   sustain: 0.056,
+  filterSustain: 0.09,
   release: 0.056,
+  filterRelease: 0.034,
 
   lowPassPitchTracking: 0.236,
   highPassPitchTracking: 0.034,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 1.618,
-
-  lowPassSpeedMultiplier: 0.618,
-  highPassSpeedMultiplier: 0.854,
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },
