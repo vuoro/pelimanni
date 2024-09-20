@@ -1,4 +1,6 @@
-**Pelimanni: Web Audio API musical instruments & utilities.**
+**Pelimanni** 
+
+Subtractive-synthesised Web Audio classical instruments and utilities for making dynamically looping music with them.
 
 Demo: https://music.vuoro.dev/
 
@@ -18,7 +20,7 @@ npm install @vuoro/pelimanni
 
 A set of pretend classical instruments, made with subtractive synthesis methods.
 
-The following are all the instrument presets currently implemented. You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola: attack: viola * 2.0}`. See `genericInstrument` in `instrumentPresets.js` for all the available options.
+The following are all the instrument presets currently implemented. 
 
 ```js
   import {
@@ -33,6 +35,8 @@ The following are all the instrument presets currently implemented. You can twea
 ```
 
 The presets define the instrument's timbre. They also combine at runtime with various simple heuristics to make each instrument play a little differently, depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound less artificial.
+
+You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola, attack: viola.attack * 2.0}`. See `genericInstrument` in instrumentPresets.js for all the available options.
 
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, create an instance of it, connect it, and call `playInstrument` with it.
 
@@ -83,16 +87,16 @@ destroyInstance(violaInstance);
 In both functions note 0 is C4. I think this deviates from the midi number standard, but it's nicer this way.
 
 ```js
-import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
+import { midiToFrequency, midiToJustFrequency } from "@vuoro/pelimanni/notes.js";
 
 const tuning = 440.0; // optional
 
-const frequency = midiToFrequency(0, tuning);
+const frequency = midiToFrequency(5, tuning);
 playInstance(violaInstance, frequency, at, duration);
 
 const root = 0; // optional
-const niceFrequency = midiToFrequency(0, tuning, root);
-playInstance(violaInstance, niceFrequency, at + 1.0, duration);
+const nicerFrequency = midiToJustFrequency(5, tuning, root);
+playInstance(violaInstance, nicerFrequency, at + 1.0, duration);
 ```
 
 ## Sequencing notes into music
@@ -189,7 +193,9 @@ const connectInstance = (instrumentInstance) => {
 }
 ```
 
-Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule any notes that start in the next `playAhead`, from each of your tracks. If the page is hidden, it will add 1 second to the `playAhead`, since 1s is as often as you can call any loop on a hidden page. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
+Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule any notes that start in the next `playAhead`, from each of your tracks. 
+
+If the page is hidden, it will add 1 second to the `playAhead`, since 1s is as often as you can call any loop on a hidden page. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
 A larger `playAhead` will make skipped notes and lag-caused audio glitches less likely, but will also delay any live changes you might be making to the tracks. Anything between 0.05–1.0 seconds should be a good choice.
 
@@ -226,7 +232,7 @@ Internally each instrument uses the following:
 6. Up to 4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-I try to avoid object allocation as much as possible in the scheduler and instruments playback, to minimise garbage collection pauses.
+I try to avoid object allocation as much as possible in the scheduler and instrument playback, to minimise garbage collection pauses.
 
 `scheduleMusic` has to loop through the `tracks` arrays once or twice whenever it's called, which means very large sets of tracks might spend a fair amount of main thread CPU time.
 
