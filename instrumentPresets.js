@@ -417,14 +417,14 @@ export const hammeredDulcimer = {
   ],
   decayExtendsDuration: true,
 
-  attack: 0.013,
-  filterAttack: 0.034,
+  attack: 0.034,
+  filterAttack: 0.013,
   decay: 0.382,
   filterDecay: 0.5,
   sustain: 0.056,
   filterSustain: 0.09,
   release: 0.056,
-  filterRelease: 0.034,
+  filterRelease: 0.09,
 
   lowPassPitchTracking: 0.146,
   highPassPitchTracking: 0.034,
