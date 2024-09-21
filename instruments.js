@@ -256,7 +256,7 @@ export const playInstance = (
   const vibratoVolumeTarget = (hasVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
   // Start and end
-  const startAt = Math.max(0.0, at - defaultDynamicAttack * 0.146);
+  const startAt = at;
   const decayAt = startAt + defaultDynamicAttack * 4.0;
   let endAt = at + Math.max(duration * 0.618, duration - defaultDynamicRelease);
 
