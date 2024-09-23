@@ -103,7 +103,7 @@ export const flute = {
   sustain: 0.91,
   filterSustain: 0.91,
   release: 0.056,
-  filterRelease: 0.09,
+  filterRelease: 0.034,
 
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
@@ -134,7 +134,7 @@ export const oboe = {
   sustain: 0.91,
   filterSustain: 0.91,
   release: 0.056,
-  filterRelease: 0.09,
+  filterRelease: 0.034,
 
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
@@ -182,7 +182,7 @@ export const clarinet = {
   sustain: 0.91,
   filterSustain: 0.91,
   release: 0.056,
-  filterRelease: 0.09,
+  filterRelease: 0.034,
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
@@ -208,7 +208,7 @@ export const saxophone = {
   decay: 0.236,
   filterDecay: 0.382,
   sustain: 0.764,
-  filterSustain: 0.91,
+  filterSustain: 0.764,
   release: 0.056,
   filterRelease: 0.09,
 
@@ -236,7 +236,7 @@ export const trumpet = {
   decay: 0.236,
   filterDecay: 0.382,
   sustain: 0.764,
-  filterSustain: 0.91,
+  filterSustain: 0.764,
   release: 0.056,
   filterRelease: 0.146,
 
@@ -370,9 +370,9 @@ const plucked = {
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.021,
-  decay: 0.382,
-  filterDecay: 0.333333,
+  filterAttack: 0.013,
+  decay: 0.5,
+  filterDecay: 0.382,
   sustain: 0.0,
   release: 0.0,
 
@@ -415,14 +415,14 @@ export const hammeredDulcimer = {
   ],
   decayExtendsDuration: true,
 
-  attack: 0.034,
-  filterAttack: 0.013,
-  decay: 0.382,
-  filterDecay: 0.5,
+  attack: 0.018,
+  filterAttack: 0.018,
+  decay: 0.5,
+  filterDecay: 0.414,
   sustain: 0.056,
   filterSustain: 0.09,
   release: 0.056,
-  filterRelease: 0.09,
+  filterRelease: 0.034,
 
   lowPassPitchTracking: 0.146,
   highPassPitchTracking: 0.034,
