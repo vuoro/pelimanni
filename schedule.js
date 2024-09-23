@@ -9,6 +9,7 @@ const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
  * @property {number=} velocity - how strongly the note is played (does not affect volume)
  * @property {number=} volume - how loud the note is
  * @property {number=} vibrato - amount of vibrato
+ * @property {number=} vibratoFrequency - frequency of vibrato
  * @property {number=} transpose - added to the note's midi number
  * @property {number=} root - used with `midiToJustFrequency`
  * @property {boolean=} alternate - sequentially pick just one entry, instead of subdividing time
@@ -111,9 +112,10 @@ const createSchedule = (audioContext) =>
       root: 0,
       at: 0,
       duration: 0,
-      velocity: 0,
-      volume: 0,
-      vibrato: 0,
+      velocity: undefined,
+      volume: undefined,
+      vibrato: undefined,
+      vibratoFrequency: undefined,
     }),
   });
 
@@ -125,6 +127,7 @@ const createSchedule = (audioContext) =>
  * @param {number} velocityFromParent
  * @param {number} volumeFromParent
  * @param {number} vibratoFromParent
+ * @param {number} vibratoFrequencyFromParent
  * @param {number} transposeFromParent
  * @param {number} rootFromParent
  */
@@ -140,6 +143,7 @@ const schedulePart = (
   velocityFromParent = undefined,
   volumeFromParent = undefined,
   vibratoFromParent = undefined,
+  vibratoFrequencyFromParent = undefined,
   transposeFromParent = undefined,
   rootFromParent = undefined,
 ) => {
@@ -159,6 +163,7 @@ const schedulePart = (
     const velocity = velocityFromParent;
     const volume = volumeFromParent;
     const vibrato = vibratoFromParent;
+    const vibratoFrequency = vibratoFrequencyFromParent;
 
     schedule.pendingNote.instrument = instrument;
     schedule.pendingNote.note = note;
@@ -168,6 +173,7 @@ const schedulePart = (
     schedule.pendingNote.velocity = velocity;
     schedule.pendingNote.volume = volume;
     schedule.pendingNote.vibrato = vibrato;
+    schedule.pendingNote.vibratoFrequency = vibratoFrequency;
 
     schedule.pendingNote.pending = true;
     return schedule;
@@ -196,6 +202,7 @@ const schedulePart = (
   let velocity = velocityFromParent;
   let volume = volumeFromParent;
   let vibrato = vibratoFromParent;
+  let vibratoFrequency = vibratoFrequencyFromParent;
   let transpose = transposeFromParent;
   let root = rootFromParent;
 
@@ -206,6 +213,7 @@ const schedulePart = (
       velocity = child.velocity ?? velocity;
       volume = child.volume ?? volume;
       vibrato = child.vibrato ?? vibrato;
+      vibratoFrequency = child.vibratoFrequency ?? vibratoFrequency;
       transpose = child.transpose ?? transpose;
       root = child.root ?? root;
 
@@ -237,6 +245,7 @@ const schedulePart = (
       velocity,
       volume,
       vibrato,
+      vibratoFrequency,
       transpose,
       root,
     );
@@ -259,6 +268,7 @@ const schedulePart = (
         velocity,
         volume,
         vibrato,
+        vibratoFrequency,
         transpose,
         root,
       );
@@ -286,6 +296,7 @@ const schedulePart = (
       velocity,
       volume,
       vibrato,
+      vibratoFrequency,
       transpose,
       root,
     );
@@ -296,7 +307,7 @@ const schedulePart = (
  @param {Schedule} schedule
  */
 const playPendingNote = ({ connectInstance, numberToFrequency, pendingNote, audioContext }) => {
-  const { instrument, note, root, at, duration, velocity, volume, vibrato } = pendingNote;
+  const { instrument, note, root, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
   pendingNote.pending = false;
 
   // Find a free instance
@@ -316,5 +327,14 @@ const playPendingNote = ({ connectInstance, numberToFrequency, pendingNote, audi
   }
 
   // Play the note
-  playInstance(instance, numberToFrequency(note, undefined, root), at, duration, velocity, volume, vibrato);
+  playInstance(
+    instance,
+    numberToFrequency(note, undefined, root),
+    at,
+    duration,
+    velocity,
+    volume,
+    vibrato,
+    vibratoFrequency,
+  );
 };

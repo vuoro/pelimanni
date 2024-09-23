@@ -71,8 +71,6 @@ export const genericInstrument = Object.seal({
   /** @type {number} how much to move highPassFrequency towards the currently played note */
   highPassPitchTracking: 0.034,
 
-  /** @type {number} how quickly vibrato should… vibrate */
-  baseVibratoFrequency: 5.0,
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
   vibratoEffectOnLowPass: 0.0,
   /** @type {number} how much vibrato should affect the note frequency (in cents) */

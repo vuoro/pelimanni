@@ -166,6 +166,7 @@ export const playInstance = (
   velocity = 1.0,
   volume = 1.0,
   vibratoAmount = 0.0,
+  vibratoFrequency = 5.0,
 ) => {
   const {
     oscillators,
@@ -198,7 +199,6 @@ export const playInstance = (
     highPassFrequency,
     highPassPitchTracking,
     lowPassPitchTracking,
-    baseVibratoFrequency,
     vibratoEffectOnLowPass,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
@@ -247,9 +247,7 @@ export const playInstance = (
   const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
-  const vibratoTarget = hasVibrato
-    ? baseVibratoFrequency * (0.8 + highPitchness * dynamicVelocity * 0.4)
-    : idleVibratoTarget;
+  const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
 
   const vibratoLowPassTarget = hasVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
   const vibratoPitchTarget = hasVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
