@@ -370,9 +370,9 @@ const plucked = {
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.013,
-  decay: 0.5,
-  filterDecay: 0.382,
+  filterAttack: 0.008,
+  decay: 0.414,
+  filterDecay: 0.414,
   sustain: 0.0,
   release: 0.0,
 
@@ -415,8 +415,8 @@ export const hammeredDulcimer = {
   ],
   decayExtendsDuration: true,
 
-  attack: 0.018,
-  filterAttack: 0.018,
+  attack: 0.013,
+  filterAttack: 0.013,
   decay: 0.5,
   filterDecay: 0.414,
   sustain: 0.056,

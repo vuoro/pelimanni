@@ -224,12 +224,12 @@ export const playInstance = (
   const attackDynamics =
     (0.764 + 0.236 * 3.0 * longness) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (0.854 + 0.146 * 2.0 * dynamicVelocity) *
+    (1.0 + 0.146 * dynamicSlowness) *
     situationalDynamics;
   const releaseDynamics =
     (0.764 + 0.236 * 3.0 * longness) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (0.854 + 0.146 * 2.0 * dynamicVelocity) *
+    (1.0 - 0.146 * dynamicSlowness) *
     situationalDynamics;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
@@ -272,6 +272,7 @@ export const playInstance = (
   vibratoMain.frequency.cancelScheduledValues(startAt);
   vibratoLowPassGain?.gain.cancelScheduledValues(startAt);
 
+  // also fire up oscillators, and attack amplitudes
   for (const {
     oscillatorNode,
     gainNode,
@@ -283,14 +284,13 @@ export const playInstance = (
     oscillatorNode.frequency.cancelScheduledValues(startAt);
     gainNode.gain.cancelScheduledValues(startAt);
 
-    // and also fire up oscillators
     oscillatorNode.frequency.setTargetAtTime(pitch * pitchMultiplier, startAt, glide * glideDynamics);
     gainNode.gain.setTargetAtTime(gainTarget * volume, startAt, attack * attackDynamics);
   }
 
-  // Fire up filters
-  lowPassFilter.frequency.setTargetAtTime(lowPassTarget, startAt, filterAttack);
-  highPassFilter.frequency.setTargetAtTime(highPassTarget, startAt, filterAttack);
+  // Attack filters
+  lowPassFilter.frequency.setTargetAtTime(lowPassTarget, startAt, filterDynamicAttack);
+  highPassFilter.frequency.setTargetAtTime(highPassTarget, startAt, filterDynamicAttack);
 
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
@@ -314,7 +314,7 @@ export const playInstance = (
   // Decay if needed
   if (shouldDecay) {
     const decayDynamics = mix(
-      (0.854 + 0.146 * 2.0 * lowPitchness) * (0.854 + 0.146 * 2.0 * dynamicSlowness),
+      (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness),
       (endAt - decayAt) * 0.333333,
       0.333333,
     );
@@ -330,7 +330,7 @@ export const playInstance = (
     }
 
     // Filters
-    const filterDynamicDecay = filterDecay * decayDynamics * (1.146 - 0.382 * dynamicVelocity);
+    const filterDynamicDecay = filterDecay * decayDynamics * (1.0 + 0.236 * dynamicSlowness);
     const filterDynamicSustain = filterSustain * sustainDynamics;
 
     lowPassFilter.frequency.setTargetAtTime(
