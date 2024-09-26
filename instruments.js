@@ -62,7 +62,17 @@ export const createInstance = ({ preset, instances }, audioContext) => {
   const oscillators = [];
   const baseVolume = 1.0 / maxPeak;
 
-  for (const { type, pulseWidth = 0.5, pitchMultiplier = 1.0, gain = 1.0, glide = 0.0001 } of oscillatorTypes) {
+  for (const {
+    type,
+    pulseWidth = 0.5,
+    pitchMultiplier = 1.0,
+    gain = 1.0,
+    attack,
+    decay,
+    sustain,
+    release,
+    glide,
+  } of oscillatorsInPreset) {
     const oscillatorNode =
       type === "pulse"
         ? new PulseOscillatorNode(audioContext, { type, pulseWidth, frequency: 440 })
@@ -89,7 +99,7 @@ export const createInstance = ({ preset, instances }, audioContext) => {
 
     oscillatorNode.connect(gainNode).connect(lowPassFilter);
     oscillatorNode.start(audioContext.currentTime);
-    oscillators.push({ oscillatorNode, gainNode, gainTarget, glide, pitchMultiplier });
+    oscillators.push({ oscillatorNode, gainNode, gainTarget, attack, decay, sustain, release, glide, pitchMultiplier });
   }
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
