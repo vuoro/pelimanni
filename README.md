@@ -142,17 +142,26 @@ You can also add configuration objects to the ends of the arrays, for more contr
 // Plays all notes at once, instead of subdividing time
 [0, 5, 7, { chord: true }]; // 0, 5, 7 at the same time for 0.2s
 
-// These are passed through to the playNote function (see below)
+// These are passed through to the scheduler (see below)
 // ´velocity` is how strongly the note is played, but does not affect the volume: best stay between 0–1
 // `volume` is how loud it should be: don't go above 1.0
 // `vibrato` makes most of the note waver: off at 0.0, very aggressive at 1.0
-// `root` is used for `midiToJustFrequency` (see earlier above)
-[0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, root: 0 }]
+// `vibratoFrequency` determines the wavering frequency: ~5.0 seems common 
+// `root` is for use with `midiToJustFrequency` (see earlier above)
+[0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, vibratoFrequency: 5.0, root: 0 }]
 
 // Multiple objects are ok: later ones will be merged over earlier ones.
 // Both of these end up the same:
 [0, x, { transpose: 1, vibrato: 0.5 }, { transpose: 2 }]
 [0, x, { transpose: 2, vibrato: 0.5 }];
+
+// Configuration properties are inherited
+[
+  0,                   // 0.5 volume
+  [0, 2],              // 0.5 volume
+  [4, { volume 1.0 }], // 1.0 volume
+  { volume: 0.5 }
+]
 
 // If all these inline objects are getting messy or repetitive, consider defining them beforehand:
 const v0 = [0, { vibrato: 0.5 }];
