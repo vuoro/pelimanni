@@ -76,7 +76,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstrument, op
     // Destroy inactive instruments, and remove instrumentSets with no instruments remaining
     for (const [preset, instrumentSet] of schedule.instruments) {
       for (const instrument of instrumentSet) {
-        if (schedule.scheduledUpTo - instrument.willPlayUntil > cycle * 2.0) {
+        if (schedule.scheduledUpTo - instrument.willPlayUntil > cycle * 8.0) {
           destroyInstrument(instrument);
           instrumentSet.delete(instrument);
         }
