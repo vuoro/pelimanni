@@ -1,17 +1,10 @@
 /**
   @param {import ("./instrumentPresets.js").Instrument} preset
-*/
-export const createInstrument = (preset) => {
-  return { preset, instances: new Set() };
-};
-
-/**
-  @param {ReturnType<typeof createInstrument>} instrument
   @param {AudioContext} audioContext
 */
-export const createInstance = ({ preset, instances }, audioContext) => {
+export const createInstrument = (preset, audioContext) => {
   const {
-    oscillators: oscillatorTypes,
+    oscillators: oscillatorsInPreset,
     vibratoType,
     vibratoEffectOnLowPass,
     vibratoEffectOnPitch,
@@ -145,7 +138,7 @@ export const createInstance = ({ preset, instances }, audioContext) => {
 
   vibratoMain.start(audioContext.currentTime);
 
-  const instance = {
+  return {
     oscillators,
     vibratoMain,
     vibratoLowPassGain,
@@ -162,13 +155,9 @@ export const createInstance = ({ preset, instances }, audioContext) => {
     willPlayUntil: 0,
     previousPitch: 440,
   };
-
-  instances.add(instance);
-
-  return instance;
 };
 
-export const playInstance = (
+export const playInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ pitch,
   /** @type {number} */ at,
@@ -374,15 +363,11 @@ export const playInstance = (
 };
 
 /**
-  @param {ReturnType<typeof createInstance>} instance
   @param {ReturnType<typeof createInstrument>} instrument
 */
-export const destroyInstance = (instance, instrument) => {
-  instrument.instances.delete(instance);
-
+export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
   // TODO: Is this all that's needed?
   // Or do all nodes need to be disconnected?
-  const { output, oscillators, vibratoMain } = instance;
 
   output.disconnect();
   for (const { oscillatorNode } of oscillators) {

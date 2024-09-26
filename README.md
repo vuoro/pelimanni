@@ -1,4 +1,4 @@
-**Pelimanni** 
+**Pelimanni**
 
 Subtractive-synthesised Web Audio classical instruments, and utilities for making dynamically looping music with them.
 
@@ -20,7 +20,7 @@ npm install @vuoro/pelimanni
 
 A set of pretend classical instruments, made with subtractive synthesis methods.
 
-The following are all the instrument presets currently implemented. 
+The following are all the instrument presets currently implemented.
 
 ```js
   import {
@@ -38,17 +38,16 @@ The presets define the instrument's timbre. They also combine at runtime with va
 
 You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola, attack: viola.attack * 2.0}`. See `genericInstrument` in instrumentPresets.js for all the available options.
 
-To play the instruments, you must create an `AudioContext`, resume it, create the instrument, create an instance of it, connect it, and call `playInstrument` with it.
+To play the instruments, you must create an `AudioContext`, resume it, create the instrument, connect it to your audio system, and call `playInstrument` with it.
 
-Each instance is monophonic (it can only play 1 sound at a time), but you can combine multiple instances to play them as if they're polyphonic (the scheduler further below does this automatically).
+Each instrument is monophonic (it can only play 1 sound at a time). If you need polyphony, you have to create multiple copies of an instrument (the scheduler further below does this automatically).
 
 ```js
-  import {createInstrument, createInstance, playInstance, destroyInstance} from "@vuoro/pelimanni/instruments.js";
+  import {createInstrument, playInstrument, destroyInstrument} from "@vuoro/pelimanni/instruments.js";
 
-  // Create an AudioContext, an instrument, and an instance
+  // Create an AudioContext and an instrument
   const audioContext = new AudioContext();
   const violaInstrument = createInstrument(pluckedViola);
-  const violaInstance = createInstance(violaInstrument, audioContext);
 
   // Connect them
   // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
@@ -57,7 +56,7 @@ Each instance is monophonic (it can only play 1 sound at a time), but you can co
   // I use the following, but I'm uncertain if they're enough for every possible scenario.
   // 1. A DynamicsCompressor to guard against super high volumes.
   // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-  violaInstance.output.connect(audioContext.destination);
+  violaInstrument.output.connect(audioContext.destination);
 
   // Play the instrument
   // Note: in reality you need to first call audioContext.resume() from a user gesture event handler.
@@ -69,13 +68,13 @@ Each instance is monophonic (it can only play 1 sound at a time), but you can co
   const volume = 0.5; // optional
   const vibratoAmount = 0.0; // optional
 
-  playInstance(violaInstance, frequency, at, duration, velocity, volume, vibratoAmount);
+  playInstrument(violaInstrument, frequency, at, duration, velocity, volume, vibratoAmount);
 ```
 
-When you don't need an instrument's instance anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
+When you don't need an instrumen anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
 
 ```js
-destroyInstance(violaInstance);
+destroyInstrument(violaInstrument);
 ```
 
 ## Note number to frequency conversion
@@ -92,11 +91,11 @@ import { midiToFrequency, midiToJustFrequency } from "@vuoro/pelimanni/notes.js"
 const tuning = 440.0; // optional
 
 const frequency = midiToFrequency(5, tuning);
-playInstance(violaInstance, frequency, at, duration);
+playInstrument(violaInstrument, frequency, at, duration);
 
 const root = 0; // optional
 const nicerFrequency = midiToJustFrequency(5, tuning, root);
-playInstance(violaInstance, nicerFrequency, at + 1.0, duration);
+playInstrument(violaInstrument, nicerFrequency, at + 1.0, duration);
 ```
 
 ## Sequencing notes into music
@@ -161,7 +160,7 @@ const v0 = [0, { vibrato: 0.5 }];
 [2, 4, 5, 2, v0, e, e, e];
 ```
 
-Now that you've got some sequences, you can pair them up with instruments into tracks.
+Now that you've got some sequences, you can pair them up with instrument presets into tracks.
 
 ```js
 const alternate = true;
@@ -179,21 +178,21 @@ const tracks = [
 
 If you have tracks as explained above, you can use `scheduleMusic` to play them in a loop.
 
-The scheduler will take care of timekeeping, managing instrument instances, and playing them. You just have to provide your own `connectInstance` function, to let it connect the instrument instances it creates to your audio system.
+The scheduler will take care of timekeeping, managing instruments, and playing them. You just have to provide your own `connectInstrument` function, to let it connect the instruments it creates to your audio system.
 
 ```js
-const connectInstance = (instrumentInstance) => {
+const connectInstrument = (instrument) => {
   // **Warning**: in reality I recommend adding several extra nodes between the instrument(s) and the destination.
   // Otherwise bugs you cause may literally cause **PHYSICAL PAIN** to yourself or your users.
   // Yeah. Working with audio is a bit scary. :|
   // I use the following, but I'm uncertain if they're enough for every possible scenario.
   // 1. A DynamicsCompressor to guard against super high volumes.
   // 2. A set of BiquadFilters to cut off frequencies below (~20 hz) and above (~20k hz) human hearing limits.
-  instrumentInstance.output.connect(audioContext.destination);
+  instrument.output.connect(audioContext.destination);
 }
 ```
 
-Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule any notes that start in the next `playAhead`, from each of your tracks. 
+Now you just have to call `scheduleMusic` at an appropriate time interval. If the page is visible, it will schedule any notes that start in the next `playAhead`, from each of your tracks.
 
 If the page is hidden, it will add 1 second to the `playAhead`, since 1s is as often as you can call any loop on a hidden page. If some kind of lagspike still manages to make the scheduler fall behind, it will skip enough notes to get back to schedule.
 
@@ -205,14 +204,14 @@ The parameters are:
 - your `tracks`: array of `[instrumentPreset, sequence]`
 - your `cycle` from earlier above
 - your `AudioContext`
-- your `connectInstance` function from above
+- your `connectInstrument` function from above
 - (optional) options: `{ playAhead: 0.2, numberToFrequency: midiToFrequency }`
 
 ```js
 import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 
 const options = { playAhead: 0.2 };
-const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstance, options);
+const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstrument, options);
 
 setInterval(callScheduleMusic, options.playAhead / 4.0 * 1000.0);
 document.addEventListener("visibilitychange", tryToScheduleMusic);

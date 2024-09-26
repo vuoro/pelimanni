@@ -1,10 +1,10 @@
-import { createInstance, createInstrument, destroyInstance, playInstance } from "./instruments.js";
+import { createInstrument, destroyInstrument, playInstrument } from "./instruments.js";
 import { midiToFrequency } from "./notes.js";
 
 const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
 
 /**
- * @typedef {typeof import("./instrumentPresets.js").genericInstrument} Instrument
+ * @typedef {typeof import("./instrumentPresets.js").genericInstrument} InstrumentPreset
  * @typedef {object} PlayableOptions
  * @property {number=} velocity - how strongly the note is played (does not affect volume)
  * @property {number=} volume - how loud the note is
@@ -15,13 +15,13 @@ const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
  * @property {boolean=} alternate - sequentially pick just one entry, instead of subdividing time
  * @property {boolean=} chord - play all entries at the same time, instead of subdividing time
  * @typedef {(PlayableOptions | number | undefined | Playable)[]} Playable
- * @typedef {(instrument: ReturnType<typeof createInstance>) => void} ConnectInstance
- * @param {([Instrument, Playable])[]} tracks
+ * @typedef {(instrument: ReturnType<typeof createInstrument>) => void} ConnectInstrument
+ * @param {([InstrumentPreset, Playable])[]} tracks
  * @param {number} cycle
  * @param {AudioContext} audioContext
- * @param {ConnectInstance} connectInstance
+ * @param {ConnectInstrument} connectInstrument
  */
-export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, options = defaultOptions) => {
+export const scheduleMusic = (tracks, cycle, audioContext, connectInstrument, options = defaultOptions) => {
   const playAhead = options.playAhead ?? defaultOptions.playAhead;
   const numberToFrequency = options.numberToFrequency ?? defaultOptions.numberToFrequency;
 
@@ -32,7 +32,7 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, opti
   const schedule =
     schedules.get(audioContext) || schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
 
-  schedule.connectInstance = connectInstance;
+  schedule.connectInstrument = connectInstrument;
   schedule.numberToFrequency = numberToFrequency;
 
   // TODO: use baseLatency to better align sounds with visuals?
@@ -53,21 +53,17 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, opti
     const cyclesToCheck = to > cycleEndsAt ? 2 : 1;
 
     // Start scheduling the tracks
-    for (const [preset, sequence] of tracks) {
-      if (!preset) continue;
+    for (const [instrumentPreset, sequence] of tracks) {
+      if (!instrumentPreset) continue;
 
       let checkedCycles = 0;
-
-      // Get or create the instrument
-      const instrument =
-        schedule.instruments.get(preset) || schedule.instruments.set(preset, createInstrument(preset)).get(preset);
 
       // Schedule the cycles within reach, and keep going if a note is pending
       while (checkedCycles < cyclesToCheck || schedule.pendingNote.pending) {
         const cycleStartedAt = (Math.floor(from / cycle) + checkedCycles) * cycle;
         const period = cycleStartedAt / cycle;
 
-        schedulePart(schedule, instrument, sequence, cycleStartedAt, cycle, period, from, to);
+        schedulePart(schedule, instrumentPreset, sequence, cycleStartedAt, cycle, period, from, to);
 
         checkedCycles++;
         if (checkedCycles > 64)
@@ -77,15 +73,16 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstance, opti
       }
     }
 
-    // Destroy inactive instrument instances, and remove instruments with no instances remaining
-    for (const [preset, instrument] of schedule.instruments) {
-      for (const instance of instrument.instances) {
-        if (schedule.scheduledUpTo - instance.willPlayUntil > cycle * 2.0) {
-          destroyInstance(instance, instrument);
+    // Destroy inactive instruments, and remove instrumentSets with no instruments remaining
+    for (const [preset, instrumentSet] of schedule.instruments) {
+      for (const instrument of instrumentSet) {
+        if (schedule.scheduledUpTo - instrument.willPlayUntil > cycle * 2.0) {
+          destroyInstrument(instrument);
+          instrumentSet.delete(instrument);
         }
       }
 
-      if (instrument.instances.size === 0) schedule.instruments.delete(preset);
+      if (instrumentSet.size === 0) schedule.instruments.delete(preset);
     }
   }
 };
@@ -100,14 +97,14 @@ const createSchedule = (audioContext) =>
     scheduledUpTo: 0.0,
     instruments: new Map(),
     audioContext,
-    /** @type {ConnectInstance} */
-    connectInstance: () => {
-      throw new Error("Missing `connectInstance` parameter in `scheduleMusic`");
+    /** @type {ConnectInstrument} */
+    connectInstrument: () => {
+      throw new Error("Missing `connectInstrument` parameter in `scheduleMusic`");
     },
     numberToFrequency: midiToFrequency,
     pendingNote: Object.seal({
       pending: false,
-      instrument: null,
+      instrumentPreset: null,
       note: 0,
       root: 0,
       at: 0,
@@ -122,7 +119,7 @@ const createSchedule = (audioContext) =>
 /**
  * @typedef {ReturnType<typeof createSchedule>} Schedule
  * @param {Schedule} schedule
- * @param {Instrument} instrument
+ * @param {InstrumentPreset} instrumentPreset
  * @param {Playable | number | undefined} playable
  * @param {number} velocityFromParent
  * @param {number} volumeFromParent
@@ -133,7 +130,7 @@ const createSchedule = (audioContext) =>
  */
 const schedulePart = (
   schedule,
-  instrument,
+  instrumentPreset,
   playable,
   at = 0.0,
   duration = 0.0,
@@ -165,7 +162,7 @@ const schedulePart = (
     const vibrato = vibratoFromParent;
     const vibratoFrequency = vibratoFrequencyFromParent;
 
-    schedule.pendingNote.instrument = instrument;
+    schedule.pendingNote.instrumentPreset = instrumentPreset;
     schedule.pendingNote.note = note;
     schedule.pendingNote.root = root;
     schedule.pendingNote.at = at;
@@ -234,7 +231,7 @@ const schedulePart = (
 
     return schedulePart(
       schedule,
-      instrument,
+      instrumentPreset,
       // FIXME: recursive types…
       child,
       at,
@@ -258,7 +255,7 @@ const schedulePart = (
 
       schedulePart(
         schedule,
-        instrument,
+        instrumentPreset,
         child,
         at,
         duration,
@@ -286,7 +283,7 @@ const schedulePart = (
 
     schedulePart(
       schedule,
-      instrument,
+      instrumentPreset,
       child,
       childAt,
       childDuration,
@@ -306,29 +303,32 @@ const schedulePart = (
 /**
  @param {Schedule} schedule
  */
-const playPendingNote = ({ connectInstance, numberToFrequency, pendingNote, audioContext }) => {
-  const { instrument, note, root, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
+const playPendingNote = ({ connectInstrument, numberToFrequency, pendingNote, audioContext, instruments }) => {
+  const { instrumentPreset, note, root, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
   pendingNote.pending = false;
 
-  // Find a free instance
-  let instance = null;
+  // Find a free instrument
+  let instrument = null;
+  const instrumentSet =
+    instruments.get(instrumentPreset) || instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
 
-  for (const potentialInstance of instrument.instances) {
-    if (potentialInstance.willPlayUntil <= at) {
-      instance = potentialInstance;
+  for (const potentialInstrument of instrumentSet) {
+    if (potentialInstrument.willPlayUntil <= at) {
+      instrument = potentialInstrument;
       break;
     }
   }
 
   // If one wasn't found, create it
-  if (!instance) {
-    instance = createInstance(instrument, audioContext);
-    connectInstance(instance);
+  if (!instrument) {
+    instrument = createInstrument(instrumentPreset, audioContext);
+    instrumentSet.add(instrument);
+    connectInstrument(instrument);
   }
 
   // Play the note
-  playInstance(
-    instance,
+  playInstrument(
+    instrument,
     numberToFrequency(note, undefined, root),
     at,
     duration,
