@@ -148,6 +148,10 @@ export const oboe = {
 /** @type {Instrument} */
 export const bassoon = {
   ...oboe,
+  attack: 0.146,
+  filterAttack: 0.09,
+  release: 0.09,
+  filterRelease: 0.056,
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
   peakingFilters: [
@@ -253,6 +257,10 @@ export const trumpet = {
 /** @type {Instrument} */
 export const trombone = {
   ...trumpet,
+  attack: 0.146,
+  filterAttack: 0.056,
+  release: 0.09,
+  filterRelease: 0.236,
   highPassFrequency: 82.406,
   lowPassFrequency: 698.464,
   peakingFilters: [
@@ -336,7 +344,9 @@ export const viola = {
 export const cello = {
   ...viola,
   attack: 0.146,
+  filterAttack: 0.09,
   release: 0.09,
+  filterRelease: 0.056,
   highPassFrequency: 65.4,
   lowPassFrequency: 1046.5,
   peakingFilters: [
@@ -409,14 +419,14 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.003 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008 },
+    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2, pitchMultiplier: 1.0 },
+    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.008 * 0.382, pitchMultiplier: 1.003 },
+    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008, pitchMultiplier: 1.003 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.013,
+  filterAttack: 0.021,
   decay: 0.618,
   filterDecay: 0.5,
   sustain: 0.056,
@@ -424,11 +434,46 @@ export const hammeredDulcimer = {
   release: 0.056,
   filterRelease: 0.034,
 
-  lowPassPitchTracking: 0.618,
   highPassPitchTracking: 0.236,
+  lowPassPitchTracking: 0.618,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51,
+
+  peakingFilters: [
+    { frequency: 400, gain: 2.0, Q: 3.0 },
+    { frequency: 700, gain: 2.0, Q: 3.0 },
+    { frequency: 900, gain: 2.0, Q: 3.0 },
+    { frequency: 1300, gain: 2.0, Q: 3.0 },
+    { frequency: 2700, gain: 3.0, Q: 2.0 },
+    { frequency: 4000, gain: 3.0, Q: 2.0 },
+  ],
+};
+
+/** @type {Instrument} */
+export const piano = {
+  ...genericInstrument,
+  oscillators: [
+    { type: "pulse", pulseWidth: 0.333333, gain: 1 / 2, pitchMultiplier: 1.0 },
+    { type: "pulse", pulseWidth: 0.333333, gain: -1 / 4, glide: 0.008 * 0.236, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 0.333333, gain: 1 / 4, glide: 0.008, pitchMultiplier: 1.005 },
+  ],
+  decayExtendsDuration: true,
+
+  attack: 0.013,
+  filterAttack: 0.021,
+  decay: 0.414,
+  filterDecay: 0.5,
+  sustain: 0.09,
+  filterSustain: 0.09,
+  release: 0.056,
+  filterRelease: 0.034,
+
+  highPassPitchTracking: 1.0,
+  lowPassPitchTracking: 1.0,
+
+  highPassFrequency: 27.5 * 2.0,
+  lowPassFrequency: 4186.009 / 2.0,
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },
