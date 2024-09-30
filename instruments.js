@@ -205,10 +205,9 @@ export const playInstrument = (
 
   const hasVibrato = vibratoAmount > 0.0;
 
-  const lowPitchness = highPassFrequency / pitch;
-  const highPitchness = pitch / lowPassFrequency;
-  const longness = 1.0 - 0.382 ** duration;
-  const shortness = 1.0 - longness;
+  const highPitchness = (pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency);
+  const lowPitchness = 1.0 - highPitchness;
+  const extremePitchness = Math.max(lowPitchness, highPitchness);
 
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
@@ -221,12 +220,12 @@ export const playInstrument = (
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
 
   const attackDynamics =
-    (0.764 + 0.236 * 3.0 * longness) *
+    mix(1.0, duration, 0.382) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
     (1.0 + 0.146 * dynamicSlowness) *
     situationalDynamics;
   const releaseDynamics =
-    (0.764 + 0.236 * 3.0 * longness) *
+    mix(1.0, duration, 0.382) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
     (1.0 - 0.146 * dynamicSlowness) *
     situationalDynamics;
@@ -312,25 +311,25 @@ export const playInstrument = (
 
   // Decay if needed
   if (shouldDecay) {
-    const decayDynamics = mix(
-      (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness),
-      (endAt - decayAt) * 0.333333,
-      0.333333,
-    );
+    const decayDuration = endAt - decayAt;
+    const decayDynamics = mix(1.0, decayDuration, 0.146) * (0.854 + 0.146 * 2.0 * lowPitchness);
 
-    const sustainDynamics = 1.0 + (lowPitchness - highPitchness + longness - shortness) * 0.236;
+    const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
+    const filterDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicSlowness);
+
+    const sustainDynamics = 1.0 + extremePitchness * 0.146;
 
     // Oscillators
     for (const { gainNode, gainTarget, decay = defaultDecay, sustain = defaultSustain } of oscillators) {
-      const dynamicDecay = decay * decayDynamics;
+      const dynamicDecay = decay * oscillatorDecayDynamics;
       if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
 
       gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
     }
 
     // Filters
-    const filterDynamicDecay = filterDecay * decayDynamics * (1.0 + 0.236 * dynamicSlowness);
-    const filterDynamicSustain = filterSustain * sustainDynamics;
+    const filterDynamicDecay = filterDecay * filterDecayDynamics;
+    const filterDynamicSustain = filterSustain ** sustainDynamics;
 
     lowPassFilter.frequency.setTargetAtTime(
       mix(pitch, lowPassTarget, filterDynamicSustain),
