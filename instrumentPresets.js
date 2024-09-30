@@ -66,9 +66,9 @@ export const genericInstrument = Object.seal({
   /** @type {number} minimum note and harmonics frequency */
   highPassFrequency: 247.0,
 
-  /** @type {number} how much to move lowPassFrequency towards the currently played note */
-  lowPassPitchTracking: 0.034,
-  /** @type {number} how much to move highPassFrequency towards the currently played note */
+  /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency, and halves it when playing a pitch at highPassFrequency */
+  lowPassPitchTracking: 0.056,
+  /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency, and doubles it when playing a pitch at lowPassFrequency */
   highPassPitchTracking: 0.034,
 
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
@@ -242,7 +242,7 @@ export const trumpet = {
 
   lowPassFrequency: 1174.656,
   highPassFrequency: 184.996,
-  lowPassPitchTracking: -0.056,
+  lowPassPitchTracking: -0.09,
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1200, gain: 2.0, Q: 3.0 },
@@ -410,7 +410,7 @@ export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
+    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.003 },
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008 },
   ],
   decayExtendsDuration: true,
@@ -424,11 +424,11 @@ export const hammeredDulcimer = {
   release: 0.056,
   filterRelease: 0.034,
 
-  lowPassPitchTracking: 0.146,
-  highPassPitchTracking: 0.034,
+  lowPassPitchTracking: 0.618,
+  highPassPitchTracking: 0.236,
 
   highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51 * 1.618,
+  lowPassFrequency: 1244.51,
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },

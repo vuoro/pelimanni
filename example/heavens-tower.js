@@ -60,7 +60,7 @@ export const heavensTower = () => {
   ];
 
   const tracks = [
-    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.236, velocity: 0.5 }]],
+    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.2, velocity: 0.5 }]],
     [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.146 }]],
     [violin, [...melody, { transpose: 12, volume: 0.2 }]],
     [viola, [...highHarmony, { transpose: 0, volume: 0.146 }]],

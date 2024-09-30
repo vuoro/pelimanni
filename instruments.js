@@ -205,9 +205,11 @@ export const playInstrument = (
 
   const hasVibrato = vibratoAmount > 0.0;
 
-  const highPitchness = (pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency);
+  // FIXME: not sure if the exponent here is the correct magical number
+  const highPitchness = ((pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency)) ** 0.41421356;
   const lowPitchness = 1.0 - highPitchness;
-  const extremePitchness = Math.max(lowPitchness, highPitchness);
+  const relativePitchness = highPitchness * 2.0 - 1.0;
+  const extremePitchness = Math.abs(relativePitchness);
 
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
@@ -241,8 +243,9 @@ export const playInstrument = (
   const vibratoGainAttack = defaultDynamicAttack * 0.236;
   const vibratoGainRelease = defaultDynamicRelease * 0.236;
 
-  const highPassTarget = mix(highPassFrequency, pitch, highPassPitchTracking * (1.0 - lowPitchness * lowPitchness));
-  const lowPassTarget = mix(lowPassFrequency, pitch, lowPassPitchTracking * (1.0 - highPitchness * highPitchness));
+  const filterMultiplier = relativePitchness < 0.0 ? relativePitchness * 0.5 : relativePitchness;
+  const highPassTarget = highPassFrequency * (1.0 + highPassPitchTracking * filterMultiplier);
+  const lowPassTarget = lowPassFrequency * (1.0 + lowPassPitchTracking * filterMultiplier);
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
