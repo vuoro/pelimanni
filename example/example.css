@@ -1,0 +1,12 @@
+body {
+  display: grid;
+  gap: 1rlh;
+  margin: 2rlh 1rlh;
+}
+
+#visualizer {
+  width: 100%;
+  aspect-ratio: 16/9;
+  max-height: 50vh;
+  border: 2px solid;
+}

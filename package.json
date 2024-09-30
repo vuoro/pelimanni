@@ -9,8 +9,12 @@
     "./instrumentPresets.js": "./instrumentPresets.js",
     "./notes.js": "./notes.js"
   },
+  "scripts": {
+    "dev": "vite dev --port 3000"
+  },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.0"
+    "@biomejs/biome": "^1.9.0",
+    "vite": "^5.4.8"
   },
   "packageManager": "pnpm@9.7.0"
 }
