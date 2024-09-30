@@ -15,8 +15,9 @@ playButton.addEventListener("click", () => audioSystem.audioContext.resume());
 stopButton.addEventListener("click", () => audioSystem.audioContext.suspend());
 
 // Scheduler
+const playAhead = 0.2;
 const scheduleTracks = () => {
-  scheduleMusic(tracks, cycle, audioSystem.audioContext, audioSystem.connectInstrument);
+  scheduleMusic(tracks, cycle, audioSystem.audioContext, audioSystem.connectInstrument, { playAhead });
 };
 
 // Visualizer
@@ -24,9 +25,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("visual
 const drawVisualization = AudioVisualizer(audioSystem, canvas);
 
 const loop = () => {
-  scheduleTracks();
   drawVisualization();
   requestAnimationFrame(loop);
 };
 
 requestAnimationFrame(loop);
+
+// Schedules often, but will be throttled to 1000ms when the page is not visible
+setInterval(scheduleTracks, (playAhead / 2.0) * 1000.0);
+
+// Schedules music when page visibility changes, to avoid a gap
+document.addEventListener("visibilitychange", scheduleTracks);
