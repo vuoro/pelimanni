@@ -68,14 +68,14 @@ export const createInstrument = (preset, audioContext) => {
   } of oscillatorsInPreset) {
     const oscillatorNode =
       type === "pulse"
-        ? new PulseOscillatorNode(audioContext, { type, pulseWidth, frequency: 440 })
+        ? new PulseOscillatorNode(audioContext, { pulseWidth, frequency: 440 })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
     const gainNode = new GainNode(audioContext, { gain: 0 });
 
     let oscillatorBaseVolume = 1.0;
     switch (type) {
       case "pulse": {
-        oscillatorBaseVolume = 0.25 + (1.0 - pulseWidth) ** 2.0 * 0.5;
+        oscillatorBaseVolume = 0.5 + 0.5 * (Math.abs(0.5 - pulseWidth) * 2.0) ** 2.0;
         break;
       }
       case "square": {
@@ -222,12 +222,12 @@ export const playInstrument = (
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
 
   const attackDynamics =
-    mix(1.0, duration, 0.382) *
+    mix(1.0, duration, 0.146) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
     (1.0 + 0.146 * dynamicSlowness) *
     situationalDynamics;
   const releaseDynamics =
-    mix(1.0, duration, 0.382) *
+    mix(1.0, duration, 0.146) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
     (1.0 - 0.146 * dynamicSlowness) *
     situationalDynamics;
@@ -243,9 +243,8 @@ export const playInstrument = (
   const vibratoGainAttack = defaultDynamicAttack * 0.236;
   const vibratoGainRelease = defaultDynamicRelease * 0.236;
 
-  const filterMultiplier = relativePitchness < 0.0 ? relativePitchness * 0.5 : relativePitchness;
-  const highPassTarget = highPassFrequency * (1.0 + highPassPitchTracking * filterMultiplier);
-  const lowPassTarget = lowPassFrequency * (1.0 + lowPassPitchTracking * filterMultiplier);
+  const highPassTarget = highPassFrequency / (1.0 + highPassPitchTracking * lowPitchness);
+  const lowPassTarget = lowPassFrequency * (1.0 + lowPassPitchTracking * highPitchness);
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
@@ -315,25 +314,25 @@ export const playInstrument = (
   // Decay if needed
   if (shouldDecay) {
     const decayDuration = endAt - decayAt;
-    const decayDynamics = mix(1.0, decayDuration, 0.146) * (0.854 + 0.146 * 2.0 * lowPitchness);
+    const decayDynamics = mix(1.0, decayDuration, 0.146) * (0.618 + 0.382 * 2.0 * lowPitchness);
 
     const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
     const filterDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicSlowness);
 
-    const oscillatorSustainDynamics = 1.0 + extremePitchness * 0.146;
-    const filterSustainDynamics = 1.0 + extremePitchness * 0.146 - highPitchness * 0.146;
+    const sustainDynamics = 1.0 + highPitchness * 0.236;
 
     // Oscillators
     for (const { gainNode, gainTarget, decay = defaultDecay, sustain = defaultSustain } of oscillators) {
       const dynamicDecay = decay * oscillatorDecayDynamics;
+
       if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
 
-      gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** oscillatorSustainDynamics, decayAt, dynamicDecay);
+      gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
     }
 
     // Filters
     const filterDynamicDecay = filterDecay * filterDecayDynamics;
-    const filterDynamicSustain = filterSustain ** filterSustainDynamics;
+    const filterDynamicSustain = filterSustain ** sustainDynamics;
 
     lowPassFilter.frequency.setTargetAtTime(
       mix(pitch, lowPassTarget, filterDynamicSustain),
@@ -390,14 +389,14 @@ class PulseOscillatorNode extends OscillatorNode {
     @param {AudioContext} audioContext
   */
   constructor(audioContext, options = {}) {
-    super(audioContext, { ...options, type: "triangle" });
+    super(audioContext, { ...options, type: "sawtooth" });
 
-    const width = options?.pulseWidth || 0.25;
+    const width = options?.pulseWidth ?? 0.25;
     const roundedWidth = Math.round(width * 256);
 
     const curve = new Float32Array(256);
-    curve.fill(-1, 0, roundedWidth);
-    curve.fill(1, roundedWidth);
+    curve.fill(-1.0, 0, roundedWidth);
+    curve.fill(1.0, roundedWidth);
 
     this.waveShaper = new WaveShaperNode(audioContext, { curve, oversample: "none" });
     super.connect(this.waveShaper);

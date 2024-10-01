@@ -1,3 +1,4 @@
+import { midiToJustFrequency } from "../notes";
 import { scheduleMusic } from "../schedule";
 import { AudioSystem } from "./AudioSystem";
 import { AudioVisualizer } from "./AudioVisualizer";
@@ -17,7 +18,10 @@ stopButton.addEventListener("click", () => audioSystem.audioContext.suspend());
 // Scheduler
 const playAhead = 0.2;
 const scheduleTracks = () => {
-  scheduleMusic(tracks, cycle, audioSystem.audioContext, audioSystem.connectInstrument, { playAhead });
+  scheduleMusic(tracks, cycle, audioSystem.audioContext, audioSystem.connectInstrument, {
+    playAhead,
+    numberToFrequency: midiToJustFrequency,
+  });
 };
 
 // Visualizer

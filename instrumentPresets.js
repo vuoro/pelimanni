@@ -11,8 +11,8 @@
 export const genericInstrument = Object.seal({
   /**
    * @typedef {object} Oscillator - creates the sound of the note
-   * @property {OscillatorType | "pulse"} type - any of `OscillatorNode` types or `pulse`
-   * @property {number=} pulseWidth - only used when `type` is `pulse`
+   * @property {OscillatorType | "pulse"} type
+   * @property {number=} pulseWidth - duty cycle of the pulse; only used when `type` is `pulse`
    * @property {number=} pitchMultiplier - multiplies the frequency of the note for this oscillator
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
    * @property {Attack=} attack
@@ -66,10 +66,10 @@ export const genericInstrument = Object.seal({
   /** @type {number} minimum note and harmonics frequency */
   highPassFrequency: 247.0,
 
-  /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency, and halves it when playing a pitch at highPassFrequency */
+  /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency */
   lowPassPitchTracking: 0.056,
-  /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency, and doubles it when playing a pitch at lowPassFrequency */
-  highPassPitchTracking: 0.034,
+  /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency */
+  highPassPitchTracking: 0.056,
 
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
   vibratoEffectOnLowPass: 0.0,
@@ -123,8 +123,8 @@ export const piccolo = {
 export const oboe = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.15, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.15, gain: 1 / 2, glide: 0.004 },
+    { type: "pulse", pulseWidth: 0.146, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.146, gain: 1 / 2, glide: 0.004 },
   ],
 
   attack: 0.09,
@@ -374,8 +374,8 @@ const plucked = {
   /** @type {Instrument["oscillators"]} */
   oscillators: [
     { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.004 * Math.SQRT1_2 },
-    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.004 },
+    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.003 * Math.SQRT1_2 },
+    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.003 },
   ],
   decayExtendsDuration: true,
 
@@ -419,23 +419,23 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2, pitchMultiplier: 1.0 },
-    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.008 * 0.382, pitchMultiplier: 1.003 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.008, pitchMultiplier: 1.003 },
+    { type: "pulse", pulseWidth: 0.383, pitchMultiplier: 1.003, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.008 },
+    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.008 * Math.SQRT1_2 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.021,
-  decay: 0.618,
-  filterDecay: 0.5,
+  filterAttack: 0.008,
+  decay: 0.764,
+  filterDecay: 0.618,
   sustain: 0.056,
-  filterSustain: 0.09,
-  release: 0.056,
-  filterRelease: 0.034,
+  filterSustain: 0.056,
+  release: 0.09,
+  filterRelease: 0.056,
 
-  highPassPitchTracking: 0.236,
-  lowPassPitchTracking: 0.618,
+  // highPassPitchTracking: 0.0,
+  lowPassPitchTracking: 1.0,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51,
@@ -445,8 +445,8 @@ export const hammeredDulcimer = {
     { frequency: 700, gain: 2.0, Q: 3.0 },
     { frequency: 900, gain: 2.0, Q: 3.0 },
     { frequency: 1300, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 3.0, Q: 2.0 },
-    { frequency: 4000, gain: 3.0, Q: 2.0 },
+    { frequency: 2700, gain: 2.0, Q: 3.0 },
+    { frequency: 4000, gain: 2.0, Q: 3.0 },
   ],
 };
 
@@ -454,33 +454,33 @@ export const hammeredDulcimer = {
 export const piano = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.333333, gain: 1 / 2, pitchMultiplier: 1.0 },
-    { type: "pulse", pulseWidth: 0.333333, gain: -1 / 4, glide: 0.008 * 0.236, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 0.333333, gain: 1 / 4, glide: 0.008, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 0.414, pitchMultiplier: 1.003, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.005 },
+    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.005 * Math.SQRT1_2 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.021,
-  decay: 0.414,
-  filterDecay: 0.5,
+  filterAttack: 0.008,
+  decay: 0.5,
+  filterDecay: 0.414,
   sustain: 0.09,
   filterSustain: 0.09,
-  release: 0.056,
-  filterRelease: 0.034,
+  release: 0.09,
+  filterRelease: 0.056,
 
-  highPassPitchTracking: 1.0,
-  lowPassPitchTracking: 1.0,
+  // highPassPitchTracking: 0.0,
+  lowPassPitchTracking: 2.0,
 
-  highPassFrequency: 27.5 * 2.0,
-  lowPassFrequency: 4186.009 / 2.0,
+  highPassFrequency: 27.5,
+  lowPassFrequency: 4186.009 / (1.0 + 2.0),
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },
     { frequency: 700, gain: 2.0, Q: 3.0 },
     { frequency: 900, gain: 2.0, Q: 3.0 },
     { frequency: 1300, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 3.0, Q: 2.0 },
-    { frequency: 4000, gain: 3.0, Q: 2.0 },
+    { frequency: 2700, gain: 2.0, Q: 3.0 },
+    { frequency: 4000, gain: 2.0, Q: 3.0 },
   ],
 };

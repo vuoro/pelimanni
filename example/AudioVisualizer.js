@@ -70,21 +70,22 @@ export const AudioVisualizer = (audioSystem, canvas) => {
     }
 
     // Oscilloscope
-    const timeSlice = width / binCount;
+    const timeSlice = (width / binCount) * 4.0;
     let timeX = 0;
     drawer.beginPath();
 
     for (let i = 0; i < binCount; i++) {
       const v = timeData[i];
-      const y = v * (height / 4) + height / 2 - height / 3;
+      const y = v * height + height / 2 - height / 3;
 
       if (i === 0) {
-        drawer.moveTo(timeX, y);
+        drawer.moveTo(timeX * 2.0, y);
       } else {
-        drawer.lineTo(timeX, y);
+        drawer.lineTo(timeX * 2.0, y);
       }
 
       timeX += timeSlice;
+      if (timeX >= width) break;
     }
 
     drawer.stroke();

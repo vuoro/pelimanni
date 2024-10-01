@@ -1,6 +1,6 @@
 {
   "name": "@vuoro/pelimanni",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "type": "module",
   "main": "./instruments.js",
   "exports": {
@@ -13,7 +13,7 @@
     "dev": "vite dev --port 3000"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
+    "@biomejs/biome": "^1.9.2",
     "vite": "^5.4.8"
   },
   "packageManager": "pnpm@9.7.0"

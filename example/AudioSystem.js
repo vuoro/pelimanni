@@ -8,7 +8,7 @@ export const defaultReverbOptions = {
   bandwidth: 0.854,
   inputDiffusion1: 0.236,
   inputDiffusion2: 0.236,
-  decay: 0.5,
+  decay: 0.382,
   decayDiffusion1: 0.236,
   decayDiffusion2: 0.236,
   damping: 0.146,
