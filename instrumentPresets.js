@@ -123,8 +123,8 @@ export const piccolo = {
 export const oboe = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.146, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.146, gain: 1 / 2, glide: 0.004 },
+    { type: "pulse", pulseWidth: 0.236, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.236, gain: 1 / 2, glide: 0.004 },
   ],
 
   attack: 0.09,
@@ -419,7 +419,7 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.7, pitchMultiplier: 1.003, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 2 },
     { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.008 },
     { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.008 * Math.SQRT1_2 },
   ],
@@ -455,8 +455,8 @@ export const piano = {
   ...genericInstrument,
   oscillators: [
     { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.618, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.005 },
-    { type: "pulse", pulseWidth: 0.618, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.005 * Math.SQRT1_2 },
+    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.005 },
+    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.005 * Math.SQRT1_2 },
   ],
   decayExtendsDuration: true,
 

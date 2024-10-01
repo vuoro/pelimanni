@@ -211,6 +211,8 @@ export const playInstrument = (
   const relativePitchness = highPitchness * 2.0 - 1.0;
   const extremePitchness = Math.abs(relativePitchness);
 
+  const volumeTarget = volume * (1.0 - 0.146 * extremePitchness);
+
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
   const pitchSameness = 0.034 ** Math.abs(Math.log(pitch) - Math.log(instrument.previousPitch)) * franticness;
@@ -285,7 +287,7 @@ export const playInstrument = (
     gainNode.gain.cancelScheduledValues(startAt);
 
     oscillatorNode.frequency.setTargetAtTime(pitch * pitchMultiplier, startAt, glide * glideDynamics);
-    gainNode.gain.setTargetAtTime(gainTarget * volume, startAt, attack * attackDynamics);
+    gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, startAt, attack * attackDynamics);
   }
 
   // Attack filters
