@@ -216,8 +216,13 @@ export const saxophone = {
   release: 0.056,
   filterRelease: 0.09,
 
-  highPassFrequency: 233.08,
-  lowPassFrequency: 1567.968,
+  // FIXME: are these sensible? There are too many saxophone variants.
+  highPassFrequency: 116.0,
+  lowPassFrequency: 1244.0,
+
+  // See note about trumpet high notes below
+  lowPassPitchTracking: -0.5,
+
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1100, gain: 2.0, Q: 3.0 },
@@ -244,9 +249,12 @@ export const trumpet = {
   release: 0.056,
   filterRelease: 0.146,
 
-  lowPassFrequency: 1174.656,
+  lowPassFrequency: 1174.656 * 2.0,
   highPassFrequency: 184.996,
-  lowPassPitchTracking: -0.09,
+
+  // Trumpet high notes are apparently less bright. Assuming it applies to all brass?
+  lowPassPitchTracking: -1.0,
+
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1200, gain: 2.0, Q: 3.0 },
@@ -261,38 +269,29 @@ export const trombone = {
   filterAttack: 0.056,
   release: 0.09,
   filterRelease: 0.236,
-  highPassFrequency: 82.406,
-  lowPassFrequency: 698.464,
-  peakingFilters: [
-    { frequency: 520, gain: 2.0, Q: 3.0 },
-    { frequency: 1500, gain: 3.0, Q: 3.0 },
-  ],
-};
-
-/** @type {Instrument} */
-export const bassTrombone = {
-  ...trombone,
   highPassFrequency: 58.27,
-  lowPassFrequency: 466.16,
+  lowPassFrequency: 698.464 * 2.0,
   peakingFilters: [
     { frequency: 370, gain: 2.0, Q: 3.0 },
-    { frequency: 720, gain: 3.0, Q: 3.0 },
+    { frequency: 520, gain: 2.0, Q: 3.0 },
+    { frequency: 720, gain: 2.0, Q: 3.0 },
+    { frequency: 1500, gain: 2.0, Q: 3.0 },
   ],
 };
 
 /** @type {Instrument} */
 export const frenchHorn = {
-  ...bassTrombone,
+  ...trombone,
   highPassFrequency: 55.0,
-  lowPassFrequency: 698.46,
-  peakingFilters: [{ frequency: 450, gain: 2.0, Q: 3.0 }],
+  lowPassFrequency: 698.46 * 2.0,
+  peakingFilters: [{ frequency: 340, gain: 2.0, Q: 3.0 }],
 };
 
 /** @type {Instrument} */
 export const tuba = {
   ...frenchHorn,
   highPassFrequency: 36.71,
-  lowPassFrequency: 349.23,
+  lowPassFrequency: 349.23 * 2.0,
   peakingFilters: [
     { frequency: 230, gain: 2.0, Q: 3.0 },
     { frequency: 400, gain: 2.0, Q: 3.0 },
