@@ -27,10 +27,10 @@ The following are all the instrument presets currently implemented.
     flute, piccolo, // flutes
     oboe, bassoon, contrabassoon, // double-reed woodwinds
     clarinet, saxophone, // single-reed woodwinds
-    trumpet, trombone, bassTrombone, frenchHorn, tuba, // brass
+    trumpet, trombone, frenchHorn, tuba, // brass
     violin, viola, cello, contrabass, // bowed strings
     pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
-    hammeredDulcimer // string percussion: missing the hammer blow noise, for now
+    piano, hammeredDulcimer // string percussion: missing the hammer blow noise, for now
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
@@ -146,7 +146,7 @@ You can also add configuration objects to the ends of the arrays, for more contr
 // ´velocity` is how strongly the note is played, but does not affect the volume: best stay between 0–1
 // `volume` is how loud it should be: don't go above 1.0
 // `vibrato` makes most of the note waver: off at 0.0, very aggressive at 1.0
-// `vibratoFrequency` determines the wavering frequency: ~5.0 seems common 
+// `vibratoFrequency` determines the wavering frequency: ~5.0 seems common
 // `root` is for use with `midiToJustFrequency` (see earlier above)
 [0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, vibratoFrequency: 5.0, root: 0 }]
 
