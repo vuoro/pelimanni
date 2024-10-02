@@ -315,7 +315,7 @@ export const playInstrument = (
   // Decay if needed
   if (shouldDecay) {
     const decayDuration = endAt - decayAt;
-    const decayDynamics = mix(1.0, decayDuration, 0.146) * (0.618 + 0.382 * 2.0 * lowPitchness);
+    const decayDynamics = mix(1.0, decayDuration * 2.0, 0.236) * (0.618 + 0.382 * 2.0 * lowPitchness);
 
     const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
     const filterDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicSlowness);
