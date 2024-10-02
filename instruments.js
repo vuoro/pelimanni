@@ -206,8 +206,9 @@ export const playInstrument = (
   const hasVibrato = vibratoAmount > 0.0;
 
   // FIXME: not sure if the exponent here is the correct magical number
-  const highPitchness = ((pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency)) ** 0.41421356;
-  const lowPitchness = 1.0 - highPitchness;
+  let highPitchness = (pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency);
+  if (highPitchness > 0.0) highPitchness **= 0.41421356;
+  const lowPitchness = Math.max(0.0, 1.0 - highPitchness);
   const relativePitchness = highPitchness * 2.0 - 1.0;
   const extremePitchness = Math.abs(relativePitchness);
 
