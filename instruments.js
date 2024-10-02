@@ -136,8 +136,9 @@ export const createInstrument = (preset, audioContext) => {
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
     preset,
-    willPlayUntil: 0,
-    previousPitch: 440,
+    startedPlayingAt: 0.0,
+    willPlayUntil: 0.0,
+    previousPitch: 440.0,
   };
 };
 
@@ -189,7 +190,6 @@ export const playInstrument = (
 
   const hasVibrato = vibratoAmount > 0.0;
 
-  // FIXME: not sure if the exponent here is the correct magical number
   let highPitchness = (pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency);
   if (highPitchness > 0.0) highPitchness **= 0.41421356;
   const lowPitchness = Math.max(0.0, 1.0 - highPitchness);
@@ -298,17 +298,20 @@ export const playInstrument = (
 
   // Decay if needed
   if (shouldDecay) {
-    const decayDuration = endAt - decayAt;
-    const decayDynamics = mix(1.0, decayDuration * 2.0, 0.236) * (0.618 + 0.382 * 2.0 * lowPitchness);
+    const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
 
-    const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
-    const filterDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicSlowness);
+    const decayDuration = endAt - decayAt;
+    const decayTarget = decayDuration / 2.0;
+    const decayInterpolation = 0.333333;
+
+    const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
+    const filterDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
 
     const sustainDynamics = 1.0 + highPitchness * 0.236;
 
     // Oscillators
     for (const { gainNode, gainTarget, decay = defaultDecay, sustain = defaultSustain } of oscillators) {
-      const dynamicDecay = decay * oscillatorDecayDynamics;
+      const dynamicDecay = mix(decay, decayTarget, decayInterpolation) * oscillatorDecayDynamics;
 
       if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
 
@@ -316,7 +319,7 @@ export const playInstrument = (
     }
 
     // Filters
-    const filterDynamicDecay = filterDecay * filterDecayDynamics;
+    const filterDynamicDecay = mix(filterDecay, decayTarget, decayInterpolation) * filterDecayDynamics;
     const filterDynamicSustain = filterSustain ** sustainDynamics;
 
     lowPassFilter.frequency.setTargetAtTime(
@@ -345,6 +348,7 @@ export const playInstrument = (
   vibratoVolumeGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
 
   // Metadata
+  instrument.startedPlayingAt = startAt;
   instrument.willPlayUntil = endAt;
   instrument.previousPitch = pitch;
 };
