@@ -244,7 +244,7 @@ export const trumpet = {
   ...genericInstrument,
   oscillators: [
     { type: "pulse", pulseWidth: 1 / 6, gain: 2 / 3, glide: 0.003 },
-    { type: "triangle", gain: -1 / 3, glide: 0.003 },
+    { type: "triangle", gain: 1 / 3, glide: 0.003 },
   ],
   initialInstability: 1.0,
 
