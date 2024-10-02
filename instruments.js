@@ -38,7 +38,7 @@ export const createInstrument = (preset, audioContext) => {
 
   if (peakingFilters.length > 0) {
     for (const { frequency, gain, Q } of peakingFilters) {
-      maxPeak = Math.max(maxPeak, gain ** 0.764);
+      maxPeak = Math.max(maxPeak, gain);
       const peakFilter = new BiquadFilterNode(audioContext, {
         type: "peaking",
         frequency: frequency,
@@ -53,7 +53,7 @@ export const createInstrument = (preset, audioContext) => {
 
   // Oscillators
   const oscillators = [];
-  const baseVolume = 1.0 / maxPeak;
+  const baseVolume = 1.0 / maxPeak ** 0.41421356;
 
   for (const {
     type,
@@ -72,23 +72,7 @@ export const createInstrument = (preset, audioContext) => {
         : new OscillatorNode(audioContext, { type, frequency: 440 });
     const gainNode = new GainNode(audioContext, { gain: 0 });
 
-    let oscillatorBaseVolume = 1.0;
-    switch (type) {
-      case "pulse": {
-        oscillatorBaseVolume = 0.5 + 0.5 * (Math.abs(0.5 - pulseWidth) * 2.0) ** 2.0;
-        break;
-      }
-      case "square": {
-        oscillatorBaseVolume = 0.5;
-        break;
-      }
-      case "sawtooth": {
-        oscillatorBaseVolume = 0.875;
-        break;
-      }
-    }
-
-    const gainTarget = baseVolume * oscillatorBaseVolume * gain;
+    const gainTarget = (baseVolume * gain) ** 0.41421356;
 
     oscillatorNode.connect(gainNode).connect(lowPassFilter);
     oscillatorNode.start(audioContext.currentTime);
