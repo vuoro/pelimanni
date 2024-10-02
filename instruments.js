@@ -216,7 +216,7 @@ export const playInstrument = (
 
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
-  const pitchSameness = 0.034 ** Math.abs(Math.log(pitch) - Math.log(instrument.previousPitch)) * franticness;
+  const pitchSameness = 0.013 ** Math.abs(Math.log(pitch) - Math.log(instrument.previousPitch)) * franticness;
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
@@ -262,9 +262,7 @@ export const playInstrument = (
   let endAt = at + Math.max(duration * 0.618, duration - defaultDynamicRelease);
 
   const instabilityStopsAt =
-    initialInstability > 0.0
-      ? Math.min(endAt - Number.EPSILON * 2.0, startAt + filterDynamicAttack * 4.0 * pitchDifferentness ** 0.382)
-      : startAt;
+    initialInstability > 0.0 ? Math.min(endAt - Number.EPSILON * 2.0, startAt + filterDynamicAttack * 4.0) : startAt;
   const vibratoAt = Math.min(endAt - Number.EPSILON, instabilityStopsAt + defaultDynamicAttack);
 
   const shouldDecay = defaultDecay > 0.0 && defaultSustain !== 1.0 && decayAt < endAt;
@@ -299,7 +297,7 @@ export const playInstrument = (
   if (initialInstability > 0.0) {
     const instabilityTarget = 78 + 4 * highPitchness;
     // TODO: maybe this should be (lowPassTarget - pitch), in cents?
-    const instabilityEffect = initialInstability * 600 * pitchDifferentness ** 0.5;
+    const instabilityEffect = initialInstability * 700 * pitchDifferentness;
 
     vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, vibratoAttack);
     vibratoLowPassGain?.gain.setTargetAtTime(instabilityEffect, startAt, vibratoGainAttack);
