@@ -305,8 +305,6 @@ const schedulePart = (
  */
 const playPendingNote = ({ connectInstrument, numberToFrequency, pendingNote, audioContext, instruments }) => {
   const { instrumentPreset, note, root, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
-
-  const pitch = numberToFrequency(note, undefined, root);
   pendingNote.pending = false;
 
   // Find a free instrument
@@ -315,7 +313,7 @@ const playPendingNote = ({ connectInstrument, numberToFrequency, pendingNote, au
     instruments.get(instrumentPreset) || instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
 
   for (const potentialInstrument of instrumentSet) {
-    if (potentialInstrument.willPlayUntil <= at || potentialInstrument.previousPitch === pitch) {
+    if (potentialInstrument.willPlayUntil <= at) {
       instrument = potentialInstrument;
       break;
     }
@@ -329,5 +327,14 @@ const playPendingNote = ({ connectInstrument, numberToFrequency, pendingNote, au
   }
 
   // Play the note
-  playInstrument(instrument, pitch, at, duration, velocity, volume, vibrato, vibratoFrequency);
+  playInstrument(
+    instrument,
+    numberToFrequency(note, undefined, root),
+    at,
+    duration,
+    velocity,
+    volume,
+    vibrato,
+    vibratoFrequency,
+  );
 };
