@@ -393,14 +393,15 @@ class PulseOscillatorNode extends OscillatorNode {
   constructor(audioContext, options = {}) {
     super(audioContext, { ...options, type: "sawtooth" });
 
-    const width = options?.pulseWidth ?? 0.25;
-    const roundedWidth = Math.round(width * 256);
+    const width = options?.pulseWidth ?? 0.5;
+    const resolution = 1.0 / width;
+    const relativeWidth = width * resolution;
 
-    const curve = new Float32Array(256);
-    curve.fill(-1.0, 0, roundedWidth);
-    curve.fill(1.0, roundedWidth);
+    const curve = new Float32Array(resolution);
+    curve.fill(-1.0, 0, relativeWidth);
+    curve.fill(1.0, relativeWidth);
 
-    this.waveShaper = new WaveShaperNode(audioContext, { curve, oversample: "none" });
+    this.waveShaper = new WaveShaperNode(audioContext, { curve, oversample: "4x" });
     super.connect(this.waveShaper);
   }
 
