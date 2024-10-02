@@ -32,13 +32,13 @@ export const genericInstrument = Object.seal({
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
   /** @type {Attack} */
-  attack: 0.09,
+  attack: 0.0,
   /** @type {Decay} */
   decay: 0.0,
   /** @type {Sustain} */
   sustain: 1.0,
   /** @type {Release} */
-  release: 0.056,
+  release: 0.0,
   /** @type {Glide} */
   glide: 0.0,
 
@@ -92,8 +92,8 @@ export const genericInstrument = Object.seal({
 export const flute = {
   ...genericInstrument,
   oscillators: [
-    { type: "triangle", gain: 1 / 2 },
-    { type: "triangle", gain: 1 / 2, glide: 0.004 },
+    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
+    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
   ],
 
   attack: 0.09,
@@ -105,8 +105,13 @@ export const flute = {
   release: 0.056,
   filterRelease: 0.034,
 
-  highPassFrequency: 261.624,
-  lowPassFrequency: 2349.312,
+  highPassFrequency: 261.624 * 2.0,
+  lowPassFrequency: 2349.312 / 2.0,
+
+  // The tracking helps create the right overtones
+  highPassPitchTracking: 1.0,
+  lowPassPitchTracking: 1.0,
+
   vibratoEffectOnLowPass: 900.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 3.0 }],
 };
@@ -123,8 +128,9 @@ export const piccolo = {
 export const oboe = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.236, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.236, gain: 1 / 2, glide: 0.004 },
+    { type: "triangle", gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 3, gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 9, gain: 1 / 3, glide: 0.003 },
   ],
 
   attack: 0.09,
@@ -138,6 +144,7 @@ export const oboe = {
 
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
+
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
     { frequency: 1400, gain: 2.0, Q: 3.0 },
@@ -175,8 +182,9 @@ export const contrabassoon = {
 export const clarinet = {
   ...genericInstrument,
   oscillators: [
-    { type: "square", gain: 1 / 2 },
-    { type: "square", gain: 1 / 2, glide: 0.004 },
+    { type: "square", gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 6, gain: 1 / 3, glide: 0.003 },
   ],
 
   attack: 0.09,
@@ -201,11 +209,11 @@ export const clarinet = {
 export const saxophone = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2, glide: 0.005 },
+    { type: "triangle", gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 3, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 9, gain: 1 / 3, glide: 0.003 },
   ],
-  // kind of halfway between woodwind and brass
-  initialInstability: 0.764,
+  initialInstability: 1.0,
 
   attack: 0.09,
   filterAttack: 0.034,
@@ -218,10 +226,10 @@ export const saxophone = {
 
   // FIXME: are these sensible? There are too many saxophone variants.
   highPassFrequency: 116.0,
-  lowPassFrequency: 1244.0,
+  lowPassFrequency: 1244.0 * 2.0,
 
   // See note about trumpet high notes below
-  lowPassPitchTracking: -0.5,
+  lowPassPitchTracking: -1.0,
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
@@ -235,8 +243,8 @@ export const saxophone = {
 export const trumpet = {
   ...genericInstrument,
   oscillators: [
-    { type: "sawtooth", gain: 1 / 2 },
-    { type: "sawtooth", gain: 1 / 2, glide: 0.004 },
+    { type: "pulse", pulseWidth: 1 / 6, gain: 2 / 3, glide: 0.003 },
+    { type: "triangle", gain: -1 / 3, glide: 0.003 },
   ],
   initialInstability: 1.0,
 
@@ -249,8 +257,8 @@ export const trumpet = {
   release: 0.056,
   filterRelease: 0.146,
 
-  lowPassFrequency: 1174.656 * 2.0,
   highPassFrequency: 184.996,
+  lowPassFrequency: 1174.656 * 2.0,
 
   // Trumpet high notes are apparently less bright. Assuming it applies to all brass?
   lowPassPitchTracking: -1.0,
@@ -302,8 +310,8 @@ export const tuba = {
 export const violin = {
   ...genericInstrument,
   oscillators: [
-    { type: "sawtooth", gain: 1 / 2 },
-    { type: "sawtooth", gain: 1 / 2, glide: 0.004 },
+    { type: "sawtooth", gain: 1 / 2, glide: 0.002 },
+    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
   ],
 
   attack: 0.09,
@@ -316,7 +324,10 @@ export const violin = {
   filterRelease: 0.034,
 
   highPassFrequency: 196.0,
-  lowPassFrequency: 4186.01,
+  lowPassFrequency: 4186.01 / 2.0,
+
+  lowPassPitchTracking: 1.0,
+
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 300, gain: 3, Q: 3.5 },
@@ -330,7 +341,10 @@ export const violin = {
 export const viola = {
   ...violin,
   highPassFrequency: 130.8,
-  lowPassFrequency: 2093.005, // not sure what this should be, exactly
+  lowPassFrequency: 2093.005 / 2.0,
+
+  lowPassPitchTracking: 1.0,
+
   peakingFilters: [
     { frequency: 220, gain: 3, Q: 3.5 },
     { frequency: 350, gain: 4, Q: 3.5 },
@@ -347,7 +361,10 @@ export const cello = {
   release: 0.09,
   filterRelease: 0.056,
   highPassFrequency: 65.4,
-  lowPassFrequency: 1046.5,
+  lowPassFrequency: 1046.5, // intentionally not divided for tracking
+
+  lowPassPitchTracking: 1.0,
+
   peakingFilters: [
     { frequency: 250, gain: 3, Q: 3.5 },
     { frequency: 400, gain: 4, Q: 3.5 },
@@ -360,7 +377,10 @@ export const cello = {
 export const contrabass = {
   ...cello,
   highPassFrequency: 41.2,
-  lowPassFrequency: 523.25,
+  lowPassFrequency: 523.25, // intentionally not divided for tracking
+
+  lowPassPitchTracking: 1.0,
+
   peakingFilters: [
     { frequency: 70, gain: 3, Q: 3.0 },
     { frequency: 250, gain: 4, Q: 2.5 },
@@ -372,16 +392,15 @@ export const contrabass = {
 const plucked = {
   /** @type {Instrument["oscillators"]} */
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, gain: 1 / 4, glide: 0.003 * Math.SQRT1_2 },
-    { type: "pulse", pulseWidth: 0.3, gain: -1 / 4, glide: 0.003 },
+    { type: "pulse", pulseWidth: 1 / 3, gain: 1 / 2 },
+    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 2 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.008,
+  filterAttack: 0.003,
   decay: 0.5,
-  filterDecay: 0.414,
+  filterDecay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
@@ -418,20 +437,17 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.008 },
-    { type: "pulse", pulseWidth: 0.3, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.008 * Math.SQRT1_2 },
+    { type: "square", pulseWidth: 1 / 5, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 6, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.008,
-  decay: 0.764,
-  filterDecay: 0.618,
-  sustain: 0.056,
-  filterSustain: 0.056,
-  release: 0.09,
-  filterRelease: 0.056,
+  filterAttack: 0.09,
+  decay: 0.5,
+  filterDecay: 0.5,
+  sustain: 0.0,
+  release: 0.0,
 
   // highPassPitchTracking: 0.0,
   lowPassPitchTracking: 1.0,
@@ -453,20 +469,18 @@ export const hammeredDulcimer = {
 export const piano = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: 1 / 4, glide: 0.005 },
-    { type: "pulse", pulseWidth: 0.382, pitchMultiplier: 1.003, gain: -1 / 4, glide: 0.005 * Math.SQRT1_2 },
+    { type: "square", gain: 2 / 4, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
   ],
   decayExtendsDuration: true,
 
   attack: 0.013,
-  filterAttack: 0.008,
+  filterAttack: 0.09,
   decay: 0.5,
-  filterDecay: 0.414,
-  sustain: 0.09,
-  filterSustain: 0.09,
-  release: 0.09,
-  filterRelease: 0.056,
+  filterDecay: 0.5,
+  sustain: 0.0,
+  release: 0.0,
 
   // highPassPitchTracking: 0.0,
   lowPassPitchTracking: 2.0,

@@ -60,13 +60,21 @@ export const heavensTower = () => {
   ];
 
   const tracks = [
-    // [piano, [0, 4, 7, 9, { volume: 0.5, vibrato: 0.5 }]],
     [pluckedViola, [...rhythm, { transpose: 0, volume: 0.2, velocity: 0.5 }]],
     [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.146 }]],
     [violin, [...melody, { transpose: 12, volume: 0.2 }]],
     [viola, [...highHarmony, { transpose: 0, volume: 0.146 }]],
     [cello, [...midHarmony, { transpose: -12, volume: 0.09 }]],
     [contrabass, [...lowHarmony, { transpose: -12, volume: 0.09 }]],
+
+    // [piano, [0, 4, 7, 9, { volume: 0.5, vibrato: 0.5 }]],
+
+    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.2, velocity: 0.5 }]],
+    // [pluckedViola, [...plinkingMelody, { transpose: -12, volume: 0.146 }]],
+    // [pluckedViola, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [pluckedViola, [...highHarmony, { transpose: 0, volume: 0.146 }]],
+    // [pluckedViola, [...midHarmony, { transpose: -12, volume: 0.09 }]],
+    // [pluckedViola, [...lowHarmony, { transpose: -12, volume: 0.09 }]],
   ];
 
   return { tracks, cycle };
