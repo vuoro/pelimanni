@@ -189,7 +189,8 @@ export const playInstrument = (
   } = instrument;
 
   const {
-    decayExtendsDuration,
+    decayImpactOnDuration,
+    durationImpactOnDecay,
     initialInstability,
     attack: defaultAttack,
     decay: defaultDecay,
@@ -332,7 +333,7 @@ export const playInstrument = (
 
     const decayDuration = endAt - decayAt;
     const decayTarget = decayDuration / 2.0;
-    const decayInterpolation = 0.333333;
+    const decayInterpolation = 0.333333 * durationImpactOnDecay;
 
     const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
     const filterDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
@@ -343,7 +344,7 @@ export const playInstrument = (
     for (const { gainNode, gainTarget, decay = defaultDecay, sustain = defaultSustain } of oscillators) {
       const dynamicDecay = mix(decay, decayTarget, decayInterpolation) * oscillatorDecayDynamics;
 
-      if (decayExtendsDuration) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0);
+      if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
 
       gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
     }

@@ -51,8 +51,10 @@ export const genericInstrument = Object.seal({
   /** @type {Release} */
   filterRelease: undefined,
 
-  /** @type {boolean} lets decay phase duration extend the note out of its boundaries: good for truly polyphonic instruments like percussion and plucked strings */
-  decayExtendsDuration: false,
+  /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
+  decayImpactOnDuration: 0.0,
+  /** @type {number} how much note duration can extend decay's duration; 1.0 = similar to piano keys */
+  durationImpactOnDecay: 0.09,
 
   // Controls the maximum and minimum frequencies of the notes and their harmonics.
   // I've taken my values from these sources:
@@ -395,7 +397,8 @@ const plucked = {
     { type: "pulse", pulseWidth: 1 / 3, gain: 1 / 2 },
     { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 2 },
   ],
-  decayExtendsDuration: true,
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.146,
 
   attack: 0.013,
   filterAttack: 0.003,
@@ -437,13 +440,14 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "square", pulseWidth: 1 / 5, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
     { type: "pulse", pulseWidth: 1 / 6, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
   ],
-  decayExtendsDuration: true,
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.5,
 
   attack: 0.013,
-  filterAttack: 0.09,
+  filterAttack: 0.021,
   decay: 0.5,
   filterDecay: 0.5,
   sustain: 0.0,
@@ -473,7 +477,8 @@ export const piano = {
     { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
     { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
   ],
-  decayExtendsDuration: true,
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 1.0,
 
   attack: 0.013,
   filterAttack: 0.09,
