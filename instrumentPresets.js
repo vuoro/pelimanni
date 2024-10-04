@@ -440,8 +440,8 @@ export const pluckedContrabass = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 6, gain: 1 / 2, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 5, glide: 0.001, gain: 1 / 2, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 6, glide: 0.001, gain: 1 / 2, pitchMultiplier: 1.005 },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.5,
@@ -454,10 +454,10 @@ export const hammeredDulcimer = {
   release: 0.0,
 
   // highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 1.0,
+  // lowPassPitchTracking: 0.333333,
 
   highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51,
+  lowPassFrequency: 1244.51 * 2.0,
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },
@@ -473,9 +473,9 @@ export const hammeredDulcimer = {
 export const piano = {
   ...genericInstrument,
   oscillators: [
-    { type: "square", gain: 2 / 4, glide: 0.002, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 4, glide: 0.002, pitchMultiplier: 1.005 },
+    { type: "square", gain: 2 / 4, glide: 0.001, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 4, glide: 0.001, pitchMultiplier: 1.005 },
+    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 4, glide: 0.001, pitchMultiplier: 1.005 },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 1.0,
@@ -488,10 +488,10 @@ export const piano = {
   release: 0.0,
 
   // highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 2.0,
+  lowPassPitchTracking: 1.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 2.0),
+  lowPassFrequency: 4186.009 / (1.0 + 1.0),
 
   peakingFilters: [
     { frequency: 400, gain: 2.0, Q: 3.0 },
