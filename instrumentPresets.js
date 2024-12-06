@@ -137,7 +137,7 @@ export const flute = {
   lowPassPitchTracking: 1.0,
 
   vibratoEffectOnLowPass: 900.0,
-  peakingFilters: [{ frequency: 810, gain: 2.0, Q: 3.0 }],
+  peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
 };
 
 /** @type {Instrument} */
@@ -146,7 +146,7 @@ export const piccolo = {
   highPassFrequency: 587.328,
   lowPassFrequency: 4185.984 / 2.0,
   lowPassPitchTracking: 1.0,
-  peakingFilters: [{ frequency: 900, gain: 2.0, Q: 3.0 }],
+  peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
 };
 
 /** @type {Instrument} */
@@ -195,8 +195,8 @@ export const oboe = {
 
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
-    { frequency: 1400, gain: 2.0, Q: 3.0 },
-    { frequency: 2950, gain: 2.0, Q: 3.0 },
+    { frequency: 1400, gain: 2.0, Q: 2.0 },
+    { frequency: 2950, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -237,8 +237,8 @@ export const bassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
   peakingFilters: [
-    { frequency: 440, gain: 2.0, Q: 3.0 },
-    { frequency: 1180, gain: 2.0, Q: 3.0 },
+    { frequency: 440, gain: 2.0, Q: 2.0 },
+    { frequency: 1180, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -248,8 +248,8 @@ export const contrabassoon = {
   highPassFrequency: 58.27,
   lowPassFrequency: 466.16,
   peakingFilters: [
-    { frequency: 250, gain: 2.0, Q: 3.0 },
-    { frequency: 450, gain: 2.0, Q: 3.0 },
+    { frequency: 250, gain: 2.0, Q: 2.0 },
+    { frequency: 450, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -298,8 +298,8 @@ export const clarinet = {
   lowPassFrequency: 2092.992,
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
-    { frequency: 1180, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 2.0, Q: 3.0 },
+    { frequency: 1180, gain: 2.0, Q: 2.0 },
+    { frequency: 2700, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -327,9 +327,9 @@ export const saxophone = {
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
-    { frequency: 1100, gain: 2.0, Q: 3.0 },
-    { frequency: 1900, gain: 2.0, Q: 3.0 },
-    { frequency: 3100, gain: 2.0, Q: 3.0 },
+    { frequency: 670, gain: 2.0, Q: 2.0 },
+    { frequency: 2050, gain: 2.0, Q: 2.0 },
+    { frequency: 3100, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -383,8 +383,8 @@ export const trumpet = {
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
-    { frequency: 1200, gain: 2.0, Q: 3.0 },
-    { frequency: 2200, gain: 2.0, Q: 3.0 },
+    { frequency: 1200, gain: 2.0, Q: 2.0 },
+    { frequency: 2200, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -408,8 +408,8 @@ export const trombone = {
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464 * 2.0,
   peakingFilters: [
-    { frequency: 520, gain: 2.0, Q: 3.0 },
-    { frequency: 1500, gain: 2.0, Q: 3.0 },
+    { frequency: 520, gain: 2.0, Q: 2.0 },
+    { frequency: 1500, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -429,8 +429,8 @@ export const frenchHorn = {
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46 * 2.0,
   peakingFilters: [
-    { frequency: 340, gain: 2.0, Q: 3.0 },
-    { frequency: 750, gain: 2.0, Q: 3.0 },
+    { frequency: 340, gain: 2.0, Q: 2.0 },
+    { frequency: 750, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -450,8 +450,8 @@ export const tuba = {
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23 * 2.0,
   peakingFilters: [
-    { frequency: 230, gain: 2.0, Q: 3.0 },
-    { frequency: 400, gain: 2.0, Q: 3.0 },
+    { frequency: 230, gain: 2.0, Q: 2.0 },
+    { frequency: 400, gain: 2.0, Q: 2.0 },
   ],
 };
 
@@ -589,9 +589,9 @@ export const contrabass = {
   lowPassPitchTracking: 1.0,
 
   peakingFilters: [
-    { frequency: 70, gain: 3, Q: 3.0 },
-    { frequency: 250, gain: 4, Q: 2.5 },
-    { frequency: 750, gain: 4, Q: 3.5 },
+    { frequency: 70, gain: 3, Q: 3.5 },
+    { frequency: 250, gain: 4, Q: 3.5 },
+    { frequency: 750, gain: 4, Q: 3.0 },
     { frequency: 1100, gain: 5, Q: 2.0 },
   ],
 };
@@ -628,13 +628,6 @@ export const hammeredDulcimer = {
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51,
-
-  peakingFilters: [
-    { frequency: 400, gain: 2.0, Q: 3.0 },
-    { frequency: 700, gain: 2.0, Q: 3.0 },
-    { frequency: 900, gain: 2.0, Q: 3.0 },
-    { frequency: 1300, gain: 2.0, Q: 3.0 },
-  ],
 };
 
 /** @type {Instrument} */
@@ -667,13 +660,6 @@ export const piano = {
   highPassFrequency: 27.5,
   lowPassFrequency: 4186.009 / (1.0 + 2.0),
   lowPassPitchTracking: 2.0,
-
-  peakingFilters: [
-    { frequency: 400, gain: 2.0, Q: 3.0 },
-    { frequency: 700, gain: 2.0, Q: 3.0 },
-    { frequency: 900, gain: 2.0, Q: 3.0 },
-    { frequency: 1300, gain: 2.0, Q: 3.0 },
-  ],
 };
 
 // String instruments cause sympathetic vibration.
