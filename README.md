@@ -232,11 +232,10 @@ Performance has not been tested extensively, but seems tolerable: on a M2 Mac St
 
 Internally each instrument uses the following:
 
-1. Up to 3 main `OscillatorNode`s to make the sound.
+1. Up to 3 main `OscillatorNode`s to make the sound. Most of them are custom, using a `PeriodicWave`.
 2. Another `OscillatorNode`: shared for vibrato, LFO effects, and brass-style initial note instability.
-3. A `WaveShaperNode` for each pulse oscillator the instrument may have.
-4. A low-pass and a high-pass `BiquadfilterNode`.
-5. Up to 6 peaking `BiquadfilterNode`s for shaping the timbre.
+3. A low-pass and a high-pass `BiquadfilterNode`.
+4. Up to 6 peaking `BiquadfilterNode`s for shaping the timbre.
 6. Up to 4 `GainNode`s.
 7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 

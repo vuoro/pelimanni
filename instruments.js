@@ -57,7 +57,7 @@ export const createInstrument = (preset, audioContext) => {
 
   for (const {
     type,
-    pulseWidth = 0.5,
+    periodicWave,
     pitchMultiplier = 1.0,
     gain = 1.0,
     attack,
@@ -67,33 +67,20 @@ export const createInstrument = (preset, audioContext) => {
     glide,
   } of oscillatorsInPreset) {
     const oscillatorNode =
-      type === "pulse"
-        ? new PulseOscillatorNode(audioContext, { pulseWidth, frequency: 440 })
+      type === "custom"
+        ? new OscillatorNode(audioContext, {
+            type,
+            frequency: 440,
+            periodicWave: new PeriodicWave(audioContext, {
+              ...periodicWave,
+              // If no cosine terms are given, fill them in, with some slight randomisation for flavour
+              real: periodicWave.real ?? new Float32Array(periodicWave.imag.length).map(() => Math.random() * 0.013),
+            }),
+          })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
     const gainNode = new GainNode(audioContext, { gain: 0 });
 
-    let oscillatorBaseVolume = 1.0;
-
-    switch (type) {
-      case "pulse": {
-        oscillatorBaseVolume = (1.0 - pulseWidth * Math.SQRT1_2) ** 2.0;
-        break;
-      }
-      case "square": {
-        oscillatorBaseVolume = 0.414;
-        break;
-      }
-      case "triangle": {
-        oscillatorBaseVolume = 0.75;
-        break;
-      }
-      case "sawtooth": {
-        oscillatorBaseVolume = 0.666666;
-        break;
-      }
-    }
-
-    const gainTarget = oscillatorBaseVolume * (baseVolume * gain) ** 0.41421356;
+    const gainTarget = (baseVolume * gain) ** 0.41421356;
 
     oscillatorNode.connect(gainNode).connect(lowPassFilter);
     oscillatorNode.start(audioContext.currentTime);
@@ -402,36 +389,4 @@ export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
 
 function mix(a = 0.0, b = 1.0, amount = 0.5) {
   return a + amount * (b - a);
-}
-
-class PulseOscillatorNode extends OscillatorNode {
-  /**
-    @param {AudioContext} audioContext
-  */
-  constructor(audioContext, options = {}) {
-    super(audioContext, { ...options, type: "sawtooth" });
-
-    const width = options?.pulseWidth ?? 0.5;
-    const resolution = 1.0 / width;
-    const relativeWidth = width * resolution;
-
-    const curve = new Float32Array(resolution);
-    curve.fill(-1.0, 0, relativeWidth);
-    curve.fill(1.0, relativeWidth);
-
-    this.waveShaper = new WaveShaperNode(audioContext, { curve, oversample: "4x" });
-    super.connect(this.waveShaper);
-  }
-
-  // FIXME: dunno how to type these bloody things correctly
-  // using .call instead didn't seem to work, because args were not truly undefined?
-  /** @param {Parameters<WaveShaperNode["connect"]>} args */
-  connect(...args) {
-    return this.waveShaper.connect.apply(this.waveShaper, args);
-  }
-
-  /** @param {Parameters<WaveShaperNode["disconnect"]>} args */
-  disconnect(...args) {
-    return this.waveShaper.disconnect.apply(this.waveShaper, args);
-  }
 }

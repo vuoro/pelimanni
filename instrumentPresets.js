@@ -11,8 +11,8 @@
 export const genericInstrument = Object.seal({
   /**
    * @typedef {object} Oscillator - creates the sound of the note
-   * @property {OscillatorType | "pulse"} type
-   * @property {number=} pulseWidth - duty cycle of the pulse; only used when `type` is `pulse`
+   * @property {OscillatorType} type
+   * @property {PeriodicWaveOptions=} periodicWave - used for custom oscillators
    * @property {number=} pitchMultiplier - multiplies the frequency of the note for this oscillator
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
    * @property {Attack=} attack
@@ -94,8 +94,33 @@ export const genericInstrument = Object.seal({
 export const flute = {
   ...genericInstrument,
   oscillators: [
-    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
-    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+        // https://musiccrashcourses.com/lessons/harmonic_series.html
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.91,
+          0.5,
+          0.4,
+          0.35,
+          0.3,
+          0.25,
+          0.2,
+          0.4,
+          0.15,
+          0.1,
+          0.05,
+          0.04,
+          0.03,
+          0.02,
+          0.01,
+        ),
+      },
+      glide: 0.003,
+    },
   ],
 
   attack: 0.09,
@@ -107,11 +132,8 @@ export const flute = {
   release: 0.056,
   filterRelease: 0.034,
 
-  highPassFrequency: 261.624 * 2.0,
+  highPassFrequency: 261.624,
   lowPassFrequency: 2349.312 / 2.0,
-
-  // The tracking helps create the right overtones
-  highPassPitchTracking: 1.0,
   lowPassPitchTracking: 1.0,
 
   vibratoEffectOnLowPass: 900.0,
@@ -122,7 +144,8 @@ export const flute = {
 export const piccolo = {
   ...flute,
   highPassFrequency: 587.328,
-  lowPassFrequency: 4185.984,
+  lowPassFrequency: 4185.984 / 2.0,
+  lowPassPitchTracking: 1.0,
   peakingFilters: [{ frequency: 900, gain: 2.0, Q: 3.0 }],
 };
 
@@ -130,9 +153,32 @@ export const piccolo = {
 export const oboe = {
   ...genericInstrument,
   oscillators: [
-    { type: "triangle", gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 3, gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 9, gain: 1 / 3, glide: 0.003 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+        imag: Float32Array.of(
+          0.0,
+          0.618,
+          0.5,
+          0.8,
+          1.0,
+          0.7,
+          0.6,
+          0.65,
+          0.586,
+          0.3,
+          0.2,
+          0.18,
+          0.45,
+          0.17,
+          0.2,
+          0.16,
+          0.25,
+        ),
+      },
+      glide: 0.003,
+    },
   ],
 
   attack: 0.09,
@@ -150,13 +196,40 @@ export const oboe = {
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
     { frequency: 1400, gain: 2.0, Q: 3.0 },
-    { frequency: 2950, gain: 3.0, Q: 2.0 },
+    { frequency: 2950, gain: 2.0, Q: 3.0 },
   ],
 };
 
 /** @type {Instrument} */
 export const bassoon = {
   ...oboe,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+        // https://koppreeds.com/harmonic.html
+        imag: Float32Array.of(
+          0.0,
+          0.586,
+          0.764,
+          1.0,
+          0.5,
+          0.618,
+          0.55,
+          0.854,
+          0.382,
+          0.333333,
+          0.35,
+          0.146,
+          0.236,
+          0.146,
+          0.2,
+        ),
+      },
+      glide: 0.003,
+    },
+  ],
   attack: 0.146,
   filterAttack: 0.09,
   release: 0.09,
@@ -184,9 +257,32 @@ export const contrabassoon = {
 export const clarinet = {
   ...genericInstrument,
   oscillators: [
-    { type: "square", gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 6, gain: 1 / 3, glide: 0.003 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.2,
+          0.9,
+          0.4,
+          0.764,
+          0.1,
+          0.5,
+          0.1,
+          0.4,
+          0.15,
+          0.3,
+          0.05,
+          0.2,
+          0.02,
+          0.15,
+          0.01,
+        ),
+      },
+      glide: 0.003,
+    },
   ],
 
   attack: 0.09,
@@ -203,18 +299,14 @@ export const clarinet = {
   vibratoEffectOnLowPass: 700.0,
   peakingFilters: [
     { frequency: 1180, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 3.0, Q: 2.0 },
+    { frequency: 2700, gain: 2.0, Q: 3.0 },
   ],
 };
 
 /** @type {Instrument} */
 export const saxophone = {
   ...genericInstrument,
-  oscillators: [
-    { type: "triangle", gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 3, glide: 0.003 },
-    { type: "pulse", pulseWidth: 1 / 9, gain: 1 / 3, glide: 0.003 },
-  ],
+  oscillators: clarinet.oscillators,
   initialInstability: 1.0,
 
   attack: 0.09,
@@ -236,8 +328,8 @@ export const saxophone = {
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1100, gain: 2.0, Q: 3.0 },
-    { frequency: 1900, gain: 3.0, Q: 3.0 },
-    { frequency: 3100, gain: 3.0, Q: 2.0 },
+    { frequency: 1900, gain: 2.0, Q: 3.0 },
+    { frequency: 3100, gain: 2.0, Q: 3.0 },
   ],
 };
 
@@ -245,8 +337,32 @@ export const saxophone = {
 export const trumpet = {
   ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 1 / 6, gain: 2 / 3, glide: 0.003 },
-    { type: "triangle", gain: 1 / 3, glide: 0.003 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+        imag: Float32Array.of(
+          0.0,
+          0.65,
+          1.0,
+          0.6,
+          0.586,
+          0.4,
+          0.2,
+          0.414,
+          0.25,
+          0.2,
+          0.15,
+          0.2,
+          0.16,
+          0.18,
+          0.17,
+          0.16,
+          0.18,
+        ),
+      },
+      glide: 0.003,
+    },
   ],
   initialInstability: 1.0,
 
@@ -268,13 +384,23 @@ export const trumpet = {
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1200, gain: 2.0, Q: 3.0 },
-    { frequency: 2200, gain: 3.0, Q: 3.0 },
+    { frequency: 2200, gain: 2.0, Q: 3.0 },
   ],
 };
 
 /** @type {Instrument} */
 export const trombone = {
   ...trumpet,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
+        imag: Float32Array.of(0.0, 0.764, 1.0, 0.91, 0.8, 0.7, 0.618, 0.6, 0.5, 0.4, 0.3, 0.2, 0.2, 0.1),
+      },
+      glide: 0.003,
+    },
+  ],
   attack: 0.146,
   filterAttack: 0.056,
   release: 0.09,
@@ -282,9 +408,7 @@ export const trombone = {
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464 * 2.0,
   peakingFilters: [
-    { frequency: 370, gain: 2.0, Q: 3.0 },
     { frequency: 520, gain: 2.0, Q: 3.0 },
-    { frequency: 720, gain: 2.0, Q: 3.0 },
     { frequency: 1500, gain: 2.0, Q: 3.0 },
   ],
 };
@@ -292,14 +416,37 @@ export const trombone = {
 /** @type {Instrument} */
 export const frenchHorn = {
   ...trombone,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
+        imag: Float32Array.of(0.0, 0.854, 1.0, 0.91, 0.764, 0.666666, 0.5, 0.236, 0.2, 0.25, 0.146, 0.056, 0.09),
+      },
+      glide: 0.003,
+    },
+  ],
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46 * 2.0,
-  peakingFilters: [{ frequency: 340, gain: 2.0, Q: 3.0 }],
+  peakingFilters: [
+    { frequency: 340, gain: 2.0, Q: 3.0 },
+    { frequency: 750, gain: 2.0, Q: 3.0 },
+  ],
 };
 
 /** @type {Instrument} */
 export const tuba = {
   ...frenchHorn,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://www.rickdenney.com/the_tuba_sound.htm
+        imag: Float32Array.of(0.0, 0.618, 1.0, 0.5, 0.8, 0.75, 0.7, 0.382, 0.333333, 0.146, 0.056, 0.146, 0.09),
+      },
+      glide: 0.003,
+    },
+  ],
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23 * 2.0,
   peakingFilters: [
@@ -312,8 +459,31 @@ export const tuba = {
 export const violin = {
   ...genericInstrument,
   oscillators: [
-    { type: "sawtooth", gain: 1 / 2, glide: 0.002 },
-    { type: "sawtooth", gain: 1 / 2, glide: 0.003 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://musiccrashcourses.com/lessons/harmonic_series.html
+        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.618,
+          0.6,
+          0.618,
+          0.7,
+          0.666666,
+          0.764,
+          0.666666,
+          0.618,
+          0.5,
+          0.1,
+          0.4,
+          0.3,
+          0.2,
+        ),
+      },
+      glide: 0.003,
+    },
   ],
 
   attack: 0.09,
@@ -342,6 +512,18 @@ export const violin = {
 /** @type {Instrument} */
 export const viola = {
   ...violin,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://musiccrashcourses.com/lessons/harmonic_series.html
+        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+        // http://www.mathstudio.co.uk/pitch_perception.htm
+        imag: Float32Array.of(0.0, 1.0, 0.618, 0.6, 0.5, 0.7, 0.382, 0.35, 0.236, 0.146, 0.09, 0.056, 0.5, 0.2, 0.09),
+      },
+      glide: 0.003,
+    },
+  ],
   highPassFrequency: 130.8,
   lowPassFrequency: 2093.005 / 2.0,
 
@@ -358,6 +540,19 @@ export const viola = {
 /** @type {Instrument} */
 export const cello = {
   ...viola,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://musiccrashcourses.com/lessons/harmonic_series.html
+        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+        // http://www.mathstudio.co.uk/pitch_perception.htm
+        // https://vobarian.com/celloanly/index.html
+        imag: Float32Array.of(0.0, 1.0, 0.5, 0.382, 0.5, 0.4, 0.25, 0.236, 0.056, 0.146, 0.09, 0.09),
+      },
+      glide: 0.003,
+    },
+  ],
   attack: 0.146,
   filterAttack: 0.09,
   release: 0.09,
@@ -378,6 +573,16 @@ export const cello = {
 /** @type {Instrument} */
 export const contrabass = {
   ...cello,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // Guessed based on other instruments above
+        imag: Float32Array.of(0.0, 1.0, 0.764, 0.236, 0.382, 0.3, 0.146, 0.09, 0.021, 0.09, 0.056, 0.034),
+      },
+      glide: 0.003,
+    },
+  ],
   highPassFrequency: 41.2,
   lowPassFrequency: 523.25, // intentionally not divided for tracking
 
@@ -391,12 +596,126 @@ export const contrabass = {
   ],
 };
 
-const plucked = {
-  /** @type {Instrument["oscillators"]} */
+/** @type {Instrument} */
+export const hammeredDulcimer = {
+  ...genericInstrument,
   oscillators: [
-    { type: "pulse", pulseWidth: 1 / 3, gain: 1 / 2 },
-    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 2 },
+    {
+      type: "custom",
+      periodicWave: {
+        // https://vibrationresearch.com/resources/overtone-comparison-obserview/
+        // https://universe-review.ca/I13-17-timbre.jpg
+        // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
+        // https://audiouniversityonline.com/why-do-instruments-sound-different/
+        imag: Float32Array.of(0.0, 1.0, 0.618, 0.764, 0.5, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
+      },
+      pitchMultiplier: 1.005,
+      glide: 0.001,
+    },
   ],
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.5,
+
+  attack: 0.013,
+  filterAttack: 0.056,
+  decay: 0.5,
+  filterDecay: 0.5,
+  sustain: 0.0,
+  release: 0.0,
+
+  // highPassPitchTracking: 0.0,
+  lowPassPitchTracking: 1.0,
+
+  highPassFrequency: 73.42,
+  lowPassFrequency: 1244.51,
+
+  peakingFilters: [
+    { frequency: 400, gain: 2.0, Q: 3.0 },
+    { frequency: 700, gain: 2.0, Q: 3.0 },
+    { frequency: 900, gain: 2.0, Q: 3.0 },
+    { frequency: 1300, gain: 2.0, Q: 3.0 },
+  ],
+};
+
+/** @type {Instrument} */
+export const piano = {
+  ...genericInstrument,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // https://vibrationresearch.com/resources/overtone-comparison-obserview/
+        // https://universe-review.ca/I13-17-timbre.jpg
+        // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
+        // https://audiouniversityonline.com/why-do-instruments-sound-different/
+        imag: Float32Array.of(0.0, 1.0, 0.618, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
+      },
+      pitchMultiplier: 1.005,
+      glide: 0.001,
+    },
+  ],
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 1.0,
+
+  attack: 0.013,
+  filterAttack: 0.09,
+  decay: 0.5,
+  filterDecay: 0.5,
+  sustain: 0.0,
+  release: 0.0,
+
+  highPassFrequency: 27.5,
+  lowPassFrequency: 4186.009 / (1.0 + 2.0),
+  lowPassPitchTracking: 2.0,
+
+  peakingFilters: [
+    { frequency: 400, gain: 2.0, Q: 3.0 },
+    { frequency: 700, gain: 2.0, Q: 3.0 },
+    { frequency: 900, gain: 2.0, Q: 3.0 },
+    { frequency: 1300, gain: 2.0, Q: 3.0 },
+  ],
+};
+
+// String instruments cause sympathetic vibration.
+// Using extra oscillators in unison to kind of emulate this.
+/** @param {Instrument} instrument */
+const addSympatheticStrings = (
+  instrument,
+  gainMultiplier = 0.021,
+  pitchMultiplier = 0.5,
+  attackOffset = 10.0 / 34300.0,
+) => {
+  const mainOscillator = instrument.oscillators[0];
+  const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
+  const attack = (mainOscillator.attack ?? instrument.attack) + attackOffset;
+
+  instrument.oscillators.push({
+    ...mainOscillator,
+    attack,
+    gain,
+    pitchMultiplier: pitchMultiplier * (mainOscillator.pitchMultiplier ?? 1.0),
+  });
+
+  instrument.oscillators.push({
+    ...mainOscillator,
+    attack,
+    gain,
+    pitchMultiplier: (1.0 / pitchMultiplier) * (mainOscillator.pitchMultiplier ?? 1.0),
+  });
+
+  return instrument;
+};
+
+for (const instrument of [violin, viola, cello, contrabass]) {
+  addSympatheticStrings(instrument, 0.021, 0.5, 5.0 / 34300.0);
+}
+
+for (const instrument of [hammeredDulcimer, piano]) {
+  addSympatheticStrings(instrument, 0.034, 0.5, 10.0 / 34300.0);
+}
+
+// Plucked versions of string instruments
+const plucked = {
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.146,
 
@@ -434,71 +753,4 @@ export const pluckedCello = {
 export const pluckedContrabass = {
   ...contrabass,
   ...plucked,
-};
-
-/** @type {Instrument} */
-export const hammeredDulcimer = {
-  ...genericInstrument,
-  oscillators: [
-    { type: "pulse", pulseWidth: 1 / 5, glide: 0.001, gain: 1 / 2, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 6, glide: 0.001, gain: 1 / 2, pitchMultiplier: 1.005 },
-  ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.5,
-
-  attack: 0.013,
-  filterAttack: 0.056,
-  decay: 0.5,
-  filterDecay: 0.5,
-  sustain: 0.0,
-  release: 0.0,
-
-  // highPassPitchTracking: 0.0,
-  // lowPassPitchTracking: 0.333333,
-
-  highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51 * 2.0,
-
-  peakingFilters: [
-    { frequency: 400, gain: 2.0, Q: 3.0 },
-    { frequency: 700, gain: 2.0, Q: 3.0 },
-    { frequency: 900, gain: 2.0, Q: 3.0 },
-    { frequency: 1300, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 2.0, Q: 3.0 },
-    { frequency: 4000, gain: 2.0, Q: 3.0 },
-  ],
-};
-
-/** @type {Instrument} */
-export const piano = {
-  ...genericInstrument,
-  oscillators: [
-    { type: "square", gain: 2 / 4, glide: 0.001, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 4, gain: 1 / 4, glide: 0.001, pitchMultiplier: 1.005 },
-    { type: "pulse", pulseWidth: 1 / 5, gain: 1 / 4, glide: 0.001, pitchMultiplier: 1.005 },
-  ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 1.0,
-
-  attack: 0.013,
-  filterAttack: 0.09,
-  decay: 0.5,
-  filterDecay: 0.5,
-  sustain: 0.0,
-  release: 0.0,
-
-  // highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 1.0,
-
-  highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 1.0),
-
-  peakingFilters: [
-    { frequency: 400, gain: 2.0, Q: 3.0 },
-    { frequency: 700, gain: 2.0, Q: 3.0 },
-    { frequency: 900, gain: 2.0, Q: 3.0 },
-    { frequency: 1300, gain: 2.0, Q: 3.0 },
-    { frequency: 2700, gain: 2.0, Q: 3.0 },
-    { frequency: 4000, gain: 2.0, Q: 3.0 },
-  ],
 };
