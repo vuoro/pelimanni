@@ -550,7 +550,23 @@ export const cello = {
         // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
         // http://www.mathstudio.co.uk/pitch_perception.htm
         // https://vobarian.com/celloanly/index.html
-        imag: Float32Array.of(0.0, 1.0, 0.5, 0.382, 0.5, 0.4, 0.25, 0.236, 0.056, 0.146, 0.09, 0.09),
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.618,
+          0.382,
+          0.618,
+          0.5,
+          0.382,
+          0.382,
+          0.09,
+          0.236,
+          0.146,
+          0.09,
+          0.056,
+          0.034,
+          0.021,
+        ),
       },
       glide: 0.003,
     },
@@ -576,7 +592,22 @@ export const contrabass = {
       type: "custom",
       periodicWave: {
         // Guessed based on other instruments above
-        imag: Float32Array.of(0.0, 1.0, 0.764, 0.236, 0.382, 0.3, 0.146, 0.09, 0.021, 0.09, 0.056, 0.034),
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.666,
+          0.333,
+          0.5,
+          0.333,
+          0.333,
+          0.146,
+          0.236,
+          0.146,
+          0.09,
+          0.056,
+          0.034,
+          0.021,
+        ),
       },
       glide: 0.003,
     },
@@ -605,7 +636,25 @@ export const hammeredDulcimer = {
         // https://universe-review.ca/I13-17-timbre.jpg
         // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
         // https://audiouniversityonline.com/why-do-instruments-sound-different/
-        imag: Float32Array.of(0.0, 1.0, 0.618, 0.764, 0.5, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.618,
+          0.382,
+          0.618,
+          0.5,
+          0.382,
+          0.382,
+          0.236,
+          0.146,
+          0.236,
+          0.146,
+          0.056,
+          0.056,
+          0.034,
+          0.021,
+          0.013,
+        ),
       },
       pitchMultiplier: 1.005,
     },
@@ -648,11 +697,31 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
+        // Oh dear…
         // https://vibrationresearch.com/resources/overtone-comparison-obserview/
         // https://universe-review.ca/I13-17-timbre.jpg
         // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
         // https://audiouniversityonline.com/why-do-instruments-sound-different/
-        imag: Float32Array.of(0.0, 1.0, 0.618, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
+        // https://www.lamadeguido.com/fundamentos/ecap2.htm
+        // https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.764,
+          0.5,
+          0.618,
+          0.382,
+          0.414,
+          0.09,
+          0.146,
+          0.236,
+          0.146,
+          0.09,
+          0.056,
+          0.034,
+          0.021,
+          0.013,
+        ),
       },
       pitchMultiplier: 1.005,
     },
@@ -662,11 +731,11 @@ export const piano = {
       periodicWave: {
         imag: Float32Array.of(0.0, 1.0, 1.0),
       },
-      gain: 0.146,
+      gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
       attack: 0.013,
-      decay: 0.034,
+      decay: 0.056,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -675,14 +744,14 @@ export const piano = {
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 1.0,
 
-  attack: 0.018,
+  attack: 0.013,
   decay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 2.0),
-  lowPassPitchTracking: 2.0,
+  lowPassFrequency: 4186.009 / (1.0 + 1.0),
+  lowPassPitchTracking: 1.0,
 };
 
 // String instruments cause sympathetic vibration.
