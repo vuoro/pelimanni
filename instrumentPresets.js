@@ -20,6 +20,8 @@ export const genericInstrument = Object.seal({
    * @property {Sustain=} sustain
    * @property {Release=} release
    * @property {Glide=} glide
+   * @property {number=} decayImpactOnDuration - see below
+   * @property {number=} durationImpactOnDecay - see below
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
   oscillators: [{ type: "triangle" }],
@@ -366,7 +368,7 @@ export const trumpet = {
   ],
   initialInstability: 1.0,
 
-  attack: 0.09,
+  attack: 0.056,
   filterAttack: 0.034,
   decay: 0.236,
   filterDecay: 0.382,
@@ -401,7 +403,7 @@ export const trombone = {
       glide: 0.003,
     },
   ],
-  attack: 0.146,
+  attack: 0.09,
   filterAttack: 0.056,
   release: 0.09,
   filterRelease: 0.236,
@@ -486,14 +488,14 @@ export const violin = {
     },
   ],
 
-  attack: 0.09,
-  filterAttack: 0.146,
+  attack: 0.146,
+  filterAttack: 0.09,
   decay: 0.236,
   filterDecay: 0.2,
   sustain: 0.854,
   filterSustain: 0.854,
-  release: 0.056,
-  filterRelease: 0.034,
+  release: 0.09,
+  filterRelease: 0.056,
 
   highPassFrequency: 196.0,
   lowPassFrequency: 4186.01 / 2.0,
@@ -553,10 +555,6 @@ export const cello = {
       glide: 0.003,
     },
   ],
-  attack: 0.146,
-  filterAttack: 0.09,
-  release: 0.09,
-  filterRelease: 0.056,
   highPassFrequency: 65.4,
   lowPassFrequency: 1046.5, // intentionally not divided for tracking
 
@@ -610,14 +608,27 @@ export const hammeredDulcimer = {
         imag: Float32Array.of(0.0, 1.0, 0.618, 0.764, 0.5, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
       },
       pitchMultiplier: 1.005,
-      glide: 0.001,
+    },
+    {
+      // This should probably be noise instead
+      type: "custom",
+      periodicWave: {
+        imag: Float32Array.of(0.0, 1.0, 1.0),
+      },
+      gain: 0.09,
+      pitchMultiplier: 0.5, // mismatch with the above softens it a bit
+
+      attack: 0.013,
+      decay: 0.056,
+
+      decayImpactOnDuration: 0.0,
+      durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.5,
 
   attack: 0.013,
-  filterAttack: 0.056,
   decay: 0.5,
   filterDecay: 0.5,
   sustain: 0.0,
@@ -644,16 +655,28 @@ export const piano = {
         imag: Float32Array.of(0.0, 1.0, 0.618, 0.854, 0.382, 0.236, 0.146, 0.18, 0.2, 0.09, 0.056, 0.013),
       },
       pitchMultiplier: 1.005,
-      glide: 0.001,
+    },
+    {
+      // This should probably be noise instead
+      type: "custom",
+      periodicWave: {
+        imag: Float32Array.of(0.0, 1.0, 1.0),
+      },
+      gain: 0.146,
+      pitchMultiplier: 0.5, // mismatch with the above softens it a bit
+
+      attack: 0.013,
+      decay: 0.034,
+
+      decayImpactOnDuration: 0.0,
+      durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 1.0,
 
-  attack: 0.013,
-  filterAttack: 0.09,
+  attack: 0.018,
   decay: 0.5,
-  filterDecay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
@@ -701,42 +724,51 @@ for (const instrument of [hammeredDulcimer, piano]) {
 }
 
 // Plucked versions of string instruments
-const plucked = {
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.146,
+/** @param {Instrument} instrument */
+const makePlucked = (instrument) => {
+  const plucked = {
+    ...instrument,
+    oscillators: [],
 
-  attack: 0.013,
-  filterAttack: 0.003,
-  decay: 0.5,
-  filterDecay: 0.5,
-  sustain: 0.0,
-  release: 0.0,
+    decayImpactOnDuration: 1.0,
+    durationImpactOnDecay: 1.0,
 
-  vibratoEffectOnPitch: 0.0,
-  vibratoEffectOnVolume: 0.0,
-  vibratoEffectOnLowpass: 0.0,
+    attack: 0.013,
+    filterAttack: 0.013,
+    decay: 0.5,
+    filterDecay: 0.5,
+    sustain: 0.0,
+    filterSustain: 0.0,
+    release: 0.0,
+    filterRelease: 0.0,
+
+    vibratoEffectOnPitch: 20.0,
+    vibratoEffectOnVolume: 0.0,
+    vibratoEffectOnLowpass: 0.0,
+  };
+
+  for (const oscillator of instrument.oscillators) {
+    plucked.oscillators.push({
+      ...oscillator,
+      glide: undefined,
+      attack: undefined,
+      decay: undefined,
+      sustain: undefined,
+      release: undefined,
+    });
+  }
+
+  return plucked;
 };
 
 /** @type {Instrument} */
-export const pluckedViolin = {
-  ...violin,
-  ...plucked,
-};
+export const pluckedViolin = makePlucked(violin);
 
 /** @type {Instrument} */
-export const pluckedViola = {
-  ...viola,
-  ...plucked,
-};
+export const pluckedViola = makePlucked(viola);
 
 /** @type {Instrument} */
-export const pluckedCello = {
-  ...cello,
-  ...plucked,
-};
+export const pluckedCello = makePlucked(cello);
 
 /** @type {Instrument} */
-export const pluckedContrabass = {
-  ...contrabass,
-  ...plucked,
-};
+export const pluckedContrabass = makePlucked(contrabass);

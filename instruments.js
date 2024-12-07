@@ -37,7 +37,7 @@ export const createInstrument = (preset, audioContext) => {
   let maxPeak = 1.0;
 
   if (peakingFilters.length > 0) {
-    for (const { frequency, gain, Q } of peakingFilters) {
+    for (const { frequency, gain, Q = Math.SQRT1_2 } of peakingFilters) {
       maxPeak = Math.max(maxPeak, gain);
       const peakFilter = new BiquadFilterNode(audioContext, {
         type: "peaking",
@@ -65,6 +65,8 @@ export const createInstrument = (preset, audioContext) => {
     sustain,
     release,
     glide,
+    decayImpactOnDuration,
+    durationImpactOnDecay,
   } of oscillatorsInPreset) {
     const oscillatorNode =
       type === "custom"
@@ -84,7 +86,19 @@ export const createInstrument = (preset, audioContext) => {
 
     oscillatorNode.connect(gainNode).connect(lowPassFilter);
     oscillatorNode.start(audioContext.currentTime);
-    oscillators.push({ oscillatorNode, gainNode, gainTarget, attack, decay, sustain, release, glide, pitchMultiplier });
+    oscillators.push({
+      oscillatorNode,
+      gainNode,
+      gainTarget,
+      attack,
+      decay,
+      sustain,
+      release,
+      glide,
+      pitchMultiplier,
+      decayImpactOnDuration,
+      durationImpactOnDecay,
+    });
   }
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
@@ -176,8 +190,8 @@ export const playInstrument = (
   } = instrument;
 
   const {
-    decayImpactOnDuration,
-    durationImpactOnDecay,
+    decayImpactOnDuration: defaultDecayImpactOnDuration,
+    durationImpactOnDecay: defaultDurationImpactOnDecay,
     initialInstability,
     attack: defaultAttack,
     decay: defaultDecay,
@@ -264,8 +278,6 @@ export const playInstrument = (
     initialInstability > 0.0 ? Math.min(endAt - Number.EPSILON * 2.0, startAt + filterDynamicAttack * 6.0) : startAt;
   const vibratoAt = Math.min(endAt - Number.EPSILON, instabilityStopsAt + defaultDynamicAttack);
 
-  const shouldDecay = defaultDecay > 0.0 && defaultSustain !== 1.0 && decayAt < endAt;
-
   // Cancel pending events
   lowPassFilter.frequency.cancelScheduledValues(startAt);
   highPassFilter.frequency.cancelScheduledValues(startAt);
@@ -314,29 +326,41 @@ export const playInstrument = (
   vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
 
-  // Decay if needed
-  if (shouldDecay) {
-    const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
+  // Decay
+  const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
+  const decayDuration = endAt - decayAt;
+  const decayTarget = decayDuration / 2.0;
 
-    const decayDuration = endAt - decayAt;
-    const decayTarget = decayDuration / 2.0;
+  const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
+  const filterDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
+
+  const sustainDynamics = 1.0 + highPitchness * 0.236;
+
+  // Oscillators
+  for (const {
+    gainNode,
+    gainTarget,
+    decay = defaultDecay,
+    sustain = defaultSustain,
+    durationImpactOnDecay = defaultDurationImpactOnDecay,
+    decayImpactOnDuration = defaultDecayImpactOnDuration,
+  } of oscillators) {
+    const shouldDecay = decay > 0.0 && sustain !== 1.0 && decayAt < endAt;
+    if (!shouldDecay) continue;
+
     const decayInterpolation = 0.333333 * durationImpactOnDecay;
+    const dynamicDecay = mix(decay, decayTarget, decayInterpolation) * oscillatorDecayDynamics;
 
-    const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
-    const filterDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
+    if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
 
-    const sustainDynamics = 1.0 + highPitchness * 0.236;
+    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
+  }
 
-    // Oscillators
-    for (const { gainNode, gainTarget, decay = defaultDecay, sustain = defaultSustain } of oscillators) {
-      const dynamicDecay = mix(decay, decayTarget, decayInterpolation) * oscillatorDecayDynamics;
+  // Filters
+  const filtersShouldDecay = filterDecay > 0.0 && filterSustain !== 1.0 && decayAt < endAt;
 
-      if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
-
-      gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
-    }
-
-    // Filters
+  if (filtersShouldDecay) {
+    const decayInterpolation = 0.333333 * defaultDurationImpactOnDecay;
     const filterDynamicDecay = mix(filterDecay, decayTarget, decayInterpolation) * filterDecayDynamics;
     const filterDynamicSustain = filterSustain ** sustainDynamics;
 
