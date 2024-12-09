@@ -54,6 +54,7 @@ export const createInstrument = (preset, audioContext) => {
   // Oscillators
   const oscillators = [];
   const baseVolume = 1.0 / maxPeak ** 0.41421356;
+  const randomisedPhase = Math.random() * 2.0 - 1.0;
 
   for (const {
     type,
@@ -76,7 +77,7 @@ export const createInstrument = (preset, audioContext) => {
             periodicWave: new PeriodicWave(audioContext, {
               ...periodicWave,
               // If no cosine terms are given, fill them in, with some slight randomisation for flavour
-              real: periodicWave.real ?? new Float32Array(periodicWave.imag.length).map(() => Math.random() * 0.013),
+              real: periodicWave.real ?? periodicWave.imag.map((v) => v * randomisedPhase),
             }),
           })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
