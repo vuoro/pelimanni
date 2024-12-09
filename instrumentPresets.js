@@ -34,13 +34,13 @@ export const genericInstrument = Object.seal({
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
   /** @type {Attack} */
-  attack: 0.0,
+  attack: 0.09,
   /** @type {Decay} */
   decay: 0.0,
   /** @type {Sustain} */
   sustain: 1.0,
   /** @type {Release} */
-  release: 0.0,
+  release: 0.236,
   /** @type {Glide} */
   glide: 0.0,
 
@@ -52,6 +52,8 @@ export const genericInstrument = Object.seal({
   filterSustain: undefined,
   /** @type {Release} */
   filterRelease: undefined,
+  /** @type {Glide} */
+  filterGlide: undefined,
 
   /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
   decayImpactOnDuration: 0.0,
@@ -121,10 +123,10 @@ export const flute = {
           0.01,
         ),
       },
-      glide: 0.003,
     },
   ],
 
+  glide: 0.003,
   attack: 0.09,
   filterAttack: 0.056,
   decay: 0.236,
@@ -229,9 +231,9 @@ export const bassoon = {
           0.2,
         ),
       },
-      glide: 0.003,
     },
   ],
+  glide: 0.003,
   attack: 0.146,
   filterAttack: 0.09,
   release: 0.09,
@@ -283,10 +285,10 @@ export const clarinet = {
           0.01,
         ),
       },
-      glide: 0.003,
     },
   ],
 
+  glide: 0.003,
   attack: 0.09,
   filterAttack: 0.056,
   decay: 0.236,
@@ -309,6 +311,7 @@ export const clarinet = {
 export const saxophone = {
   ...genericInstrument,
   oscillators: clarinet.oscillators,
+  glide: 0.003,
   initialInstability: 1.0,
 
   attack: 0.09,
@@ -363,13 +366,13 @@ export const trumpet = {
           0.18,
         ),
       },
-      glide: 0.003,
     },
   ],
+  glide: 0.003,
   initialInstability: 1.0,
 
   attack: 0.056,
-  filterAttack: 0.034,
+  filterAttack: 0.021,
   decay: 0.236,
   filterDecay: 0.382,
   sustain: 0.764,
@@ -400,11 +403,11 @@ export const trombone = {
         // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
         imag: Float32Array.of(0.0, 0.764, 1.0, 0.91, 0.8, 0.7, 0.618, 0.6, 0.5, 0.4, 0.3, 0.2, 0.2, 0.1),
       },
-      glide: 0.003,
     },
   ],
+
   attack: 0.09,
-  filterAttack: 0.056,
+  filterAttack: 0.034,
   release: 0.09,
   filterRelease: 0.236,
   highPassFrequency: 58.27,
@@ -425,7 +428,6 @@ export const frenchHorn = {
         // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
         imag: Float32Array.of(0.0, 0.854, 1.0, 0.91, 0.764, 0.666666, 0.5, 0.236, 0.2, 0.25, 0.146, 0.056, 0.09),
       },
-      glide: 0.003,
     },
   ],
   highPassFrequency: 55.0,
@@ -446,7 +448,6 @@ export const tuba = {
         // https://www.rickdenney.com/the_tuba_sound.htm
         imag: Float32Array.of(0.0, 0.618, 1.0, 0.5, 0.8, 0.75, 0.7, 0.382, 0.333333, 0.146, 0.056, 0.146, 0.09),
       },
-      glide: 0.003,
     },
   ],
   highPassFrequency: 36.71,
@@ -484,9 +485,10 @@ export const violin = {
           0.2,
         ),
       },
-      glide: 0.003,
     },
   ],
+
+  glide: 0.003,
 
   attack: 0.146,
   filterAttack: 0.09,
@@ -523,7 +525,6 @@ export const viola = {
         // http://www.mathstudio.co.uk/pitch_perception.htm
         imag: Float32Array.of(0.0, 1.0, 0.618, 0.6, 0.5, 0.7, 0.382, 0.35, 0.236, 0.146, 0.09, 0.056, 0.5, 0.2, 0.09),
       },
-      glide: 0.003,
     },
   ],
   highPassFrequency: 130.8,
@@ -568,7 +569,6 @@ export const cello = {
           0.021,
         ),
       },
-      glide: 0.003,
     },
   ],
   highPassFrequency: 65.4,
@@ -609,7 +609,6 @@ export const contrabass = {
           0.021,
         ),
       },
-      glide: 0.003,
     },
   ],
   highPassFrequency: 41.2,
@@ -678,6 +677,7 @@ export const hammeredDulcimer = {
   durationImpactOnDecay: 0.5,
 
   attack: 0.013,
+  filterAttack: 0.008,
   decay: 0.5,
   filterDecay: 0.5,
   sustain: 0.0,
@@ -745,6 +745,7 @@ export const piano = {
   durationImpactOnDecay: 1.0,
 
   attack: 0.013,
+  filterAttack: 0.005,
   decay: 0.5,
   sustain: 0.0,
   release: 0.0,
@@ -803,7 +804,7 @@ const makePlucked = (instrument) => {
     durationImpactOnDecay: 1.0,
 
     attack: 0.013,
-    filterAttack: 0.013,
+    filterAttack: 0.005,
     decay: 0.5,
     filterDecay: 0.5,
     sustain: 0.0,

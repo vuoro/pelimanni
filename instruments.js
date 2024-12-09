@@ -198,10 +198,11 @@ export const playInstrument = (
     sustain: defaultSustain,
     release: defaultRelease,
     glide: defaultGlide,
-    filterAttack = defaultAttack,
+    filterAttack = defaultAttack * 0.618,
     filterDecay = defaultDecay,
     filterSustain = defaultSustain,
-    filterRelease = defaultRelease,
+    filterRelease = defaultRelease * 0.618,
+    filterGlide = defaultGlide,
     lowPassFrequency,
     highPassFrequency,
     highPassPitchTracking,
@@ -301,8 +302,15 @@ export const playInstrument = (
   }
 
   // Attack filters
-  lowPassFilter.frequency.setTargetAtTime(lowPassTarget, startAt, filterDynamicAttack);
-  highPassFilter.frequency.setTargetAtTime(highPassTarget, startAt, filterDynamicAttack);
+  // NOTE: this might make slowly gliding instruments sound off
+  const dynamicFilterGlide = filterGlide * glideDynamics;
+  const afterFilterGlide = startAt + Math.max(0.00001, Math.min(0.003, dynamicFilterGlide));
+
+  lowPassFilter.frequency.setTargetAtTime(pitch, startAt, dynamicFilterGlide);
+  highPassFilter.frequency.setTargetAtTime(pitch, startAt, dynamicFilterGlide);
+
+  lowPassFilter.frequency.setTargetAtTime(lowPassTarget, afterFilterGlide, filterDynamicAttack);
+  highPassFilter.frequency.setTargetAtTime(highPassTarget, afterFilterGlide, filterDynamicAttack);
 
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
