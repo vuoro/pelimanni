@@ -52,8 +52,6 @@ export const genericInstrument = Object.seal({
   filterSustain: undefined,
   /** @type {Release} */
   filterRelease: undefined,
-  /** @type {Glide} */
-  filterGlide: undefined,
 
   /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
   decayImpactOnDuration: 0.0,
@@ -128,7 +126,7 @@ export const flute = {
 
   glide: 0.003,
   attack: 0.09,
-  filterAttack: 0.056,
+  filterAttack: 0.034,
   decay: 0.236,
   filterDecay: 0.236,
   sustain: 0.91,
@@ -186,7 +184,7 @@ export const oboe = {
   ],
 
   attack: 0.09,
-  filterAttack: 0.056,
+  filterAttack: 0.034,
   decay: 0.236,
   filterDecay: 0.236,
   sustain: 0.91,
@@ -235,7 +233,7 @@ export const bassoon = {
   ],
   glide: 0.003,
   attack: 0.146,
-  filterAttack: 0.09,
+  filterAttack: 0.056,
   release: 0.09,
   filterRelease: 0.056,
   highPassFrequency: 58.27,
@@ -290,7 +288,7 @@ export const clarinet = {
 
   glide: 0.003,
   attack: 0.09,
-  filterAttack: 0.056,
+  filterAttack: 0.034,
   decay: 0.236,
   filterDecay: 0.236,
   sustain: 0.91,
@@ -315,7 +313,7 @@ export const saxophone = {
   initialInstability: 1.0,
 
   attack: 0.09,
-  filterAttack: 0.034,
+  filterAttack: 0.021,
   decay: 0.236,
   filterDecay: 0.382,
   sustain: 0.764,
@@ -372,7 +370,7 @@ export const trumpet = {
   initialInstability: 1.0,
 
   attack: 0.056,
-  filterAttack: 0.021,
+  filterAttack: 0.013,
   decay: 0.236,
   filterDecay: 0.382,
   sustain: 0.764,
@@ -407,7 +405,7 @@ export const trombone = {
   ],
 
   attack: 0.09,
-  filterAttack: 0.034,
+  filterAttack: 0.021,
   release: 0.09,
   filterRelease: 0.236,
   highPassFrequency: 58.27,
@@ -491,7 +489,7 @@ export const violin = {
   glide: 0.003,
 
   attack: 0.146,
-  filterAttack: 0.09,
+  filterAttack: 0.056,
   decay: 0.236,
   filterDecay: 0.2,
   sustain: 0.854,
@@ -658,35 +656,34 @@ export const hammeredDulcimer = {
       pitchMultiplier: 1.005,
     },
     {
-      // This should probably be noise instead
       type: "custom",
       periodicWave: {
         imag: Float32Array.of(0.0, 1.0, 1.0),
+        real: Float32Array.of(0.0, -0.764, -0.618),
       },
       gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
       attack: 0.013,
-      decay: 0.056,
+      decay: 0.018,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.5,
+  durationImpactOnDecay: 0.382,
 
-  attack: 0.013,
-  decay: 0.5,
+  attack: 0.018,
+  filterAttack: 0.013,
+  decay: 0.618,
   filterDecay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
-  // highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 1.0,
-
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51,
+  lowPassPitchTracking: 1.0,
 };
 
 /** @type {Instrument} */
@@ -706,26 +703,25 @@ export const piano = {
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.764,
-          0.5,
           0.618,
           0.382,
-          0.414,
-          0.09,
-          0.146,
+          0.5,
           0.236,
+          0.382,
+          0.056,
+          0.09,
           0.146,
           0.09,
           0.056,
           0.034,
           0.021,
           0.013,
+          0.008,
         ),
       },
       pitchMultiplier: 1.005,
     },
     {
-      // This should probably be noise instead
       type: "custom",
       periodicWave: {
         imag: Float32Array.of(0.0, 1.0, 1.0),
@@ -734,24 +730,26 @@ export const piano = {
       gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
-      attack: 0.013,
-      decay: 0.056,
+      attack: 0.008,
+      decay: 0.013,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 1.0,
+  durationImpactOnDecay: 0.618,
 
   attack: 0.013,
+  filterAttack: 0.008,
   decay: 0.5,
+  filterDecay: 0.414,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 1.0),
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 4186.009 / (1.0 + 4.0),
+  lowPassPitchTracking: 4.0,
 };
 
 // String instruments cause sympathetic vibration.
@@ -803,7 +801,7 @@ const makePlucked = (instrument) => {
     durationImpactOnDecay: 1.0,
 
     attack: 0.013,
-    filterAttack: 0.013,
+    filterAttack: 0.008,
     decay: 0.5,
     filterDecay: 0.5,
     sustain: 0.0,
