@@ -678,7 +678,6 @@ export const hammeredDulcimer = {
   durationImpactOnDecay: 0.5,
 
   attack: 0.013,
-  filterAttack: 0.008,
   decay: 0.5,
   filterDecay: 0.5,
   sustain: 0.0,
@@ -747,7 +746,6 @@ export const piano = {
   durationImpactOnDecay: 1.0,
 
   attack: 0.013,
-  filterAttack: 0.005,
   decay: 0.5,
   sustain: 0.0,
   release: 0.0,
@@ -806,7 +804,7 @@ const makePlucked = (instrument) => {
     durationImpactOnDecay: 1.0,
 
     attack: 0.013,
-    filterAttack: 0.005,
+    filterAttack: 0.013,
     decay: 0.5,
     filterDecay: 0.5,
     sustain: 0.0,
