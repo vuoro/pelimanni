@@ -662,6 +662,7 @@ export const hammeredDulcimer = {
       type: "custom",
       periodicWave: {
         imag: Float32Array.of(0.0, 1.0, 1.0),
+        real: Float32Array.of(0.0, -0.618, -0.764),
       },
       gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
@@ -730,6 +731,7 @@ export const piano = {
       type: "custom",
       periodicWave: {
         imag: Float32Array.of(0.0, 1.0, 1.0),
+        real: Float32Array.of(0.0, -0.764, -0.618),
       },
       gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
