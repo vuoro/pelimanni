@@ -665,14 +665,14 @@ export const hammeredDulcimer = {
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
       attack: 0.013,
-      decay: 0.018,
+      decay: 0.021,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
+  durationImpactOnDecay: 0.764,
 
   attack: 0.018,
   filterAttack: 0.013,
@@ -731,14 +731,14 @@ export const piano = {
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
       attack: 0.008,
-      decay: 0.013,
+      decay: 0.021,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.618,
+  durationImpactOnDecay: 1.0,
 
   attack: 0.013,
   filterAttack: 0.008,
@@ -798,7 +798,7 @@ const makePlucked = (instrument) => {
     oscillators: [],
 
     decayImpactOnDuration: 1.0,
-    durationImpactOnDecay: 1.0,
+    durationImpactOnDecay: 0.382,
 
     attack: 0.013,
     filterAttack: 0.008,
