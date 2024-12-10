@@ -349,8 +349,7 @@ export const playInstrument = (
     const shouldDecay = decay > 0.0 && sustain !== 1.0 && decayAt < endAt;
     if (!shouldDecay) continue;
 
-    const decayInterpolation = 0.333333 * durationImpactOnDecay;
-    const dynamicDecay = mix(decay, decayTarget, decayInterpolation) * oscillatorDecayDynamics;
+    const dynamicDecay = mix(decay, decayTarget, durationImpactOnDecay) * oscillatorDecayDynamics;
 
     if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
 
@@ -361,8 +360,7 @@ export const playInstrument = (
   const filtersShouldDecay = filterDecay > 0.0 && filterSustain !== 1.0 && decayAt < endAt;
 
   if (filtersShouldDecay) {
-    const decayInterpolation = 0.333333 * defaultDurationImpactOnDecay;
-    const filterDynamicDecay = mix(filterDecay, decayTarget, decayInterpolation) * filterDecayDynamics;
+    const filterDynamicDecay = mix(filterDecay, decayTarget, defaultDurationImpactOnDecay) * filterDecayDynamics;
     const filterDynamicSustain = filterSustain ** sustainDynamics;
 
     lowPassFilter.frequency.setTargetAtTime(

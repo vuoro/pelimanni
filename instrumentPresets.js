@@ -658,8 +658,8 @@ export const hammeredDulcimer = {
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 1.0),
-        real: Float32Array.of(0.0, -0.764, -0.618),
+        imag: Float32Array.of(0.0, 1.0, 0.618, 1.0),
+        real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
       },
       gain: 0.09,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
@@ -672,7 +672,7 @@ export const hammeredDulcimer = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.764,
+  durationImpactOnDecay: 0.236,
 
   attack: 0.018,
   filterAttack: 0.013,
@@ -724,10 +724,10 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 1.0),
-        real: Float32Array.of(0.0, -0.764, -0.618),
+        imag: Float32Array.of(0.0, 1.0, 0.618, 1.0),
+        real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
       },
-      gain: 0.09,
+      gain: 0.0,
       pitchMultiplier: 0.5, // mismatch with the above softens it a bit
 
       attack: 0.008,
@@ -738,56 +738,51 @@ export const piano = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 1.0,
+  durationImpactOnDecay: 0.382,
 
   attack: 0.013,
   filterAttack: 0.008,
-  decay: 0.5,
-  filterDecay: 0.414,
+  decay: 0.618,
+  filterDecay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 4.0),
-  lowPassPitchTracking: 4.0,
+  lowPassFrequency: 4186.009 / (1.0 + 2.0),
+  lowPassPitchTracking: 2.0,
 };
 
 // String instruments cause sympathetic vibration.
 // Using extra oscillators in unison to kind of emulate this.
 /** @param {Instrument} instrument */
-const addSympatheticStrings = (
-  instrument,
-  gainMultiplier = 0.021,
-  pitchMultiplier = 0.5,
-  attackOffset = 10.0 / 34300.0,
-) => {
+const addSympatheticStrings = (instrument, gainMultiplier = 0.021, attackOffset = 10.0 / 34300.0) => {
   const mainOscillator = instrument.oscillators[0];
   const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
-  const attack = (mainOscillator.attack ?? instrument.attack) + attackOffset;
+  const attack = mainOscillator.attack ?? instrument.attack;
 
   instrument.oscillators.push({
     ...mainOscillator,
-    attack,
+    attack: attack + attackOffset,
     gain,
-    pitchMultiplier: pitchMultiplier * (mainOscillator.pitchMultiplier ?? 1.0),
+    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0),
   });
 
   instrument.oscillators.push({
     ...mainOscillator,
-    attack,
+    attack: attack + attackOffset,
     gain,
-    pitchMultiplier: (1.0 / pitchMultiplier) * (mainOscillator.pitchMultiplier ?? 1.0),
+    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0),
   });
 
   return instrument;
 };
 
 for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.021, 0.5, 5.0 / 34300.0);
+  addSympatheticStrings(instrument, 0.021, 5.0 / 34300.0);
 }
 
 for (const instrument of [hammeredDulcimer, piano]) {
-  addSympatheticStrings(instrument, 0.034, 0.5, 10.0 / 34300.0);
+  addSympatheticStrings(instrument, 0.034, 10.0 / 34300.0);
 }
 
 // Plucked versions of string instruments
@@ -798,11 +793,11 @@ const makePlucked = (instrument) => {
     oscillators: [],
 
     decayImpactOnDuration: 1.0,
-    durationImpactOnDecay: 0.382,
+    durationImpactOnDecay: 0.236,
 
     attack: 0.013,
-    filterAttack: 0.008,
-    decay: 0.5,
+    filterAttack: 0.013,
+    decay: 0.618,
     filterDecay: 0.5,
     sustain: 0.0,
     filterSustain: 0.0,
