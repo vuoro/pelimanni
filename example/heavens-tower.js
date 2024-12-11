@@ -78,8 +78,8 @@ export const heavensTower = () => {
     // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
     // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
     // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [trombone, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [contrabassoon, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
   ];
 
   return { tracks, cycle };

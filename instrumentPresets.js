@@ -795,6 +795,7 @@ const makePlucked = (instrument) => {
     decayImpactOnDuration: 1.0,
     durationImpactOnDecay: 0.236,
 
+    glide: 0.0,
     attack: 0.013,
     filterAttack: 0.013,
     decay: 0.618,

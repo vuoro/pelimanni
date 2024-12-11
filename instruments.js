@@ -246,6 +246,7 @@ export const playInstrument = (
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
 
+  const filterDynamicGlide = defaultGlide * glideDynamics;
   const filterDynamicAttack = filterAttack * attackDynamics;
   const filterDynamicRelease = filterRelease * releaseDynamics;
 
@@ -282,10 +283,12 @@ export const playInstrument = (
   // Cancel pending events
   lowPassFilter.frequency.cancelScheduledValues(startAt);
   highPassFilter.frequency.cancelScheduledValues(startAt);
+  lowPassFilter.detune.cancelScheduledValues(startAt);
+  highPassFilter.detune.cancelScheduledValues(startAt);
   vibratoMain.frequency.cancelScheduledValues(startAt);
   vibratoLowPassGain?.gain.cancelScheduledValues(startAt);
 
-  // also fire up oscillators, and attack amplitudes
+  // Glide oscillators, and attack amplitudes
   for (const {
     oscillatorNode,
     gainNode,
@@ -301,9 +304,15 @@ export const playInstrument = (
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, startAt, attack * attackDynamics);
   }
 
-  // Attack filters
-  lowPassFilter.frequency.setTargetAtTime(lowPassTarget, startAt, filterDynamicAttack);
-  highPassFilter.frequency.setTargetAtTime(highPassTarget, startAt, filterDynamicAttack);
+  // Glide and attack filters
+  lowPassFilter.frequency.setTargetAtTime(pitch, startAt, filterDynamicGlide);
+  highPassFilter.frequency.setTargetAtTime(pitch, startAt, filterDynamicGlide);
+
+  const lowPassFilterTarget = 1200.0 * Math.log2(lowPassTarget / pitch);
+  const highPassFilterTarget = 1200.0 * Math.log2(highPassTarget / pitch);
+
+  lowPassFilter.detune.setTargetAtTime(lowPassFilterTarget, startAt, filterDynamicAttack);
+  highPassFilter.detune.setTargetAtTime(highPassFilterTarget, startAt, filterDynamicAttack);
 
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
@@ -327,7 +336,7 @@ export const playInstrument = (
   vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
 
-  // Decay
+  // Decay and sustain
   const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
   const decayDuration = endAt - decayAt;
   const decayTarget = decayDuration / 2.0;
@@ -335,9 +344,6 @@ export const playInstrument = (
   const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
   const filterDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
 
-  const sustainDynamics = 1.0 + highPitchness * 0.236;
-
-  // Oscillators
   for (const {
     gainNode,
     gainTarget,
@@ -353,26 +359,18 @@ export const playInstrument = (
 
     if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
 
-    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain ** sustainDynamics, decayAt, dynamicDecay);
+    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
 
-  // Filters
   const filtersShouldDecay = filterDecay > 0.0 && filterSustain !== 1.0 && decayAt < endAt;
 
   if (filtersShouldDecay) {
     const filterDynamicDecay = mix(filterDecay, decayTarget, defaultDurationImpactOnDecay) * filterDecayDynamics;
-    const filterDynamicSustain = filterSustain ** sustainDynamics;
+    const lowPassFilterSustainTarget = Math.max(0.0, 1200.0 * Math.log2((lowPassTarget * filterSustain) / pitch));
+    const highPassFilterSustainTarget = Math.max(0.0, 1200.0 * Math.log2((highPassTarget * filterSustain) / pitch));
 
-    lowPassFilter.frequency.setTargetAtTime(
-      mix(pitch, lowPassTarget, filterDynamicSustain),
-      decayAt,
-      filterDynamicDecay,
-    );
-    highPassFilter.frequency.setTargetAtTime(
-      mix(pitch, highPassTarget, filterDynamicSustain),
-      decayAt,
-      filterDynamicDecay,
-    );
+    lowPassFilter.detune.setTargetAtTime(lowPassFilterSustainTarget, decayAt, filterDynamicDecay);
+    highPassFilter.detune.setTargetAtTime(highPassFilterSustainTarget, decayAt, filterDynamicDecay);
   }
 
   // Release
@@ -380,8 +378,8 @@ export const playInstrument = (
     gainNode.gain.setTargetAtTime(0.0, endAt, release * releaseDynamics);
   }
 
-  lowPassFilter.frequency.setTargetAtTime(pitch, endAt, filterDynamicRelease);
-  highPassFilter.frequency.setTargetAtTime(pitch, endAt, filterDynamicRelease);
+  lowPassFilter.detune.setTargetAtTime(0.0, endAt, filterDynamicRelease);
+  highPassFilter.detune.setTargetAtTime(0.0, endAt, filterDynamicRelease);
 
   vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endAt, vibratoRelease);
   vibratoLowPassGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
