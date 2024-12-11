@@ -357,7 +357,7 @@ export const playInstrument = (
 
     const dynamicDecay = mix(decay, decayTarget, durationImpactOnDecay) * oscillatorDecayDynamics;
 
-    if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 3.0 * decayImpactOnDuration);
+    if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 4.0 * decayImpactOnDuration);
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }

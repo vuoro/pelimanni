@@ -125,6 +125,7 @@ export const flute = {
   ],
 
   glide: 0.003,
+
   attack: 0.09,
   filterAttack: 0.034,
   decay: 0.236,
@@ -232,6 +233,7 @@ export const bassoon = {
     },
   ],
   glide: 0.003,
+
   attack: 0.146,
   filterAttack: 0.056,
   release: 0.09,
@@ -287,6 +289,7 @@ export const clarinet = {
   ],
 
   glide: 0.003,
+
   attack: 0.09,
   filterAttack: 0.034,
   decay: 0.236,
@@ -310,6 +313,7 @@ export const saxophone = {
   ...genericInstrument,
   oscillators: clarinet.oscillators,
   glide: 0.003,
+
   initialInstability: 1.0,
 
   attack: 0.09,
@@ -367,6 +371,7 @@ export const trumpet = {
     },
   ],
   glide: 0.003,
+
   initialInstability: 1.0,
 
   attack: 0.056,
@@ -465,22 +470,27 @@ export const violin = {
       periodicWave: {
         // https://musiccrashcourses.com/lessons/harmonic_series.html
         // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+        // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
         imag: Float32Array.of(
           0.0,
           1.0,
           0.618,
-          0.6,
-          0.618,
-          0.7,
-          0.666666,
-          0.764,
-          0.666666,
-          0.618,
-          0.5,
-          0.1,
-          0.4,
-          0.3,
-          0.2,
+          0.382,
+          0.236,
+          0.5, // 5
+          0.236,
+          0.382, // 3
+          0.236,
+          0.146,
+          0.09,
+          0.056,
+          0.034,
+          0.021,
+          0.034, // 8
+          0.013,
+          0.008,
+          0.005,
+          0.003,
         ),
       },
     },
@@ -498,9 +508,7 @@ export const violin = {
   filterRelease: 0.056,
 
   highPassFrequency: 196.0,
-  lowPassFrequency: 4186.01 / 2.0,
-
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 3520.0,
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
@@ -521,14 +529,32 @@ export const viola = {
         // https://musiccrashcourses.com/lessons/harmonic_series.html
         // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
         // http://www.mathstudio.co.uk/pitch_perception.htm
-        imag: Float32Array.of(0.0, 1.0, 0.618, 0.6, 0.5, 0.7, 0.382, 0.35, 0.236, 0.146, 0.09, 0.056, 0.5, 0.2, 0.09),
+        imag: Float32Array.of(
+          0.0,
+          1.0,
+          0.618,
+          0.382,
+          0.5, // 4
+          0.236,
+          0.146,
+          0.09,
+          0.056,
+          0.034,
+          0.056, // 7
+          0.034,
+          0.021,
+          0.013,
+          0.034, // 5
+          0.013,
+          0.008,
+          0.005,
+          0.003,
+        ),
       },
     },
   ],
   highPassFrequency: 130.8,
-  lowPassFrequency: 2093.005 / 2.0,
-
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 2093.005,
 
   peakingFilters: [
     { frequency: 220, gain: 3, Q: 3.5 },
@@ -553,26 +579,27 @@ export const cello = {
           0.0,
           1.0,
           0.618,
-          0.382,
-          0.618,
-          0.5,
-          0.382,
-          0.382,
-          0.09,
+          0.236,
+          0.382, // 4
           0.236,
           0.146,
           0.09,
           0.056,
           0.034,
-          0.021,
+          0.056, // 7
+          0.034,
+          0.056, // 3
+          0.034,
+          0.013,
+          0.008,
+          0.005,
+          0.003,
         ),
       },
     },
   ],
   highPassFrequency: 65.4,
-  lowPassFrequency: 1046.5, // intentionally not divided for tracking
-
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 1760.0,
 
   peakingFilters: [
     { frequency: 250, gain: 3, Q: 3.5 },
@@ -593,26 +620,28 @@ export const contrabass = {
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.666,
-          0.333,
-          0.5,
-          0.333,
-          0.333,
+          0.382,
           0.146,
-          0.236,
+          0.236, // 4
           0.146,
           0.09,
           0.056,
           0.034,
-          0.021,
+          0.056,
+          0.09, // 7
+          0.034,
+          0.056, // 3
+          0.034,
+          0.013,
+          0.008,
+          0.005,
+          0.003,
         ),
       },
     },
   ],
   highPassFrequency: 41.2,
-  lowPassFrequency: 523.25, // intentionally not divided for tracking
-
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 523.25,
 
   peakingFilters: [
     { frequency: 70, gain: 3, Q: 3.5 },
@@ -636,21 +665,23 @@ export const hammeredDulcimer = {
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.618,
           0.382,
-          0.618,
-          0.5,
-          0.382,
-          0.382,
+          0.618, // 3
           0.236,
           0.146,
-          0.236,
-          0.146,
+          0.09,
+          0.146, // 5
           0.056,
+          0.09, // 3
           0.056,
           0.034,
           0.021,
           0.013,
+          0.034, // 5
+          0.013,
+          0.008,
+          0.005,
+          0.003,
         ),
       },
       pitchMultiplier: 1.005,
@@ -658,14 +689,14 @@ export const hammeredDulcimer = {
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 0.618, 1.0),
+        imag: Float32Array.of(0.0, 1.0, 1.0, 1.0),
         real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
       },
-      gain: 0.09,
-      pitchMultiplier: 0.5, // mismatch with the above softens it a bit
+      gain: 0.056,
+      pitchMultiplier: 1.0 / 3.0,
 
-      attack: 0.013,
-      decay: 0.021,
+      attack: 0.008,
+      decay: 0.008,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -703,20 +734,23 @@ export const piano = {
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.618,
           0.382,
-          0.5,
+          0.618, // 3
           0.236,
-          0.382,
-          0.056,
-          0.09,
           0.146,
           0.09,
+          0.146, // 5
+          0.056,
+          0.09, // 3
           0.056,
           0.034,
           0.021,
           0.013,
+          0.034, // 5
+          0.013,
           0.008,
+          0.005,
+          0.003,
         ),
       },
       pitchMultiplier: 1.005,
@@ -724,14 +758,14 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 0.618, 1.0),
+        imag: Float32Array.of(0.0, 1.0, 1.0, 1.0),
         real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
       },
-      gain: 0.0,
-      pitchMultiplier: 0.5, // mismatch with the above softens it a bit
+      gain: 0.056,
+      pitchMultiplier: 1.0 / 3.0,
 
       attack: 0.008,
-      decay: 0.021,
+      decay: 0.008,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -748,8 +782,8 @@ export const piano = {
   release: 0.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 2.0),
-  lowPassPitchTracking: 2.0,
+  lowPassFrequency: 4186.009 / (1.0 + 1.0),
+  lowPassPitchTracking: 1.0,
 };
 
 // String instruments cause sympathetic vibration.
@@ -778,11 +812,11 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, attackOffset 
 };
 
 for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.021, 5.0 / 34300.0);
+  addSympatheticStrings(instrument, 0.021, 5.5 / 34300.0);
 }
 
 for (const instrument of [hammeredDulcimer, piano]) {
-  addSympatheticStrings(instrument, 0.034, 10.0 / 34300.0);
+  addSympatheticStrings(instrument, 0.034, 16.5 / 34300.0);
 }
 
 // Plucked versions of string instruments
