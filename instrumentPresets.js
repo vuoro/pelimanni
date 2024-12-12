@@ -502,14 +502,15 @@ export const violin = {
 
   glide: 0.003,
 
-  attack: 0.146,
+  // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
+  attack: 0.09,
   filterAttack: 0.056,
   decay: 0.236,
-  filterDecay: 0.2,
-  sustain: 0.854,
+  filterDecay: 0.236,
+  sustain: 1.056,
   filterSustain: 0.854,
-  release: 0.09,
-  filterRelease: 0.056,
+  release: 0.146,
+  filterRelease: 0.09,
 
   highPassFrequency: 196.0,
   lowPassFrequency: 3520.0,
