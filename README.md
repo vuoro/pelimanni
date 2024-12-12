@@ -30,7 +30,7 @@ The following are all the instrument presets currently implemented.
     trumpet, trombone, frenchHorn, tuba, // brass
     violin, viola, cello, contrabass, // bowed strings
     pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
-    piano, hammeredDulcimer // string percussion: missing the hammer blow noise, for now
+    piano, hammeredDulcimer // string percussion
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
