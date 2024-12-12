@@ -631,7 +631,7 @@ export const cello = {
       },
     },
   ],
-  highPassFrequency: 65.4,
+  highPassFrequency: 65.4 * 1.6, // strings don't really emit fundamentals under 100 hz
   lowPassFrequency: 1760.0,
 
   peakingFilters: [
@@ -677,7 +677,7 @@ export const contrabass = {
       },
     },
   ],
-  highPassFrequency: 41.2,
+  highPassFrequency: 41.2 * 1.5, // strings don't really emit fundamentals under 100 hz
   lowPassFrequency: 523.25,
 
   peakingFilters: [
@@ -752,9 +752,9 @@ export const piano = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 27.5,
   lowPassFrequency: 4186.009 / (1.0 + 0.618),
   lowPassPitchTracking: 0.618,
+  highPassFrequency: 27.5 * 4.0, // strings don't really emit fundamentals under 100 hz
 };
 
 /** @type {Instrument} */
@@ -783,7 +783,7 @@ export const hammeredDulcimer = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 73.42,
+  highPassFrequency: 73.42 * 1.5, // strings don't really emit fundamentals under 100 hz
   lowPassFrequency: 1244.51,
   lowPassPitchTracking: 0.618,
 };
