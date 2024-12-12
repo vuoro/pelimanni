@@ -471,26 +471,30 @@ export const violin = {
         // https://musiccrashcourses.com/lessons/harmonic_series.html
         // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
         // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
+        // https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.618,
+          0.854,
+          0.666666,
+          0.5,
+          0.618, // 5
           0.382,
-          0.236,
-          0.5, // 5
-          0.236,
-          0.382, // 3
-          0.236,
-          0.146,
+          0.414, // 3
+          0.382,
+          0.3,
           0.09,
-          0.056,
+          0.146, // 5
+          0.124,
+          0.146,
+          0.124,
+          0.146,
           0.034,
-          0.021,
-          0.034, // 8
-          0.013,
-          0.008,
+          0.056,
+          0.09,
           0.005,
-          0.003,
+          0.09,
+          0.034,
         ),
       },
     },
@@ -529,26 +533,29 @@ export const viola = {
         // https://musiccrashcourses.com/lessons/harmonic_series.html
         // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
         // http://www.mathstudio.co.uk/pitch_perception.htm
+        // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
         imag: Float32Array.of(
           0.0,
+          0.854,
           1.0,
-          0.618,
+          0.666666,
+          0.5,
+          0.618, // 5
+          0.5,
           0.382,
-          0.5, // 4
+          0.3,
+          0.333333, // 5
           0.236,
-          0.146,
+          0.146, // 3
           0.09,
+          0.034,
+          0.056,
           0.056,
           0.034,
-          0.056, // 7
-          0.034,
+          0.09,
           0.021,
-          0.013,
-          0.034, // 5
-          0.013,
-          0.008,
-          0.005,
-          0.003,
+          0.034,
+          0.056,
         ),
       },
     },
@@ -578,22 +585,26 @@ export const cello = {
         imag: Float32Array.of(
           0.0,
           1.0,
-          0.618,
-          0.236,
-          0.382, // 4
-          0.236,
-          0.146,
+          0.666666,
+          0.382,
+          0.618, // 4
+          0.382,
+          0.2,
+          0.236, // 4
           0.09,
+          0.2, // 3
+          0.146,
+          0.146,
+          0.124,
+          0.146,
+          0.124,
+          0.146,
+          0.034,
           0.056,
-          0.034,
-          0.056, // 7
-          0.034,
-          0.056, // 3
-          0.034,
-          0.013,
-          0.008,
+          0.09,
           0.005,
-          0.003,
+          0.09,
+          0.034,
         ),
       },
     },
@@ -616,26 +627,30 @@ export const contrabass = {
     {
       type: "custom",
       periodicWave: {
-        // Guessed based on other instruments above
+        // Guessed based on cello
         imag: Float32Array.of(
           0.0,
           1.0,
+          0.618,
           0.382,
+          0.5, // 4
+          0.333333,
           0.146,
           0.236, // 4
-          0.146,
+          0.09,
+          0.146, // 3
+          0.09,
           0.09,
           0.056,
+          0.09,
+          0.056,
+          0.09,
+          0.021,
           0.034,
           0.056,
-          0.09, // 7
-          0.034,
-          0.056, // 3
-          0.034,
-          0.013,
-          0.008,
-          0.005,
           0.003,
+          0.056,
+          0.021,
         ),
       },
     },
@@ -650,6 +665,13 @@ export const contrabass = {
     { frequency: 1100, gain: 5, Q: 2.0 },
   ],
 };
+
+console.log(
+  Math.hypot(...violin.oscillators[0].periodicWave.imag),
+  Math.hypot(...viola.oscillators[0].periodicWave.imag),
+  Math.hypot(...cello.oscillators[0].periodicWave.imag),
+  Math.hypot(...contrabass.oscillators[0].periodicWave.imag),
+);
 
 /** @type {Instrument} */
 export const hammeredDulcimer = {
