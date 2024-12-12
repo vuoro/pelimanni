@@ -688,79 +688,6 @@ export const contrabass = {
   ],
 };
 
-console.log(
-  Math.hypot(...violin.oscillators[0].periodicWave.imag),
-  Math.hypot(...viola.oscillators[0].periodicWave.imag),
-  Math.hypot(...cello.oscillators[0].periodicWave.imag),
-  Math.hypot(...contrabass.oscillators[0].periodicWave.imag),
-);
-
-/** @type {Instrument} */
-export const hammeredDulcimer = {
-  ...genericInstrument,
-  oscillators: [
-    {
-      type: "custom",
-      periodicWave: {
-        // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-        // https://universe-review.ca/I13-17-timbre.jpg
-        // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
-        // https://audiouniversityonline.com/why-do-instruments-sound-different/
-        imag: Float32Array.of(
-          0.0,
-          1.0,
-          0.382,
-          0.618, // 3
-          0.236,
-          0.146,
-          0.09,
-          0.146, // 5
-          0.056,
-          0.09, // 3
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.034, // 5
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-        ),
-      },
-      pitchMultiplier: 1.005,
-    },
-    {
-      type: "custom",
-      periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 1.0, 1.0),
-        real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
-      },
-      gain: 0.056,
-      pitchMultiplier: 1.0 / 3.0,
-
-      attack: 0.008,
-      decay: 0.008,
-
-      decayImpactOnDuration: 0.0,
-      durationImpactOnDecay: 0.0,
-    },
-  ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.236,
-
-  attack: 0.018,
-  filterAttack: 0.013,
-  decay: 0.618,
-  filterDecay: 0.5,
-  sustain: 0.0,
-  release: 0.0,
-
-  highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51,
-  lowPassPitchTracking: 1.0,
-};
-
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
@@ -779,9 +706,10 @@ export const piano = {
           0.0,
           1.0,
           0.382,
-          0.618, // 3
+          0.333333,
+          0.618, // 4
           0.236,
-          0.146,
+          0.2,
           0.09,
           0.146, // 5
           0.056,
@@ -790,11 +718,10 @@ export const piano = {
           0.034,
           0.021,
           0.013,
-          0.034, // 5
-          0.013,
           0.008,
           0.005,
           0.003,
+          0.002,
         ),
       },
       pitchMultiplier: 1.005,
@@ -802,11 +729,11 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 1.0, 1.0),
-        real: Float32Array.of(0.0, -1.0, 0.0, 1.0),
+        imag: Float32Array.of(0.0, 1.0, 1.0),
+        real: Float32Array.of(0.0, -1.0, 1.0),
       },
-      gain: 0.056,
-      pitchMultiplier: 1.0 / 3.0,
+      gain: 0.034,
+      pitchMultiplier: 1.0 / 2.0,
 
       attack: 0.008,
       decay: 0.008,
@@ -816,18 +743,49 @@ export const piano = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
+  durationImpactOnDecay: 0.5,
 
   attack: 0.013,
   filterAttack: 0.008,
-  decay: 0.618,
-  filterDecay: 0.5,
+  decay: 0.666666,
+  filterDecay: 0.666666,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009 / (1.0 + 1.0),
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 4186.009 / (1.0 + 0.618),
+  lowPassPitchTracking: 0.618,
+};
+
+/** @type {Instrument} */
+export const hammeredDulcimer = {
+  ...genericInstrument,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 1.09),
+      },
+      pitchMultiplier: 1.005,
+    },
+    {
+      ...piano.oscillators[1],
+      attack: 0.013,
+    },
+  ],
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.236,
+
+  attack: 0.018,
+  filterAttack: 0.013,
+  decay: 0.666666,
+  filterDecay: 0.666666,
+  sustain: 0.0,
+  release: 0.0,
+
+  highPassFrequency: 73.42,
+  lowPassFrequency: 1244.51,
+  lowPassPitchTracking: 0.618,
 };
 
 // String instruments cause sympathetic vibration.

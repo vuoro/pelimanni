@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { saxophone } from "../instrumentPresets";
+import { hammeredDulcimer } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -67,12 +67,12 @@ export const heavensTower = () => {
     // [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [saxophone, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [saxophone, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [saxophone, [...melody, { transpose: 12, volume: 0.2 }]],
-    [saxophone, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [saxophone, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [saxophone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [hammeredDulcimer, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    [hammeredDulcimer, [...melody, { transpose: 12, volume: 0.2 }]],
+    [hammeredDulcimer, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    [hammeredDulcimer, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [hammeredDulcimer, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
     // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
     // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
