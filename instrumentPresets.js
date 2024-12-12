@@ -702,29 +702,43 @@ export const piano = {
         // https://audiouniversityonline.com/why-do-instruments-sound-different/
         // https://www.lamadeguido.com/fundamentos/ecap2.htm
         // https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
+        // https://www.youtube.com/watch?v=5xjD6SRY8Pg
+        // https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
         imag: Float32Array.of(
           0.0,
+          // First 4 are quite high and often in a U shape
           1.0,
-          0.382,
-          0.333333,
-          0.618, // 4
+          0.854,
+          0.618,
+          0.764,
+
+          // Then there's a pair arcing up
           0.236,
-          0.2,
+          0.382,
+
+          // And down
+          0.382,
+          0.236,
+
+          // And that repeats up to 16
+          0.236 * 1.382 * 0.91,
+          0.236 * 0.91,
+          0.236 * 1.382 * 0.854,
+          0.236 * 0.854,
+          0.236 * 1.382 * 0.764,
+          0.236 * 0.764,
+          0.236 * 1.382 * 0.618,
+          0.236 * 0.618,
+
+          // Then a gap, and some more?
+          0.013,
           0.09,
-          0.146, // 5
-          0.056,
-          0.09, // 3
           0.056,
           0.034,
           0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
         ),
       },
-      pitchMultiplier: 1.005,
+      pitchMultiplier: 1.0,
     },
     {
       type: "custom",
@@ -752,10 +766,15 @@ export const piano = {
   sustain: 0.0,
   release: 0.0,
 
-  lowPassFrequency: 4186.009 / (1.0 + 0.618),
-  lowPassPitchTracking: 0.618,
-  highPassFrequency: 27.5 * 4.0, // strings don't really emit fundamentals under 100 hz
+  highPassFrequency: 27.5 * 4.0 * (1.0 + 1.0), // strings don't really emit fundamentals under 100 hz
+  lowPassFrequency: 4186.009 / (1.0 + 2.0),
+  highPassPitchTracking: 1.0,
+  lowPassPitchTracking: 2.0,
 };
+
+/** @type {Instrument} */
+export const organ = structuredClone(piano);
+organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.0);
 
 /** @type {Instrument} */
 export const hammeredDulcimer = {
@@ -766,7 +785,6 @@ export const hammeredDulcimer = {
       periodicWave: {
         imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 1.09),
       },
-      pitchMultiplier: 1.005,
     },
     {
       ...piano.oscillators[1],
@@ -774,7 +792,7 @@ export const hammeredDulcimer = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.236,
+  durationImpactOnDecay: 0.382,
 
   attack: 0.018,
   filterAttack: 0.013,
@@ -785,7 +803,8 @@ export const hammeredDulcimer = {
 
   highPassFrequency: 73.42 * 1.5, // strings don't really emit fundamentals under 100 hz
   lowPassFrequency: 1244.51,
-  lowPassPitchTracking: 0.618,
+  highPassPitchTracking: 1.0,
+  lowPassPitchTracking: 1.0,
 };
 
 // String instruments cause sympathetic vibration.
@@ -800,25 +819,25 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, attackOffset 
     ...mainOscillator,
     attack: attack + attackOffset,
     gain,
-    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0),
+    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0) * 0.9975,
   });
 
   instrument.oscillators.push({
     ...mainOscillator,
     attack: attack + attackOffset,
     gain,
-    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0),
+    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0) * 1.0025,
   });
 
   return instrument;
 };
 
 for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.021, 5.5 / 34300.0);
+  addSympatheticStrings(instrument, 0.034, 5.5 / 34300.0);
 }
 
-for (const instrument of [hammeredDulcimer, piano]) {
-  addSympatheticStrings(instrument, 0.034, 16.5 / 34300.0);
+for (const instrument of [piano, hammeredDulcimer]) {
+  addSympatheticStrings(instrument, 0.056, 16.5 / 34300.0);
 }
 
 // Plucked versions of string instruments
