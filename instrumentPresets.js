@@ -70,6 +70,11 @@ export const genericInstrument = Object.seal({
   /** @type {number} minimum note and harmonics frequency */
   highPassFrequency: 247.0,
 
+  /** @type {number} resonance or "Q" of the low pass filter  */
+  lowPassQ: Math.SQRT1_2,
+  /** @type {number} resonance or "Q" of the high pass filter  */
+  highPassQ: Math.SQRT1_2,
+
   /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency */
   lowPassPitchTracking: 0.056,
   /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency */
@@ -762,7 +767,7 @@ export const piano = {
   attack: 0.013,
   filterAttack: 0.008,
   decay: 0.666666,
-  filterDecay: 0.666666,
+  filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 
@@ -770,10 +775,15 @@ export const piano = {
   lowPassFrequency: 4186.009 / (1.0 + 2.0),
   highPassPitchTracking: 1.0,
   lowPassPitchTracking: 2.0,
+
+  lowPassQ: 2.618,
+  highPassQ: 2.618,
 };
 
 /** @type {Instrument} */
 export const organ = structuredClone(piano);
+organ.lowPassQ = undefined;
+organ.highPassQ = undefined;
 organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.0);
 
 /** @type {Instrument} */
@@ -797,7 +807,7 @@ export const hammeredDulcimer = {
   attack: 0.018,
   filterAttack: 0.013,
   decay: 0.666666,
-  filterDecay: 0.666666,
+  filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 
@@ -805,6 +815,9 @@ export const hammeredDulcimer = {
   lowPassFrequency: 1244.51,
   highPassPitchTracking: 1.0,
   lowPassPitchTracking: 1.0,
+
+  lowPassQ: 2.618,
+  highPassQ: 2.618,
 };
 
 // String instruments cause sympathetic vibration.
@@ -853,8 +866,8 @@ const makePlucked = (instrument) => {
     glide: 0.0,
     attack: 0.013,
     filterAttack: 0.013,
-    decay: 0.618,
-    filterDecay: 0.5,
+    decay: 0.666666,
+    filterDecay: 0.618,
     sustain: 0.0,
     filterSustain: 0.0,
     release: 0.0,
@@ -863,6 +876,9 @@ const makePlucked = (instrument) => {
     vibratoEffectOnPitch: 20.0,
     vibratoEffectOnVolume: 0.0,
     vibratoEffectOnLowpass: 0.0,
+
+    lowPassQ: 2.618,
+    highPassQ: 2.618,
   };
 
   for (const oscillator of instrument.oscillators) {

@@ -11,6 +11,8 @@ export const createInstrument = (preset, audioContext) => {
     vibratoEffectOnVolume,
     initialInstability,
     peakingFilters,
+    lowPassQ = Math.SQRT1_2,
+    highPassQ = Math.SQRT1_2,
   } = preset;
 
   // Filters
@@ -22,13 +24,13 @@ export const createInstrument = (preset, audioContext) => {
   const lowPassFilter = new BiquadFilterNode(audioContext, {
     type: "lowpass",
     frequency: 440,
-    Q: Math.SQRT1_2,
+    Q: lowPassQ,
   });
 
   const highPassFilter = new BiquadFilterNode(audioContext, {
     type: "highpass",
     frequency: 440,
-    Q: Math.SQRT1_2,
+    Q: highPassQ,
   });
 
   lowPassFilter.connect(highPassFilter);
