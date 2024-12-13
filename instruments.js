@@ -78,8 +78,10 @@ export const createInstrument = (preset, audioContext) => {
             frequency: 440,
             periodicWave: new PeriodicWave(audioContext, {
               ...periodicWave,
-              // If no cosine terms are given, fill them in, with some slight randomisation for flavour
-              real: periodicWave.real ?? periodicWave.imag.map((v) => v * randomisedPhase),
+              // If no cosine terms are given, fill them in, with a random phase offset
+              // and some slight randomisation for flavour
+              real:
+                periodicWave.real ?? periodicWave.imag.map((v) => v * randomisedPhase * (1.0 - Math.random() * 0.013)),
             }),
           })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
