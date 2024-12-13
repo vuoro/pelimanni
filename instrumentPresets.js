@@ -75,6 +75,9 @@ export const genericInstrument = Object.seal({
   /** @type {number} resonance or "Q" of the high pass filter  */
   highPassQ: Math.SQRT1_2,
 
+  /** @type {number} flattens pitches on the low end and sharpens on the high end, for pianos and the like */
+  stretchedTuning: 0.0,
+
   /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency */
   lowPassPitchTracking: 0.056,
   /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency */
@@ -141,8 +144,8 @@ export const flute = {
   filterRelease: 0.09,
 
   highPassFrequency: 261.624,
-  lowPassFrequency: 2349.312 / 2.0,
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 2349.312,
+  lowPassPitchTracking: 0.382,
 
   vibratoEffectOnLowPass: 900.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
@@ -152,8 +155,8 @@ export const flute = {
 export const piccolo = {
   ...flute,
   highPassFrequency: 587.328,
-  lowPassFrequency: 4185.984 / 2.0,
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 4185.984,
+  lowPassPitchTracking: 0.382,
   peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
 };
 
@@ -360,9 +363,6 @@ export const saxophone = {
   highPassFrequency: 116.0,
   lowPassFrequency: 1244.0 * 2.0,
 
-  // See note about trumpet high notes below
-  lowPassPitchTracking: -1.0,
-
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 670, gain: 2.0, Q: 2.0 },
@@ -416,9 +416,6 @@ export const trumpet = {
 
   highPassFrequency: 184.996,
   lowPassFrequency: 1174.656 * 2.0,
-
-  // Trumpet high notes are apparently less bright. Assuming it applies to all brass?
-  lowPassPitchTracking: -1.0,
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
@@ -755,7 +752,7 @@ export const piano = {
       pitchMultiplier: 1.0 / 2.0,
 
       attack: 0.008,
-      decay: 0.008,
+      decay: 0.013,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -763,6 +760,7 @@ export const piano = {
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.5,
+  stretchedTuning: 0.005,
 
   attack: 0.013,
   filterAttack: 0.008,
@@ -771,20 +769,21 @@ export const piano = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 27.5 * 4.0 * (1.0 + 1.0), // strings don't really emit fundamentals under 100 hz
-  lowPassFrequency: 4186.009 / (1.0 + 2.0),
+  highPassFrequency: 27.5 * 4.0, // strings don't really emit fundamentals under 100 hz
+  lowPassFrequency: 4186.009,
   highPassPitchTracking: 1.0,
-  lowPassPitchTracking: 2.0,
+  lowPassPitchTracking: 1.0,
 
-  lowPassQ: 2.618,
-  highPassQ: 2.618,
+  lowPassQ: 2.236,
+  highPassQ: 2.236,
 };
 
 /** @type {Instrument} */
 export const organ = structuredClone(piano);
-organ.lowPassQ = undefined;
-organ.highPassQ = undefined;
-organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.0);
+organ.lowPassQ = genericInstrument.lowPassQ;
+organ.highPassQ = genericInstrument.highPassQ;
+organ.stretchedTuning = genericInstrument.stretchedTuning;
+organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.618);
 
 /** @type {Instrument} */
 export const hammeredDulcimer = {
@@ -803,6 +802,7 @@ export const hammeredDulcimer = {
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.382,
+  stretchedTuning: 0.00125,
 
   attack: 0.018,
   filterAttack: 0.013,
@@ -812,12 +812,12 @@ export const hammeredDulcimer = {
   release: 0.0,
 
   highPassFrequency: 73.42 * 1.5, // strings don't really emit fundamentals under 100 hz
-  lowPassFrequency: 1244.51,
-  highPassPitchTracking: 1.0,
-  lowPassPitchTracking: 1.0,
+  lowPassFrequency: 1244.51 * 2.0,
+  highPassPitchTracking: 0.0,
+  lowPassPitchTracking: 0.618,
 
-  lowPassQ: 2.618,
-  highPassQ: 2.618,
+  lowPassQ: 2.236,
+  highPassQ: 2.236,
 };
 
 // String instruments cause sympathetic vibration.
@@ -832,14 +832,14 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, attackOffset 
     ...mainOscillator,
     attack: attack + attackOffset,
     gain,
-    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0) * 0.9975,
+    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0),
   });
 
   instrument.oscillators.push({
     ...mainOscillator,
     attack: attack + attackOffset,
     gain,
-    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0) * 1.0025,
+    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0),
   });
 
   return instrument;
@@ -877,8 +877,8 @@ const makePlucked = (instrument) => {
     vibratoEffectOnVolume: 0.0,
     vibratoEffectOnLowpass: 0.0,
 
-    lowPassQ: 2.618,
-    highPassQ: 2.618,
+    lowPassQ: 2.236,
+    highPassQ: 2.236,
   };
 
   for (const oscillator of instrument.oscillators) {

@@ -214,27 +214,42 @@ export const playInstrument = (
     vibratoEffectOnLowPass,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
+    stretchedTuning,
   } = preset;
 
   const hasVibrato = vibratoAmount > 0.0;
 
-  let highPitchness = (pitch - highPassFrequency) / (lowPassFrequency - highPassFrequency);
-  if (highPitchness > 0.0) highPitchness **= 0.41421356;
-  const lowPitchness = Math.max(0.0, 1.0 - highPitchness);
-  const relativePitchness = highPitchness * 2.0 - 1.0;
-  const extremePitchness = Math.abs(relativePitchness);
+  // Frequencies
+  const rangeInCents = 1200.0 * Math.log2(lowPassFrequency / highPassFrequency);
+  // const fromLowPass = 1200.0 * Math.log2(lowPassFrequency / pitch);
+  const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitch);
 
-  const volumeTarget = volume * (1.0 - 0.146 * extremePitchness);
+  const highPitchness = -fromHighPass / rangeInCents;
+  const lowPitchness = 1.0 - highPitchness;
+  const relativePitchness = highPitchness * 2.0 - 1.0;
+
+  const highPassTarget =
+    highPassPitchTracking < 0.0
+      ? highPassFrequency * (1.0 - highPassPitchTracking * lowPitchness) // raises when negative
+      : (highPassFrequency * (1.0 + highPassPitchTracking)) / (1.0 + highPassPitchTracking * lowPitchness); // lowers when positive
+  const lowPassTarget =
+    lowPassPitchTracking < 0.0
+      ? lowPassFrequency / (1.0 - lowPassPitchTracking * highPitchness) // lowers when negative
+      : (lowPassFrequency / (1.0 + lowPassPitchTracking)) * (1.0 + lowPassPitchTracking * highPitchness); // raises when positive
+
+  const lowPassFilterTarget = 1200.0 * Math.log2(lowPassTarget / pitch);
+  const highPassFilterTarget = 1200.0 * Math.log2(highPassTarget / pitch);
 
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
-  const pitchSameness = 0.09 ** Math.abs(Math.log(pitch) - Math.log(instrument.previousPitch)) * franticness;
+  const pitchSameness = 0.333 ** Math.abs(Math.log2(instrument.previousPitch / pitch)) * franticness;
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
   const dynamicVelocity = velocity * situationalDynamics;
   const dynamicSlowness = 1.0 - dynamicVelocity;
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
+  const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.09);
 
   const attackDynamics =
     mix(1.0, duration, 0.146) *
@@ -258,15 +273,6 @@ export const playInstrument = (
   const vibratoRelease = defaultDynamicRelease * 0.09;
   const vibratoGainAttack = defaultDynamicAttack * 0.236;
   const vibratoGainRelease = defaultDynamicRelease * 0.236;
-
-  const highPassTarget =
-    highPassPitchTracking < 0.0
-      ? highPassFrequency * (1.0 - highPassPitchTracking * lowPitchness) // raises when negative
-      : highPassFrequency / (1.0 + highPassPitchTracking * lowPitchness); // lowers when positive
-  const lowPassTarget =
-    lowPassPitchTracking < 0.0
-      ? lowPassFrequency / (1.0 - lowPassPitchTracking * highPitchness) // lowers when negative
-      : lowPassFrequency * (1.0 + lowPassPitchTracking * highPitchness); // raises when positive
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
@@ -304,16 +310,24 @@ export const playInstrument = (
     oscillatorNode.frequency.cancelScheduledValues(startAt);
     gainNode.gain.cancelScheduledValues(startAt);
 
-    oscillatorNode.frequency.setTargetAtTime(pitch * pitchMultiplier, startAt, glide * glideDynamics);
+    let pitchTarget = pitch * pitchMultiplier;
+
+    if (pitchMultiplier === 1.0) {
+      pitchTarget *= 1.0 + relativePitchness * stretchedTuning;
+    } else {
+      const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitchTarget);
+      const highPitchness = -fromHighPass / rangeInCents;
+      const relativePitchness = highPitchness * 2.0 - 1.0;
+      pitchTarget *= 1.0 + relativePitchness * stretchedTuning;
+    }
+
+    oscillatorNode.frequency.setTargetAtTime(pitchTarget, startAt, glide * glideDynamics);
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, startAt, attack * attackDynamics);
   }
 
   // Glide and attack filters
   lowPassFilter.frequency.setTargetAtTime(pitch, startAt, filterDynamicGlide);
   highPassFilter.frequency.setTargetAtTime(pitch, startAt, filterDynamicGlide);
-
-  const lowPassFilterTarget = 1200.0 * Math.log2(lowPassTarget / pitch);
-  const highPassFilterTarget = 1200.0 * Math.log2(highPassTarget / pitch);
 
   lowPassFilter.detune.setTargetAtTime(lowPassFilterTarget, startAt, filterDynamicAttack);
   highPassFilter.detune.setTargetAtTime(highPassFilterTarget, startAt, filterDynamicAttack);
