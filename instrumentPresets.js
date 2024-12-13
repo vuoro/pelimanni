@@ -773,15 +773,10 @@ export const piano = {
   lowPassFrequency: 4186.009,
   highPassPitchTracking: 1.0,
   lowPassPitchTracking: 1.0,
-
-  lowPassQ: 2.236,
-  highPassQ: 2.236,
 };
 
 /** @type {Instrument} */
 export const organ = structuredClone(piano);
-organ.lowPassQ = genericInstrument.lowPassQ;
-organ.highPassQ = genericInstrument.highPassQ;
 organ.stretchedTuning = genericInstrument.stretchedTuning;
 organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.618);
 
@@ -815,43 +810,7 @@ export const hammeredDulcimer = {
   lowPassFrequency: 1244.51 * 2.0,
   highPassPitchTracking: 0.0,
   lowPassPitchTracking: 0.618,
-
-  lowPassQ: 2.236,
-  highPassQ: 2.236,
 };
-
-// String instruments cause sympathetic vibration.
-// Using extra oscillators in unison to kind of emulate this.
-/** @param {Instrument} instrument */
-const addSympatheticStrings = (instrument, gainMultiplier = 0.021, attackOffset = 10.0 / 34300.0) => {
-  const mainOscillator = instrument.oscillators[0];
-  const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
-  const attack = mainOscillator.attack ?? instrument.attack;
-
-  instrument.oscillators.push({
-    ...mainOscillator,
-    attack: attack + attackOffset,
-    gain,
-    pitchMultiplier: (1.0 / 2.0) * (mainOscillator.pitchMultiplier ?? 1.0),
-  });
-
-  instrument.oscillators.push({
-    ...mainOscillator,
-    attack: attack + attackOffset,
-    gain,
-    pitchMultiplier: (2.0 / 1.0) * (mainOscillator.pitchMultiplier ?? 1.0),
-  });
-
-  return instrument;
-};
-
-for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.034, 5.5 / 34300.0);
-}
-
-for (const instrument of [piano, hammeredDulcimer]) {
-  addSympatheticStrings(instrument, 0.056, 16.5 / 34300.0);
-}
 
 // Plucked versions of string instruments
 /** @param {Instrument} instrument */
@@ -876,9 +835,6 @@ const makePlucked = (instrument) => {
     vibratoEffectOnPitch: 20.0,
     vibratoEffectOnVolume: 0.0,
     vibratoEffectOnLowpass: 0.0,
-
-    lowPassQ: 2.236,
-    highPassQ: 2.236,
   };
 
   for (const oscillator of instrument.oscillators) {
@@ -906,3 +862,39 @@ export const pluckedCello = makePlucked(cello);
 
 /** @type {Instrument} */
 export const pluckedContrabass = makePlucked(contrabass);
+
+// String instruments cause sympathetic vibration.
+// Using extra oscillators in unison to kind of emulate this.
+/** @param {Instrument} instrument */
+const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultiplier = 0.5) => {
+  const mainOscillator = instrument.oscillators[0];
+  const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
+  const decay = (mainOscillator.decay ?? instrument.decay) * decayMultiplier;
+  const release = (mainOscillator.release ?? instrument.release) * decayMultiplier;
+
+  instrument.oscillators.push({
+    ...mainOscillator,
+    gain,
+    decay,
+    release,
+    pitchMultiplier: 0.5 * (mainOscillator.pitchMultiplier ?? 1.0),
+  });
+
+  instrument.oscillators.push({
+    ...mainOscillator,
+    gain,
+    decay,
+    release,
+    pitchMultiplier: 2.0 * (mainOscillator.pitchMultiplier ?? 1.0),
+  });
+
+  return instrument;
+};
+
+for (const instrument of [violin, viola, cello, contrabass]) {
+  addSympatheticStrings(instrument, 0.056, 0.618);
+}
+
+for (const instrument of [piano, hammeredDulcimer, pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass]) {
+  addSympatheticStrings(instrument, 0.09, 0.618);
+}
