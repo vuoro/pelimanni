@@ -61,7 +61,6 @@ export const createInstrument = (preset, audioContext) => {
   for (const {
     type,
     periodicWave,
-    pitchMultiplier = 1.0,
     gain = 1.0,
     attack,
     decay,
@@ -70,6 +69,7 @@ export const createInstrument = (preset, audioContext) => {
     glide,
     decayImpactOnDuration,
     durationImpactOnDecay,
+    getPitch = passPitchThrough,
   } of oscillatorsInPreset) {
     const oscillatorNode =
       type === "custom"
@@ -100,9 +100,9 @@ export const createInstrument = (preset, audioContext) => {
       sustain,
       release,
       glide,
-      pitchMultiplier,
       decayImpactOnDuration,
       durationImpactOnDecay,
+      getPitch,
     });
   }
 
@@ -168,6 +168,9 @@ export const createInstrument = (preset, audioContext) => {
     previousPitch: 440.0,
   };
 };
+
+/** @param {Number} pitch */
+const passPitchThrough = (pitch) => pitch;
 
 export const playInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
@@ -305,16 +308,14 @@ export const playInstrument = (
     gainTarget,
     attack = defaultAttack,
     glide = defaultGlide,
-    pitchMultiplier,
+    getPitch,
   } of oscillators) {
     oscillatorNode.frequency.cancelScheduledValues(startAt);
     gainNode.gain.cancelScheduledValues(startAt);
 
-    let pitchTarget = pitch * pitchMultiplier;
+    let pitchTarget = getPitch(pitch);
 
-    if (pitchMultiplier === 1.0) {
-      pitchTarget *= 1.0 + relativePitchness * stretchedTuning;
-    } else {
+    if (stretchedTuning !== 0.0) {
       const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitchTarget);
       const highPitchness = -fromHighPass / rangeInCents;
       const relativePitchness = highPitchness * 2.0 - 1.0;

@@ -67,6 +67,13 @@ export const heavensTower = () => {
     // [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
+    // [viola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [cello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [viola, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+
     [piano, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
     [piano, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
     [piano, [...melody, { transpose: 12, volume: 0.2 }]],

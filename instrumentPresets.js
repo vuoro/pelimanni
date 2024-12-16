@@ -13,7 +13,6 @@ export const genericInstrument = Object.seal({
    * @typedef {object} Oscillator - creates the sound of the note
    * @property {OscillatorType} type
    * @property {PeriodicWaveOptions=} periodicWave - used for custom oscillators
-   * @property {number=} pitchMultiplier - multiplies the frequency of the note for this oscillator
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
    * @property {Attack=} attack
    * @property {Decay=} decay
@@ -22,6 +21,7 @@ export const genericInstrument = Object.seal({
    * @property {Glide=} glide
    * @property {number=} decayImpactOnDuration - see below
    * @property {number=} durationImpactOnDecay - see below
+   * @property {(pitch: Number) => Number=} getPitch - lets you modify the pitch before it gets played
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
   oscillators: [{ type: "triangle" }],
@@ -711,47 +711,45 @@ export const piano = {
           // First 4 are quite high and often in a U shape
           1.0,
           0.854,
+          0.5,
           0.618,
-          0.764,
 
           // Then there's a pair arcing up
           0.236,
           0.382,
 
           // And down
-          0.382,
           0.236,
+          0.146,
 
-          // And that repeats up to 16
-          0.236 * 1.382 * 0.91,
-          0.236 * 0.91,
-          0.236 * 1.382 * 0.854,
-          0.236 * 0.854,
-          0.236 * 1.382 * 0.764,
-          0.236 * 0.764,
-          0.236 * 1.382 * 0.618,
-          0.236 * 0.618,
-
-          // Then a gap, and some more?
-          0.013,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
+          // And that repeats up to 16 or os
+          0.09 * 1.236 * 1.0,
+          0.09 * 1.0,
+          0.09 * 1.236 * 0.91,
+          0.09 * 0.91,
+          0.09 * 1.236 * 0.854,
+          0.09 * 0.854,
+          0.09 * 1.236 * 0.764,
+          0.09 * 0.764,
+          0.09 * 1.236 * 0.618,
+          0.09 * 0.618,
         ),
       },
-      pitchMultiplier: 1.0,
+      gain: 1.0,
     },
     {
       type: "custom",
       periodicWave: {
-        imag: Float32Array.of(0.0, 1.0, 1.0),
-        real: Float32Array.of(0.0, -1.0, 1.0),
+        // TODO: maybe use seeded noise and find a nice-sounding seed
+        imag: new Float32Array(1 + 45).map((_, index, { length }) => {
+          if (index === 0.0) return index;
+          const progression = (index - 1.0) / (length - 2.0);
+          return Math.random() * 0.5 ** (progression * 21.0);
+        }),
       },
       gain: 0.034,
-      pitchMultiplier: 1.0 / 2.0,
+      getPitch: (pitch) => 44.0 + pitch * 0.013,
 
-      attack: 0.008,
       decay: 0.013,
 
       decayImpactOnDuration: 0.0,
@@ -763,7 +761,7 @@ export const piano = {
   stretchedTuning: 0.005,
 
   attack: 0.013,
-  filterAttack: 0.008,
+  filterAttack: 0.013,
   decay: 0.666666,
   filterDecay: 0.618,
   sustain: 0.0,
@@ -771,14 +769,18 @@ export const piano = {
 
   highPassFrequency: 27.5 * 4.0, // strings don't really emit fundamentals under 100 hz
   lowPassFrequency: 4186.009,
-  highPassPitchTracking: 1.0,
+  highPassPitchTracking: 0.0,
   lowPassPitchTracking: 1.0,
 };
 
 /** @type {Instrument} */
-export const organ = structuredClone(piano);
-organ.stretchedTuning = genericInstrument.stretchedTuning;
-organ.oscillators[0].periodicWave.imag = organ.oscillators[0].periodicWave.imag.map((v) => v ** 2.618);
+export const organ = {
+  ...piano,
+  oscillators: [
+    { type: "custom", periodicWave: { imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 2.0) } },
+  ],
+  stretchedTuning: genericInstrument.stretchedTuning,
+};
 
 /** @type {Instrument} */
 export const hammeredDulcimer = {
@@ -787,12 +789,11 @@ export const hammeredDulcimer = {
     {
       type: "custom",
       periodicWave: {
-        imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 1.09),
+        imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 0.91),
       },
     },
     {
       ...piano.oscillators[1],
-      attack: 0.013,
     },
   ],
   decayImpactOnDuration: 1.0,
@@ -800,7 +801,7 @@ export const hammeredDulcimer = {
   stretchedTuning: 0.00125,
 
   attack: 0.018,
-  filterAttack: 0.013,
+  filterAttack: 0.018,
   decay: 0.666666,
   filterDecay: 0.618,
   sustain: 0.0,
@@ -877,7 +878,7 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultipli
     gain,
     decay,
     release,
-    pitchMultiplier: 0.5 * (mainOscillator.pitchMultiplier ?? 1.0),
+    getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 0.5,
   });
 
   instrument.oscillators.push({
@@ -885,7 +886,7 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultipli
     gain,
     decay,
     release,
-    pitchMultiplier: 2.0 * (mainOscillator.pitchMultiplier ?? 1.0),
+    getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 2.0,
   });
 
   return instrument;

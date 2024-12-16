@@ -9,7 +9,7 @@ THE AUTHOR(S) SHALL NOT BE LIABLE FOR ANYTHING, ARISING FROM, OR IN
 CONNECTION WITH THE SOFTWARE OR THE DISTRIBUTION OF THE SOFTWARE.
 */
 
-class DattorroReverb extends AudioWorkletProcessor {
+class DattorroReverb extends globalThis.AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
       ["preDelay", 0, 0, globalThis.sampleRate - 1, "k-rate"],
