@@ -785,17 +785,20 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
-        // TODO: maybe use seeded noise and find a nice-sounding seed
-        imag: new Float32Array(1 + 45).map((_, index, { length }) => {
-          if (index === 0.0) return index;
-          const progression = (index - 1.0) / (length - 2.0);
-          return Math.random() * 0.5 ** (progression * 21.0);
-        }),
+        // FIXME: this sounds more like an anvil than anything…
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(1.0, 0.0, 0.618, 0.382, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // low key noise around 40 hz
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382), // hammer noise around 900 hz
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.236, 0.0, 0.0, 0.0, 0.0, 0.146), // high key noise… somewhere
+        ),
       },
-      gain: 0.034,
-      getPitch: (pitch) => 44.0 + pitch * 0.013,
-
-      decay: 0.013,
+      getPitch: () => 44.0,
+      gain: 0.021,
+      attack: 0.008,
+      decay: 0.034,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -805,17 +808,17 @@ export const piano = {
   durationImpactOnDecay: 0.5,
   stretchedTuning: 0.005,
 
-  attack: 0.013,
-  filterAttack: 0.013,
+  attack: 0.021,
+  filterAttack: 0.008,
   decay: 0.666666,
   filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 27.5 * 4.0, // strings don't really emit fundamentals under 100 hz
+  highPassFrequency: 27.5,
   lowPassFrequency: 4186.009,
-  highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 1.0,
+  highPassPitchTracking: -2.5, // strings don't really emit fundamentals under 100 hz
+  lowPassPitchTracking: 2.0,
 };
 
 /** @type {Instrument} */
@@ -836,26 +839,45 @@ export const hammeredDulcimer = {
       periodicWave: {
         imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 0.91),
       },
+      gain: 1.0,
     },
     {
-      ...piano.oscillators[1],
+      type: "custom",
+      periodicWave: {
+        // FIXME: this sounds more like an anvil than anything…
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(0.0, 0.146, 0.0, 0.0, 0.0, 0.09, 0.0, 0.056, 0.0, 0.0), // body noise around 80 hz?
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146), // bounce noise around 900 hz
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // hammer overtones
+        ),
+      },
+      getPitch: () => 44.0,
+      gain: 0.021,
+      attack: 0.008,
+      decay: 0.034,
+
+      decayImpactOnDuration: 0.0,
+      durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.382,
-  stretchedTuning: 0.00125,
+  stretchedTuning: 0.005,
 
-  attack: 0.018,
-  filterAttack: 0.018,
+  attack: 0.013,
+  filterAttack: 0.008,
   decay: 0.666666,
   filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 73.42 * 1.5, // strings don't really emit fundamentals under 100 hz
+  highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 2.0,
-  highPassPitchTracking: 0.0,
-  lowPassPitchTracking: 0.618,
+  highPassPitchTracking: -0.333333, // strings don't really emit fundamentals under 100 hz
+  lowPassPitchTracking: 0.0,
 };
 
 // Plucked versions of string instruments
@@ -938,9 +960,9 @@ const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultipli
 };
 
 for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.056, 0.618);
+  addSympatheticStrings(instrument, 0.056, 0.764);
 }
 
 for (const instrument of [piano, hammeredDulcimer, pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass]) {
-  addSympatheticStrings(instrument, 0.09, 0.618);
+  addSympatheticStrings(instrument, 0.056, 0.764);
 }
