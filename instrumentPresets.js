@@ -66,9 +66,9 @@ export const genericInstrument = Object.seal({
   // https://euphonics.org/5-3-signature-modes-and-formants/
   // https://sengpielaudio.com/VowelDiagram.htm
   /** @type {number} maximum note and harmonics frequency */
-  lowPassFrequency: 2100.0,
+  lowPassFrequency: 4186.009,
   /** @type {number} minimum note and harmonics frequency */
-  highPassFrequency: 247.0,
+  highPassFrequency: 27.5,
 
   /** @type {number} resonance or "Q" of the low pass filter  */
   lowPassQ: Math.SQRT1_2,
@@ -815,8 +815,6 @@ export const piano = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 27.5,
-  lowPassFrequency: 4186.009,
   highPassPitchTracking: -2.5, // strings don't really emit fundamentals under 100 hz
   lowPassPitchTracking: 2.0,
 };
@@ -878,6 +876,65 @@ export const hammeredDulcimer = {
   lowPassFrequency: 1244.51 * 2.0,
   highPassPitchTracking: -0.333333, // strings don't really emit fundamentals under 100 hz
   lowPassPitchTracking: 0.0,
+};
+
+/** @param {Instrument} instrument */
+export const taikoDrum = {
+  ...genericInstrument,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(0.0, 0.0, 0.0, 1.0), // 1
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.618), // 2 (~2.11)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.382), // 3 (~2.92)
+          ...Float32Array.of(0.0, 0.0, 0.236, 0.0), // 3.75
+          ...Float32Array.of(0.0, 0.146, 0.0, 0.0), // 4.5 (~4.40)
+          ...Float32Array.of(0.0, 0.09, 0.0, 0.0), // 5.5 (~5.57)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.056, 0.0, 0.0), // 7.5 (~7.6)
+          ...Float32Array.of(0.0, 0.034, 0.0, 0.0), // 8.5
+          ...Float32Array.of(0.021, 0.0, 0.0, 0.0), // 9.25 (~9.3)
+        ),
+      },
+      getPitch: (pitch) => pitch / 4.0,
+      gain: 1.0,
+    },
+  ],
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.09,
+
+  attack: 0.013,
+  filterAttack: 0.013,
+  decay: 0.236,
+  filterDecay: 0.146,
+  sustain: 0.0,
+  release: 0.0,
+};
+
+/** @param {Instrument} instrument */
+export const timpani = {
+  ...taikoDrum,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(0.0, 0.0, 0.0, 1.0), // 1
+          ...Float32Array.of(0.0, 0.618, 0.0, 0.382), // 1.5 & 2.0 (~1.98)
+          ...Float32Array.of(0.0, 0.236, 0.0, 0.0), // 2.5 (~2.44)
+          ...Float32Array.of(0.146, 0.0, 0.0, 0.0), // 3.25 (~3.16)
+        ),
+      },
+      getPitch: (pitch) => pitch / 4.0,
+      gain: 1.0,
+    },
+  ],
 };
 
 // Plucked versions of string instruments
