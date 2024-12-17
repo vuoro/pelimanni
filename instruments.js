@@ -107,9 +107,9 @@ export const createInstrument = (preset, audioContext) => {
   }
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
-  const idleVibratoFrequency = 13 / 60;
-  const idleVibratoLowPassTarget = 400;
-  const idleVibratoPitchTarget = 3;
+  const idleVibratoFrequency = 12 / 60;
+  const idleVibratoLowPassTarget = 500;
+  const idleVibratoPitchTarget = 2;
   const idleVibratoVolumeTarget = 0.021 * baseVolume;
 
   // TODO: no need for this if there's no vibrato or instability at all?
@@ -290,7 +290,7 @@ export const playInstrument = (
   let endAt = at + Math.max(duration * 0.618, duration - defaultDynamicRelease);
 
   const instabilityStopsAt =
-    initialInstability > 0.0 ? Math.min(endAt - Number.EPSILON * 2.0, startAt + filterDynamicAttack * 6.0) : startAt;
+    initialInstability > 0.0 ? Math.min(endAt - Number.EPSILON * 2.0, startAt + filterDynamicAttack * 4.0) : startAt;
   const vibratoAt = Math.min(endAt - Number.EPSILON, instabilityStopsAt + defaultDynamicAttack);
 
   // Cancel pending events
@@ -335,9 +335,9 @@ export const playInstrument = (
 
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
-    const instabilityTarget = 78 + 4 * highPitchness;
+    const instabilityTarget = 70 + 10 * highPitchness;
     const instabilityEffect = initialInstability * (200.0 + 500.0 * pitchDifferentness);
-    const instabilityGlide = 0.001;
+    const instabilityGlide = defaultDynamicAttack * 0.146;
     const instabilityDecaysAt = startAt + instabilityGlide * 4.0;
 
     const instabilityGainDecay = instabilityStopsAt - instabilityDecaysAt;

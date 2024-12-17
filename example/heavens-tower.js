@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { piano } from "../instrumentPresets";
+import { flute, hammeredDulcimer, oboe, pluckedViola, trombone, violin } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -74,19 +74,19 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [piano, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [piano, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [piano, [...melody, { transpose: 12, volume: 0.2 }]],
-    [piano, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [piano, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [piano, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [piano, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [piano, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [piano, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [piano, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [piano, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [piano, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.12 }]],
+    [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.056 }]],
+    [violin, [...melody, { transpose: 12, volume: 0.18 }]],
+    [flute, [...highHarmony, { transpose: 0, volume: 0.146 }]],
+    [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
   ];
 
   return { tracks, cycle };
