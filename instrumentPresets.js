@@ -1,5 +1,7 @@
 /** @typedef {typeof genericInstrument} Instrument */
 
+import { getNoise } from "./noise";
+
 /**
  * @typedef {number} Attack - a `timeConstant`: how long the note takes to "fade in"
  * @typedef {number} Decay - a `timeConstant`: how long before the note reaches the `sustain` level after finishing its `attack`
@@ -888,29 +890,37 @@ export const taikoDrum = {
         // biome-ignore format: FIXME the ignoring isn't actually working
         imag: Float32Array.of(
           0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 1.0), // 1
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.618), // 2 (~2.11)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.382), // 3 (~2.92)
-          ...Float32Array.of(0.0, 0.0, 0.236, 0.0), // 3.75
-          ...Float32Array.of(0.0, 0.146, 0.0, 0.0), // 4.5 (~4.40)
-          ...Float32Array.of(0.0, 0.09, 0.0, 0.0), // 5.5 (~5.57)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.056, 0.0, 0.0), // 7.5 (~7.6)
-          ...Float32Array.of(0.0, 0.034, 0.0, 0.0), // 8.5
-          ...Float32Array.of(0.021, 0.0, 0.0, 0.0), // 9.25 (~9.3)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 2.1 (~2.11), 2.9 (~2.92)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236, 0.0, 0.0, 0.0), // 3.7 (~3.75)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.146, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 4.4 (~4.40)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.09, 0.0, 0.0, 0.0, 0.0), // 5.6 (~5.57)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.056, 0.0, 0.0, 0.0, 0.0), // 7.6 (~7.6)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.034, 0.0, 0.0, 0.0, 0.0, 0.0), // 8.5
+          ...Float32Array.of(0.0, 0.0, 0.021, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 9.3 (~9.3)
         ),
       },
-      getPitch: (pitch) => pitch / 4.0,
+      getPitch: (pitch) => pitch / 10.0 / 8.0,
       gain: 1.0,
+    },
+    {
+      type: "custom",
+      periodicWave: getNoise(),
+      getPitch: () => 11.0,
+      gain: 2.0,
+      attack: 0.008,
+      decay: 0.056,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.09,
+  durationImpactOnDecay: 0.382,
 
   attack: 0.013,
   filterAttack: 0.013,
-  decay: 0.236,
-  filterDecay: 0.146,
+  decay: 0.382,
+  filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 };
@@ -925,14 +935,20 @@ export const timpani = {
         // biome-ignore format: FIXME the ignoring isn't actually working
         imag: Float32Array.of(
           0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 1.0), // 1
-          ...Float32Array.of(0.0, 0.618, 0.0, 0.382), // 1.5 & 2.0 (~1.98)
-          ...Float32Array.of(0.0, 0.236, 0.0, 0.0), // 2.5 (~2.44)
-          ...Float32Array.of(0.146, 0.0, 0.0, 0.0), // 3.25 (~3.16)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0), // 1.5
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 2.0 (~1.98)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382, 0.0), // 2.45 (~2.44)
+          ...Float32Array.of(0.0, 0.0, 0.236, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 3.15 (~3.16)
         ),
       },
-      getPitch: (pitch) => pitch / 4.0,
+      getPitch: (pitch) => pitch / 20.0,
       gain: 1.0,
+    },
+    {
+      ...taikoDrum.oscillators[1],
+      periodicWave: getNoise(),
     },
   ],
 };

@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { timpani } from "../instrumentPresets";
+import { taikoDrum } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -74,12 +74,12 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [timpani, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [timpani, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [timpani, [...melody, { transpose: 12, volume: 0.2 }]],
-    [timpani, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [timpani, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [timpani, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [taikoDrum, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    [taikoDrum, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    [taikoDrum, [...melody, { transpose: 12, volume: 0.2 }]],
+    [taikoDrum, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    [taikoDrum, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [taikoDrum, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
     // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.12 }]],
     // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.056 }]],
