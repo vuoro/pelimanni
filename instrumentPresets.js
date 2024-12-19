@@ -894,28 +894,31 @@ export const taikoDrum = {
           ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
           ...Float32Array.of(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 2.1 (~2.11), 2.9 (~2.92)
           ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236, 0.0, 0.0, 0.0), // 3.7 (~3.75)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.146, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 4.4 (~4.40)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.09, 0.0, 0.0, 0.0, 0.0), // 5.6 (~5.57)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.09, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 4.4 (~4.40)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.056, 0.0, 0.0, 0.0, 0.0), // 5.6 (~5.57)
           ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.056, 0.0, 0.0, 0.0, 0.0), // 7.6 (~7.6)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.034, 0.0, 0.0, 0.0, 0.0, 0.0), // 8.5
-          ...Float32Array.of(0.0, 0.0, 0.021, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 9.3 (~9.3)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.034, 0.0, 0.0, 0.0, 0.0), // 7.6 (~7.6)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.021, 0.0, 0.0, 0.0, 0.0, 0.0), // 8.5
+          ...Float32Array.of(0.0, 0.0, 0.013, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 9.3 (~9.3)
         ),
       },
-      getPitch: (pitch) => pitch / 10.0 / 8.0,
+      getPitch: (pitch) => pitch / 10.0,
       gain: 1.0,
     },
     {
       type: "custom",
-      periodicWave: getNoise(),
-      getPitch: () => 11.0,
-      gain: 2.0,
+      periodicWave: getNoise(
+        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 8.0))) / Math.max(1.0, index - 8.0),
+      ),
+      getPitch: () => 11.0 + 3.0 * Math.random(),
+      gain: 1.0,
       attack: 0.008,
-      decay: 0.056,
+      decay: 0.034,
+      durationImpactOnDecay: 0.005,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
+  durationImpactOnDecay: 0.333333,
 
   attack: 0.013,
   filterAttack: 0.013,
@@ -923,6 +926,9 @@ export const taikoDrum = {
   filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
+
+  highPassFrequency: 22.0,
+  lowPassFrequency: 2200.0,
 };
 
 /** @param {Instrument} instrument */
@@ -948,7 +954,9 @@ export const timpani = {
     },
     {
       ...taikoDrum.oscillators[1],
-      periodicWave: getNoise(),
+      periodicWave: getNoise(
+        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 12.0))) / Math.max(1.0, index - 12.0),
+      ),
     },
   ],
 };

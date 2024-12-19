@@ -1,7 +1,7 @@
 // Coefficients from https://github.com/looshi/wavetable-synth-2
 export const getNoise = (
   shaper = (/** @type {number} */ value, /** @type {number} */ index, /** @type {Float32Array} */ _array) =>
-    value / Math.max(1.0, index ** Math.SQRT2),
+    value / Math.max(1.0, Math.sqrt(index)),
 ) => {
   const real0 = 51.22724533081055;
   const imag0 = 0;
@@ -44,9 +44,29 @@ export const getNoise = (
       ...real,
       ...real,
       ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
+      ...real,
     ).map(shaper),
     imag: Float32Array.of(
       imag0,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
+      ...imag,
       ...imag,
       ...imag,
       ...imag,
