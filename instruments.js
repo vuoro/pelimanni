@@ -206,10 +206,10 @@ export const playInstrument = (
     sustain: defaultSustain,
     release: defaultRelease,
     glide: defaultGlide,
-    filterAttack = defaultAttack * 0.618,
+    filterAttack = defaultAttack,
     filterDecay = defaultDecay,
     filterSustain = defaultSustain,
-    filterRelease = defaultRelease * 0.618,
+    filterRelease = defaultRelease,
     lowPassFrequency,
     highPassFrequency,
     highPassPitchTracking,
@@ -301,7 +301,7 @@ export const playInstrument = (
   vibratoMain.frequency.cancelScheduledValues(startAt);
   vibratoLowPassGain?.gain.cancelScheduledValues(startAt);
 
-  // Glide oscillators, and attack amplitudes
+  // Glide and attack
   for (const {
     oscillatorNode,
     gainNode,

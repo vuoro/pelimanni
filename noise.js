@@ -3,7 +3,7 @@ export const getNoise = (
   shaper = (/** @type {number} */ value, /** @type {number} */ index, /** @type {Float32Array} */ _array) =>
     value / Math.max(1.0, Math.sqrt(index)),
 ) => {
-  const real0 = 51.22724533081055;
+  const real0 = 0;
   const imag0 = 0;
 
   const real = [
@@ -79,4 +79,32 @@ export const getNoise = (
       ...imag,
     ).map(shaper),
   };
+};
+
+const cachedNoiseOscillators = new WeakMap();
+
+const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => {
+  const cachedNoiseOscillator = cachedNoiseOscillators.get(audioContext);
+  if (cachedNoiseOscillator) return cachedNoiseOscillator;
+
+  const imag = new Float32Array(4096);
+  const real = new Float32Array(4096);
+
+  for (let index = 1; index < imag.length; index++) {
+    imag[index] = Math.random() * 2.0 - 1.0;
+    real[index] = imag[index] * (Math.random() * 2.0 - 1.0);
+  }
+
+  const noiseOscillator = new OscillatorNode(audioContext, {
+    type: "custom",
+    frequency: 5.0,
+    periodicWave: new PeriodicWave(audioContext, {
+      imag,
+      real,
+    }),
+  });
+
+  noiseOscillator.start();
+
+  return noiseOscillator;
 };

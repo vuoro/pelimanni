@@ -130,6 +130,9 @@ export const flute = {
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
 
+  lowPassPitchTracking: 0.618,
+  lowPassQ: 3.0,
+
   vibratoEffectOnLowPass: 500.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
 };
@@ -911,9 +914,9 @@ export const taikoDrum = {
         (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 8.0))) / Math.max(1.0, index - 8.0),
       ),
       getPitch: () => 11.0 + 3.0 * Math.random(),
-      gain: 1.0,
+      gain: 0.236,
       attack: 0.008,
-      decay: 0.034,
+      decay: 0.056,
       durationImpactOnDecay: 0.005,
     },
   ],
@@ -927,7 +930,7 @@ export const taikoDrum = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 22.0,
+  highPassFrequency: 27.5,
   lowPassFrequency: 2200.0,
 };
 
