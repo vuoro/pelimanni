@@ -1097,11 +1097,11 @@ export const xylophone = {
 const glockenSpielImag = new Float32Array(20 * 32);
 glockenSpielImag[20 * 1] = 1.0;
 glockenSpielImag[20 * 2.75] = 0.618; // 2.756
-glockenSpielImag[20 * 5.4] = 0.146;
-glockenSpielImag[20 * 8.9] = 0.236;
-glockenSpielImag[20 * 13.35] = 0.146; // 13.34
-glockenSpielImag[20 * 18.65] = 0.09; // 18.64
-glockenSpielImag[20 * 31.85] = 0.021; // 31.87
+glockenSpielImag[20 * 5.4] = 0.236;
+glockenSpielImag[20 * 8.9] = 0.382;
+glockenSpielImag[20 * 13.35] = 0.236; // 13.34
+glockenSpielImag[20 * 18.65] = 0.146; // 18.64
+glockenSpielImag[20 * 31.85] = 0.09; // 31.87
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1117,7 +1117,7 @@ export const glockenspiel = {
   ],
 
   decay: marimba.decay,
-  filterDecay: marimba.decay * 0.146,
+  filterDecay: marimba.decay * 0.618
 };
 
 // Plucked versions of string instruments
