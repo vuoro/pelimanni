@@ -131,7 +131,8 @@ export const flute = {
   lowPassFrequency: 2349.312,
 
   lowPassPitchTracking: 0.618,
-  lowPassQ: 3.0,
+  lowPassQ: 2.0,
+  highPassQ: 2.0,
 
   vibratoEffectOnLowPass: 500.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
@@ -597,6 +598,9 @@ export const violin = {
   highPassFrequency: 196.0,
   lowPassFrequency: 3520.0,
 
+  lowPassQ: 2.0,
+  highPassQ: 2.0,
+
   vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 300, gain: 3, Q: 3.5 },
@@ -820,6 +824,9 @@ export const piano = {
   sustain: 0.0,
   release: 0.0,
 
+  highPassQ: 2.0,
+  lowPassQ: 2.0,
+
   highPassPitchTracking: -2.5, // strings don't really emit fundamentals under 100 hz
   lowPassPitchTracking: 2.0,
 };
@@ -877,6 +884,9 @@ export const hammeredDulcimer = {
   sustain: 0.0,
   release: 0.0,
 
+  highPassQ: 2.0,
+  lowPassQ: 2.0,
+
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 2.0,
   highPassPitchTracking: -0.333333, // strings don't really emit fundamentals under 100 hz
@@ -929,6 +939,9 @@ export const taikoDrum = {
   filterDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
+
+  highPassQ: 2.0,
+  lowPassQ: 2.0,
 
   highPassFrequency: 27.5,
   lowPassFrequency: 2200.0,
@@ -983,6 +996,9 @@ const makePlucked = (instrument) => {
     filterSustain: 0.0,
     release: 0.0,
     filterRelease: 0.0,
+
+    highPassQ: 2.618,
+    lowPassQ: 2.618,
 
     vibratoEffectOnPitch: 20.0,
     vibratoEffectOnVolume: 0.0,
