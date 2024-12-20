@@ -31,7 +31,8 @@ The following are all the instrument presets currently implemented.
     violin, viola, cello, contrabass, // bowed strings
     pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
     piano, hammeredDulcimer, organ // keyboards-likes
-    taikoDrum, timpani // percussion
+    taikoDrum, timpani, bassDrum, snareDrum // drums
+    marimba, xylophone, glockenspiel // idiophones
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 

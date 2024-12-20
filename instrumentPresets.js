@@ -789,7 +789,6 @@ export const piano = {
           0.001,
         ),
       },
-      gain: 1.0,
     },
     {
       type: "custom",
@@ -849,7 +848,6 @@ export const hammeredDulcimer = {
       periodicWave: {
         imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 0.91),
       },
-      gain: 1.0,
     },
     {
       type: "custom",
@@ -916,7 +914,6 @@ export const taikoDrum = {
         ),
       },
       getPitch: (pitch) => pitch / 10.0,
-      gain: 1.0,
     },
     {
       type: "custom",
@@ -934,7 +931,7 @@ export const taikoDrum = {
   durationImpactOnDecay: 0.333333,
 
   attack: 0.013,
-  filterAttack: 0.013,
+  filterAttack: 0.0001,
   decay: 0.382,
   filterDecay: 0.618,
   sustain: 0.0,
@@ -966,7 +963,6 @@ export const timpani = {
         ),
       },
       getPitch: (pitch) => pitch / 20.0,
-      gain: 1.0,
     },
     {
       ...taikoDrum.oscillators[1],
@@ -975,6 +971,153 @@ export const timpani = {
       ),
     },
   ],
+};
+
+/** @param {Instrument} instrument */
+export const bassDrum = {
+  ...taikoDrum,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0), // 1.85 (~1.86)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.618, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 2.70 (~2.72)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
+          ...Float32Array.of(0.0, 0.0, 0.382, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 3.64 (~3.65)
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // 4.50
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146, 0.0), // 5.46 (~5.45)
+        ),
+      },
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      ...taikoDrum.oscillators[1],
+    },
+  ],
+};
+
+/** @param {Instrument} instrument */
+export const snareDrum = {
+  ...taikoDrum,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: Float32Array.of(
+          0.0,
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0), // 1.5
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.618, 0.0, 0.0, 0.0, 0.0), // 1.8
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.382, 0.0, 0.0, 0.236, 0.0, 0.0), // 2.25 & 2.4
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146, 0.0, 0.0, 0.0), // 2.85
+          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.09, 0.0), // 3.45
+        ),
+      },
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      ...taikoDrum.oscillators[1],
+    },
+  ],
+};
+
+// Tuned so that the 2nd harmonic is at about 4.0
+const marimbaImag = new Float32Array(20 * 43);
+marimbaImag[20 * 1] = 1.0;
+marimbaImag[20 * 4] = 0.236; // 3.92
+marimbaImag[20 * 10] = 0.146; // 9.24
+marimbaImag[20 * 16.25] = 0.618; // 16.27
+marimbaImag[20 * 24.2] = 0.146; // 24.22
+marimbaImag[20 * 33.55] = 0.09; // 33.56
+marimbaImag[20 * 43] = 0.056; // 42.97
+
+/** @param {Instrument} instrument */
+export const marimba = {
+  ...genericInstrument,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: marimbaImag,
+      },
+      getPitch: (pitch) => pitch / 20.0,
+    },
+  ],
+
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.333333,
+
+  attack: 0.013,
+  filterAttack: 0.0001,
+  decay: 0.382,
+  filterDecay: 0.618,
+  sustain: 0.0,
+  release: 0.0,
+
+  lowPassFrequency: 20000,
+};
+
+// Tuned so that the 2nd harmonic is at about 3.0
+const xylophoneImag = new Float32Array(20 * 24);
+xylophoneImag[20 * 1] = 1.0;
+xylophoneImag[20 * 3] = 0.236;
+xylophoneImag[20 * 6] = 0.5; // 6.16
+xylophoneImag[20 * 10] = 0.146; // 10.29
+xylophoneImag[20 * 14] = 0.618; // 14.01
+xylophoneImag[20 * 19.65] = 0.382; // 19.66
+xylophoneImag[20 * 24] = 0.236; // 24.02
+
+/** @param {Instrument} instrument */
+export const xylophone = {
+  ...marimba,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        // biome-ignore format: FIXME the ignoring isn't actually working
+        imag: xylophoneImag,
+      },
+      getPitch: (pitch) => pitch / 20.0,
+    },
+  ],
+};
+
+// Tuned to pure idiophone overtones
+const glockenSpielImag = new Float32Array(20 * 32);
+glockenSpielImag[20 * 1] = 1.0;
+glockenSpielImag[20 * 2.75] = 0.618; // 2.756
+glockenSpielImag[20 * 5.4] = 0.146;
+glockenSpielImag[20 * 8.9] = 0.236;
+glockenSpielImag[20 * 13.35] = 0.146; // 13.34
+glockenSpielImag[20 * 18.65] = 0.09; // 18.64
+glockenSpielImag[20 * 31.85] = 0.021; // 31.87
+
+/** @param {Instrument} instrument */
+export const glockenspiel = {
+  ...marimba,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        imag: glockenSpielImag,
+      },
+      getPitch: (pitch) => pitch / 20.0,
+    },
+  ],
+
+  decay: marimba.decay,
+  filterDecay: marimba.decay * 0.146,
 };
 
 // Plucked versions of string instruments

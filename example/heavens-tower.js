@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { taikoDrum } from "../instrumentPresets";
+import { glockenspiel } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -74,19 +74,19 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [taikoDrum, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [taikoDrum, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [taikoDrum, [...melody, { transpose: 12, volume: 0.2 }]],
-    [taikoDrum, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [taikoDrum, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [taikoDrum, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [glockenspiel, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    [glockenspiel, [...melody, { transpose: 12, volume: 0.2 }]],
+    [glockenspiel, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    [glockenspiel, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [glockenspiel, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.12 }]],
-    // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.056 }]],
+    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
+    // [glockenspiel, [...plinkingMelody, { transpose: 0, volume: 0.146 }]],
     // [violin, [...melody, { transpose: 12, volume: 0.18 }]],
     // [flute, [...highHarmony, { transpose: 0, volume: 0.146 }]],
     // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.09 }]],
   ];
 
   return { tracks, cycle };

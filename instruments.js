@@ -385,8 +385,14 @@ export const playInstrument = (
 
   if (filtersShouldDecay) {
     const filterDynamicDecay = mix(filterDecay, decayTarget, defaultDurationImpactOnDecay) * filterDecayDynamics;
-    const lowPassFilterSustainTarget = Math.max(0.0, 1200.0 * Math.log2((lowPassTarget * filterSustain) / pitch));
-    const highPassFilterSustainTarget = Math.max(0.0, 1200.0 * Math.log2((highPassTarget * filterSustain) / pitch));
+    const lowPassFilterSustainTarget = Math.max(
+      50.0,
+      1200.0 * Math.log2(mix(pitch, lowPassTarget, filterSustain) / pitch),
+    );
+    const highPassFilterSustainTarget = Math.min(
+      -50.0,
+      1200.0 * Math.log2(mix(pitch, highPassTarget, filterSustain) / pitch),
+    );
 
     lowPassFilter.detune.setTargetAtTime(lowPassFilterSustainTarget, decayAt, filterDynamicDecay);
     highPassFilter.detune.setTargetAtTime(highPassFilterSustainTarget, decayAt, filterDynamicDecay);
