@@ -921,9 +921,9 @@ export const taikoDrum = {
     {
       type: "custom",
       periodicWave: getNoise(
-        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 8.0))) / Math.max(1.0, index - 8.0),
+        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
       ),
-      getPitch: () => 11.0 + 3.0 * Math.random(),
+      getPitch: () => 5.0,
       gain: 0.236,
       attack: 0.008,
       decay: 0.056,
@@ -943,7 +943,7 @@ export const taikoDrum = {
   highPassQ: 2.0,
   lowPassQ: 2.0,
 
-  highPassFrequency: 27.5,
+  highPassFrequency: 44.0,
   lowPassFrequency: 2200.0,
 };
 
@@ -971,7 +971,7 @@ export const timpani = {
     {
       ...taikoDrum.oscillators[1],
       periodicWave: getNoise(
-        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 12.0))) / Math.max(1.0, index - 12.0),
+        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 27.0))) / Math.max(1.0, index - 27.0),
       ),
     },
   ],
