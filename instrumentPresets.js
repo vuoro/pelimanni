@@ -36,13 +36,13 @@ export const genericInstrument = Object.seal({
   // These are all `timeConstant`s passed to `setTargetAtTime`.
   // They will be dynamically adjusted based on things like note frequency, duration etc.
   /** @type {Attack} */
-  attack: 0.09,
+  attack: 0.0,
   /** @type {Decay} */
   decay: 0.0,
   /** @type {Sustain} */
   sustain: 1.0,
   /** @type {Release} */
-  release: 0.236,
+  release: 0.0,
   /** @type {Glide} */
   glide: 0.0,
 
@@ -58,7 +58,7 @@ export const genericInstrument = Object.seal({
   /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
   decayImpactOnDuration: 0.0,
   /** @type {number} how much note duration can extend decay's duration; 1.0 = similar to piano keys */
-  durationImpactOnDecay: 0.09,
+  durationImpactOnDecay: 0.0,
 
   // Controls the maximum and minimum frequencies of the notes and their harmonics.
   // I've taken my values from these sources:
