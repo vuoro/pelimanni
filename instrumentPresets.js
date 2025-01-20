@@ -99,7 +99,28 @@ export const genericInstrument = Object.seal({
 });
 
 /** @param {number} v */
-const defaultLowStageMapper = (v) => v ** (4.0 + Math.random() * 2.0);
+const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (4.0 + Math.random());
+
+/** @param {Float32Array} imag */
+const addSympatheticStrings = (imag, loudness = 0.09) => {
+  const newImag = new Float32Array(imag.length * 12 * 4);
+
+  for (let index = 0; index < imag.length; index++) {
+    newImag[index * 12 * 4] += imag[index] * loudness;
+    newImag[index * 12 * 3] += imag[index] * loudness;
+    newImag[index * 12 * 2] += imag[index] * loudness; // higher strings
+    newImag[index * 12] += imag[index]; // real string
+    newImag[index * 12 * (1 / 2)] += imag[index] * loudness; // lower strings
+    newImag[index * 12 * (1 / 3)] += imag[index] * loudness;
+    newImag[index * 12 * (1 / 4)] += imag[index] * loudness;
+  }
+
+  // console.log(Math.max(...newImag));
+
+  return newImag;
+};
+
+const getSympatheticStringPitch = (pitch = 440.0) => pitch / 12.0;
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -633,29 +654,31 @@ export const tuba = {
 // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
 // https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-const violinImag = Float32Array.of(
-  0.0,
-  1.0,
-  0.854,
-  0.618,
-  0.5,
-  0.618, // 5
-  0.238,
-  0.382,
-  0.5,
-  0.382,
-  0.236,
-  0.146,
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
+const violinImag = addSympatheticStrings(
+  Float32Array.of(
+    0.0,
+    1.0,
+    0.854,
+    0.618,
+    0.5,
+    0.618, // 5
+    0.238,
+    0.382,
+    0.5,
+    0.382,
+    0.236,
+    0.146,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+    0.002,
+    0.001,
+  ),
 );
 
 /** @type {Instrument} */
@@ -668,6 +691,7 @@ export const violin = {
         imag: violinImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -677,6 +701,7 @@ export const violin = {
         imag: violinImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
   ],
 
@@ -708,29 +733,31 @@ export const violin = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
-const violaImag = Float32Array.of(
-  0.0,
-  0.854,
-  1.0,
-  0.854,
-  0.764, // 4
-  0.382,
-  0.238,
-  0.382,
-  0.5,
-  0.382,
-  0.236,
-  0.146,
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
+const violaImag = addSympatheticStrings(
+  Float32Array.of(
+    0.0,
+    0.854,
+    1.0,
+    0.854,
+    0.764, // 4
+    0.382,
+    0.238,
+    0.382,
+    0.5,
+    0.382,
+    0.236,
+    0.146,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+    0.002,
+    0.001,
+  ),
 );
 
 /** @type {Instrument} */
@@ -743,6 +770,7 @@ export const viola = {
         imag: violaImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -750,6 +778,7 @@ export const viola = {
         imag: violaImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
   ],
   highPassFrequency: 130.8,
@@ -767,26 +796,28 @@ export const viola = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://vobarian.com/celloanly/index.html
-const celloImag = Float32Array.of(
-  0.0,
-  1.0,
-  0.618,
-  0.382,
-  0.618, // 4
-  0.382,
-  0.236,
-  0.236,
-  0.146,
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
+const celloImag = addSympatheticStrings(
+  Float32Array.of(
+    0.0,
+    1.0,
+    0.618,
+    0.382,
+    0.618, // 4
+    0.382,
+    0.236,
+    0.236,
+    0.146,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+    0.002,
+    0.001,
+  ),
 );
 
 /** @type {Instrument} */
@@ -799,6 +830,7 @@ export const cello = {
         imag: celloImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -806,6 +838,7 @@ export const cello = {
         imag: celloImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
   ],
   highPassFrequency: 65.4 * 1.6, // strings don't really emit fundamentals under 100 hz
@@ -820,25 +853,27 @@ export const cello = {
 };
 
 // Guessed based on cello
-const contrabassImag = Float32Array.of(
-  0.0,
-  1.0,
-  0.618,
-  0.382,
-  0.5, // 4
-  0.333333,
-  0.146,
-  0.146,
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
+const contrabassImag = addSympatheticStrings(
+  Float32Array.of(
+    0.0,
+    1.0,
+    0.618,
+    0.382,
+    0.5, // 4
+    0.333333,
+    0.146,
+    0.146,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+    0.002,
+    0.001,
+  ),
 );
 
 /** @type {Instrument} */
@@ -851,6 +886,7 @@ export const contrabass = {
         imag: contrabassImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -858,6 +894,7 @@ export const contrabass = {
         imag: contrabassImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
   ],
   highPassFrequency: 41.2 * 1.5, // strings don't really emit fundamentals under 100 hz
@@ -880,30 +917,32 @@ export const contrabass = {
 // https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
 // https://www.youtube.com/watch?v=5xjD6SRY8Pg
 // https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
-const pianoImag = Float32Array.of(
-  0.0,
-  // First 4 are quite high and often in a U shape
-  1.0,
-  0.854,
-  0.5,
-  0.618,
-  // Then there's a pair arcing up
-  0.236,
-  0.382,
-  // And down
-  0.236,
-  0.146,
+const pianoImag = addSympatheticStrings(
+  Float32Array.of(
+    0.0,
+    // First 4 are quite high and often in a U shape
+    1.0,
+    0.854,
+    0.5,
+    0.618,
+    // Then there's a pair arcing up
+    0.236,
+    0.382,
+    // And down
+    0.236,
+    0.146,
 
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+    0.002,
+    0.001,
+  ),
 );
 
 /** @type {Instrument} */
@@ -916,6 +955,7 @@ export const piano = {
         imag: pianoImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -923,6 +963,7 @@ export const piano = {
         imag: pianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -960,31 +1001,24 @@ export const piano = {
 };
 
 /** @type {Instrument} */
-export const organ = {
-  ...piano,
-  oscillators: [
-    { type: "custom", periodicWave: { imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 2.0) } },
-  ],
-  stretchedTuning: genericInstrument.stretchedTuning,
-};
-
-/** @type {Instrument} */
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
     {
       type: "custom",
       periodicWave: {
-        imag: piano.oscillators[0].periodicWave.imag.map((v) => v),
+        imag: pianoImag,
       },
       stage: "high",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
       periodicWave: {
-        imag: piano.oscillators[0].periodicWave.imag.map(defaultLowStageMapper),
+        imag: pianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getSympatheticStringPitch,
     },
     {
       type: "custom",
@@ -1011,10 +1045,10 @@ export const hammeredDulcimer = {
   durationImpactOnDecay: 0.382,
   stretchedTuning: 0.005,
 
-  attack: 0.008,
-  overtoneAttack: 0.013,
+  attack: 0.01,
+  overtoneAttack: 0.016,
   decay: 0.618,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.5,
   sustain: 0.0,
   release: 0.0,
 
@@ -1316,10 +1350,10 @@ const makePlucked = (instrument) => {
     durationImpactOnDecay: 0.236,
 
     glide: 0.0,
-    attack: 0.013,
-    overtoneAttack: 0.013,
-    decay: 0.666666,
-    overtoneDecay: 0.618,
+    attack: 0.01,
+    overtoneAttack: 0.016,
+    decay: 0.618,
+    overtoneDecay: 0.382,
     sustain: 0.0,
     overtoneSustain: 0.0,
     release: 0.0,

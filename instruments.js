@@ -317,7 +317,7 @@ export const playInstrument = (
   // Start and end
   const startAt = at;
   const decayAt = startAt + defaultDynamicAttack * 4.0;
-  let endAt = at + Math.max(epsilon, duration - defaultDynamicRelease);
+  let endAt = at + Math.max(duration * 0.618, duration - defaultDynamicRelease);
 
   const instabilityStopsAt =
     initialInstability > 0.0 ? Math.min(endAt - epsilon * 2.0, startAt + overtoneDynamicAttack * 4.0) : startAt;
