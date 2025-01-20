@@ -16,6 +16,7 @@ export const genericInstrument = Object.seal({
    * @property {OscillatorType} type
    * @property {PeriodicWaveOptions=} periodicWave - used for custom oscillators
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
+   * @property {"both" | "low" | "high"=} stage - should this oscillator play during "low" stage (start of attack, end of release, low sustain, low velocity), "high" stage (end of attack, high sustain, high velocity), or both
    * @property {Attack=} attack
    * @property {Decay=} decay
    * @property {Sustain=} sustain
@@ -46,14 +47,14 @@ export const genericInstrument = Object.seal({
   /** @type {Glide} */
   glide: 0.0,
 
-  /** @type {Attack} */
-  filterAttack: undefined,
-  /** @type {Decay} */
-  filterDecay: undefined,
-  /** @type {Sustain} */
-  filterSustain: undefined,
-  /** @type {Release} */
-  filterRelease: undefined,
+  /** @type {Attack=} */
+  overtoneAttack: undefined,
+  /** @type {Decay=} */
+  overtoneDecay: undefined,
+  /** @type {Sustain=} */
+  overtoneSustain: undefined,
+  /** @type {Release=} */
+  overtoneRelease: undefined,
 
   /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
   decayImpactOnDuration: 0.0,
@@ -80,11 +81,6 @@ export const genericInstrument = Object.seal({
   /** @type {number} flattens pitches on the low end and sharpens on the high end, for pianos and the like */
   stretchedTuning: 0.0,
 
-  /** @type {number} makes lowPassFrequency track the pitch: 1.0 = doubles lowPassFrequency when playing a pitch at lowPassFrequency */
-  lowPassPitchTracking: 0.056,
-  /** @type {number} makes highPassFrequency track the pitch: 1.0 = halves highPassFrequency when playing a pitch at highPassFrequency */
-  highPassPitchTracking: 0.056,
-
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
   vibratoEffectOnLowPass: 0.0,
   /** @type {number} how much vibrato should affect the note frequency (in cents) */
@@ -102,6 +98,13 @@ export const genericInstrument = Object.seal({
   peakingFilters: [],
 });
 
+/** @param {number} v */
+const defaultLowStageMapper = (v) => v ** (4.0 + Math.random() * 2.0);
+
+// https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+const fluteImag = Float32Array.of(0.0, 1.0, 0.854, 0.382, 0.618, 0.236, 0.09, 0.034, 0.013, 0.005, 0.002);
+
 /** @type {Instrument} */
 export const flute = {
   ...genericInstrument,
@@ -109,28 +112,32 @@ export const flute = {
     {
       type: "custom",
       periodicWave: {
-        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-        // https://musiccrashcourses.com/lessons/harmonic_series.html
-        imag: Float32Array.of(0.0, 1.0, 0.854, 0.382, 0.618, 0.236, 0.09, 0.034, 0.013, 0.005, 0.002),
+        imag: fluteImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: fluteImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
 
-  glide: 0.003,
+  glide: 0.001,
 
   attack: 0.034,
-  filterAttack: 0.021,
+  overtoneAttack: 0.034,
   decay: 0.236,
-  filterDecay: 0.236,
+  overtoneDecay: 0.236,
   sustain: 0.91,
-  filterSustain: 1.0,
+  overtoneSustain: 0.91,
   release: 0.034,
-  filterRelease: 0.056,
+  overtoneRelease: 0.021,
 
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
-
-  lowPassPitchTracking: 0.618,
 
   vibratoEffectOnLowPass: 500.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
@@ -144,6 +151,31 @@ export const piccolo = {
   peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
 };
 
+// https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+const oboeImag = Float32Array.of(
+  0.0,
+  0.764,
+  1.0,
+  0.854,
+  1.0,
+  0.854,
+  0.764,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const oboe = {
   ...genericInstrument,
@@ -151,43 +183,28 @@ export const oboe = {
     {
       type: "custom",
       periodicWave: {
-        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-        imag: Float32Array.of(
-          0.0,
-          0.764,
-          0.91,
-          0.854,
-          1.0,
-          0.854,
-          0.764,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: oboeImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: oboeImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
-  glide: 0.003,
+  glide: 0.001,
 
   attack: 0.034,
-  filterAttack: 0.021,
+  overtoneAttack: 0.034,
   decay: 0.236,
-  filterDecay: 0.236,
+  overtoneDecay: 0.236,
   sustain: 0.91,
-  filterSustain: 1.0,
+  overtoneSustain: 0.91,
   release: 0.034,
-  filterRelease: 0.056,
+  overtoneRelease: 0.021,
 
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
@@ -199,6 +216,30 @@ export const oboe = {
   ],
 };
 
+// https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+// https://koppreeds.com/harmonic.html
+const bassoonImag = Float32Array.of(
+  0.0,
+  0.764,
+  1.0,
+  0.854,
+  0.91,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const bassoon = {
   ...oboe,
@@ -206,30 +247,16 @@ export const bassoon = {
     {
       type: "custom",
       periodicWave: {
-        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-        // https://koppreeds.com/harmonic.html
-        imag: Float32Array.of(
-          0.0,
-          0.764,
-          1.0,
-          0.854,
-          0.91,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: bassoonImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: bassoonImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 58.27,
@@ -251,6 +278,27 @@ export const contrabassoon = {
   ],
 };
 
+// https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+const clarinetImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.236,
+  0.854,
+  0.382,
+  0.618,
+  0.146,
+  0.236,
+  0.056,
+  0.09,
+  0.021,
+  0.034,
+  0.008,
+  0.013,
+  0.003,
+  0.005,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const clarinet = {
   ...genericInstrument,
@@ -258,40 +306,29 @@ export const clarinet = {
     {
       type: "custom",
       periodicWave: {
-        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-        imag: Float32Array.of(
-          0.0,
-          1.0,
-          0.236,
-          0.854,
-          0.382,
-          0.618,
-          0.146,
-          0.236,
-          0.056,
-          0.09,
-          0.021,
-          0.034,
-          0.008,
-          0.013,
-          0.003,
-          0.005,
-          0.001,
-        ),
+        imag: clarinetImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: clarinetImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
 
-  glide: 0.003,
+  glide: 0.001,
 
   attack: 0.034,
-  filterAttack: 0.021,
+  overtoneAttack: 0.034,
   decay: 0.236,
-  filterDecay: 0.236,
+  overtoneDecay: 0.236,
   sustain: 0.91,
-  filterSustain: 1.0,
+  overtoneSustain: 0.91,
   release: 0.034,
-  filterRelease: 0.056,
+  overtoneRelease: 0.021,
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
@@ -302,6 +339,34 @@ export const clarinet = {
   ],
 };
 
+// https://www.phys.unsw.edu.au/music/saxophone/soprano/Asharp3.html
+// https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-030-15046-4_2/MediaObjects/472011_1_En_2_Fig8_HTML.png
+// https://courses.physics.illinois.edu/phys406/sp2017/NSF_REU_Reports/2007_reu/Impedance_Spectrum_for_a_Tenor_Sax_and_a_Bb_Trumpet.pdf
+// https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-031-53507-9_7/MediaObjects/539603_1_En_7_Fig13_HTML.png
+// https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
+// TODO: revise these since there are now separate high and low oscillators
+const saxophoneImag = Float32Array.of(
+  0.0,
+  0.854,
+  0.764,
+  1.0,
+  0.91,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const saxophone = {
   ...genericInstrument,
@@ -309,47 +374,29 @@ export const saxophone = {
     {
       type: "custom",
       periodicWave: {
-        // https://www.phys.unsw.edu.au/music/saxophone/soprano/Asharp3.html
-        // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-030-15046-4_2/MediaObjects/472011_1_En_2_Fig8_HTML.png
-        // https://courses.physics.illinois.edu/phys406/sp2017/NSF_REU_Reports/2007_reu/Impedance_Spectrum_for_a_Tenor_Sax_and_a_Bb_Trumpet.pdf
-        // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-031-53507-9_7/MediaObjects/539603_1_En_7_Fig13_HTML.png
-        // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
-        // These are not right, might be impossible to do with a static wave
-        imag: Float32Array.of(
-          0.0,
-          0.854,
-          0.764,
-          1.0,
-          0.91,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: saxophoneImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: saxophoneImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
-  glide: 0.005,
+  glide: 0.003,
   initialInstability: 1.0,
 
   attack: 0.034,
-  filterAttack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.236,
-  filterDecay: 0.382,
+  overtoneDecay: 0.382,
   sustain: 0.854,
-  filterSustain: 0.854,
+  overtoneSustain: 0.854,
   release: 0.034,
-  filterRelease: 0.034,
+  overtoneRelease: 0.034,
 
   // FIXME: are these sensible? There are too many saxophone variants.
   highPassFrequency: 116.0,
@@ -363,6 +410,30 @@ export const saxophone = {
   ],
 };
 
+// https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+const trumpetImag = Float32Array.of(
+  0.0,
+  0.618,
+  1.0,
+  0.764,
+  0.854,
+  0.764,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const trumpet = {
   ...genericInstrument,
@@ -370,43 +441,29 @@ export const trumpet = {
     {
       type: "custom",
       periodicWave: {
-        // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-        imag: Float32Array.of(
-          0.0,
-          0.618,
-          1.0,
-          0.764,
-          0.854,
-          0.764,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: trumpetImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: trumpetImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
-  glide: 0.005,
+  glide: 0.003,
   initialInstability: 1.0,
 
   attack: 0.034,
-  filterAttack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.236,
-  filterDecay: 0.382,
+  overtoneDecay: 0.382,
   sustain: 0.854,
-  filterSustain: 0.854,
+  overtoneSustain: 0.854,
   release: 0.056,
-  filterRelease: 0.09,
+  overtoneRelease: 0.09,
 
   highPassFrequency: 184.996,
   lowPassFrequency: 1174.656 * 2.0,
@@ -418,6 +475,30 @@ export const trumpet = {
   ],
 };
 
+// https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
+// http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
+const tromboneImag = Float32Array.of(
+  0.0,
+  0.618,
+  1.0,
+  0.854,
+  0.764,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const trombone = {
   ...trumpet,
@@ -425,30 +506,16 @@ export const trombone = {
     {
       type: "custom",
       periodicWave: {
-        // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
-        // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
-        imag: Float32Array.of(
-          0.0,
-          0.618,
-          1.0,
-          0.854,
-          0.764,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: tromboneImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: tromboneImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 58.27,
@@ -459,6 +526,29 @@ export const trombone = {
   ],
 };
 
+// https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
+const frenchHornImag = Float32Array.of(
+  0.0,
+  0.854,
+  1.0,
+  0.91,
+  0.764,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const frenchHorn = {
   ...trombone,
@@ -466,29 +556,16 @@ export const frenchHorn = {
     {
       type: "custom",
       periodicWave: {
-        // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
-        imag: Float32Array.of(
-          0.0,
-          0.854,
-          1.0,
-          0.91,
-          0.764,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: frenchHornImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: frenchHornImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 55.0,
@@ -499,6 +576,31 @@ export const frenchHorn = {
   ],
 };
 
+// https://www.rickdenney.com/the_tuba_sound.htm
+const tubaImag = Float32Array.of(
+  0.0,
+  0.764,
+  0.91,
+  0.764,
+  1.0,
+  0.764,
+  0.91,
+  0.618,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const tuba = {
   ...frenchHorn,
@@ -506,31 +608,16 @@ export const tuba = {
     {
       type: "custom",
       periodicWave: {
-        // https://www.rickdenney.com/the_tuba_sound.htm
-        imag: Float32Array.of(
-          0.0,
-          0.764,
-          0.91,
-          0.764,
-          1.0,
-          0.764,
-          0.91,
-          0.618,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: tubaImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: tubaImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 36.71,
@@ -541,6 +628,36 @@ export const tuba = {
   ],
 };
 
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
+// https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
+// https://vibrationresearch.com/resources/overtone-comparison-obserview/
+const violinImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.854,
+  0.618,
+  0.5,
+  0.618, // 5
+  0.238,
+  0.382,
+  0.5,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const violin = {
   ...genericInstrument,
@@ -548,50 +665,32 @@ export const violin = {
     {
       type: "custom",
       periodicWave: {
-        // https://musiccrashcourses.com/lessons/harmonic_series.html
-        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
-        // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
-        // https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
-        // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-        imag: Float32Array.of(
-          0.0,
-          1.0,
-          0.854,
-          0.618,
-          0.5,
-          0.618, // 5
-          0.238,
-          0.382,
-          0.5,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: violinImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        // TODO: manually adjust low stage, based on
+        // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
+        imag: violinImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
 
-  glide: 0.003,
+  glide: 0.001,
 
   // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
   attack: 0.09,
-  filterAttack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.236,
-  filterDecay: 0.236,
+  overtoneDecay: 0.236,
   sustain: 1.056,
-  filterSustain: 0.854,
+  overtoneSustain: 0.618,
   release: 0.146,
-  filterRelease: 0.09,
+  overtoneRelease: 0.09,
 
   highPassFrequency: 196.0,
   lowPassFrequency: 3520.0,
@@ -605,6 +704,35 @@ export const violin = {
   ],
 };
 
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// http://www.mathstudio.co.uk/pitch_perception.htm
+// https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
+const violaImag = Float32Array.of(
+  0.0,
+  0.854,
+  1.0,
+  0.854,
+  0.764, // 4
+  0.382,
+  0.238,
+  0.382,
+  0.5,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const viola = {
   ...violin,
@@ -612,35 +740,16 @@ export const viola = {
     {
       type: "custom",
       periodicWave: {
-        // https://musiccrashcourses.com/lessons/harmonic_series.html
-        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
-        // http://www.mathstudio.co.uk/pitch_perception.htm
-        // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
-        imag: Float32Array.of(
-          0.0,
-          0.854,
-          1.0,
-          0.854,
-          0.764, // 4
-          0.382,
-          0.238,
-          0.382,
-          0.5,
-          0.382,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: violaImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: violaImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 130.8,
@@ -654,6 +763,32 @@ export const viola = {
   ],
 };
 
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// http://www.mathstudio.co.uk/pitch_perception.htm
+// https://vobarian.com/celloanly/index.html
+const celloImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.618,
+  0.382,
+  0.618, // 4
+  0.382,
+  0.236,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const cello = {
   ...viola,
@@ -661,32 +796,16 @@ export const cello = {
     {
       type: "custom",
       periodicWave: {
-        // https://musiccrashcourses.com/lessons/harmonic_series.html
-        // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
-        // http://www.mathstudio.co.uk/pitch_perception.htm
-        // https://vobarian.com/celloanly/index.html
-        imag: Float32Array.of(
-          0.0,
-          1.0,
-          0.618,
-          0.382,
-          0.618, // 4
-          0.382,
-          0.236,
-          0.236,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: celloImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: celloImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 65.4 * 1.6, // strings don't really emit fundamentals under 100 hz
@@ -700,6 +819,28 @@ export const cello = {
   ],
 };
 
+// Guessed based on cello
+const contrabassImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.618,
+  0.382,
+  0.5, // 4
+  0.333333,
+  0.146,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const contrabass = {
   ...cello,
@@ -707,28 +848,16 @@ export const contrabass = {
     {
       type: "custom",
       periodicWave: {
-        // Guessed based on cello
-        imag: Float32Array.of(
-          0.0,
-          1.0,
-          0.618,
-          0.382,
-          0.5, // 4
-          0.333333,
-          0.146,
-          0.146,
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: contrabassImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: contrabassImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
   ],
   highPassFrequency: 41.2 * 1.5, // strings don't really emit fundamentals under 100 hz
@@ -742,6 +871,41 @@ export const contrabass = {
   ],
 };
 
+// Oh dear…
+// https://vibrationresearch.com/resources/overtone-comparison-obserview/
+// https://universe-review.ca/I13-17-timbre.jpg
+// https://www.acs.psu.edu/drussell/Piano/Dynamics.html
+// https://audiouniversityonline.com/why-do-instruments-sound-different/
+// https://www.lamadeguido.com/fundamentos/ecap2.htm
+// https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
+// https://www.youtube.com/watch?v=5xjD6SRY8Pg
+// https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
+const pianoImag = Float32Array.of(
+  0.0,
+  // First 4 are quite high and often in a U shape
+  1.0,
+  0.854,
+  0.5,
+  0.618,
+  // Then there's a pair arcing up
+  0.236,
+  0.382,
+  // And down
+  0.236,
+  0.146,
+
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
+);
+
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
@@ -749,47 +913,21 @@ export const piano = {
     {
       type: "custom",
       periodicWave: {
-        // Oh dear…
-        // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-        // https://universe-review.ca/I13-17-timbre.jpg
-        // https://www.acs.psu.edu/drussell/Piano/Dynamics.html
-        // https://audiouniversityonline.com/why-do-instruments-sound-different/
-        // https://www.lamadeguido.com/fundamentos/ecap2.htm
-        // https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
-        // https://www.youtube.com/watch?v=5xjD6SRY8Pg
-        // https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
-        imag: Float32Array.of(
-          0.0,
-          // First 4 are quite high and often in a U shape
-          1.0,
-          0.854,
-          0.5,
-          0.618,
-          // Then there's a pair arcing up
-          0.236,
-          0.382,
-          // And down
-          0.236,
-          0.146,
-
-          0.09,
-          0.056,
-          0.034,
-          0.021,
-          0.013,
-          0.008,
-          0.005,
-          0.003,
-          0.002,
-          0.001,
-        ),
+        imag: pianoImag,
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: pianoImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
     {
       type: "custom",
       periodicWave: {
         // FIXME: this sounds more like an anvil than anything…
-        // biome-ignore format: FIXME the ignoring isn't actually working
         imag: Float32Array.of(
           0.0,
           ...Float32Array.of(1.0, 0.0, 0.618, 0.382, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // low key noise around 40 hz
@@ -799,27 +937,26 @@ export const piano = {
         ),
       },
       getPitch: () => 44.0,
-      gain: 0.021,
+      gain: 0.034,
       attack: 0.008,
-      decay: 0.034,
+      decay: 0.056,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.5,
+  durationImpactOnDecay: 0.382,
   stretchedTuning: 0.005,
 
-  attack: 0.021,
-  filterAttack: 0.008,
-  decay: 0.666666,
-  filterDecay: 0.618,
+  attack: 0.01,
+  overtoneAttack: 0.013,
+  decay: 0.618,
+  overtoneDecay: 0.382,
   sustain: 0.0,
   release: 0.0,
 
-  highPassPitchTracking: -2.5, // strings don't really emit fundamentals under 100 hz
-  lowPassPitchTracking: 2.0,
+  highPassFrequency: 27.5 * 3.65, // strings don't really emit fundamentals under 100 hz
 };
 
 /** @type {Instrument} */
@@ -838,14 +975,21 @@ export const hammeredDulcimer = {
     {
       type: "custom",
       periodicWave: {
-        imag: piano.oscillators[0].periodicWave.imag.map((v) => v ** 0.91),
+        imag: piano.oscillators[0].periodicWave.imag.map((v) => v),
       },
+      stage: "high",
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: piano.oscillators[0].periodicWave.imag.map(defaultLowStageMapper),
+      },
+      stage: "low",
     },
     {
       type: "custom",
       periodicWave: {
         // FIXME: this sounds more like an anvil than anything…
-        // biome-ignore format: FIXME the ignoring isn't actually working
         imag: Float32Array.of(
           0.0,
           ...Float32Array.of(0.0, 0.146, 0.0, 0.0, 0.0, 0.09, 0.0, 0.056, 0.0, 0.0), // body noise around 80 hz?
@@ -855,9 +999,9 @@ export const hammeredDulcimer = {
         ),
       },
       getPitch: () => 44.0,
-      gain: 0.021,
+      gain: 0.034,
       attack: 0.008,
-      decay: 0.034,
+      decay: 0.056,
 
       decayImpactOnDuration: 0.0,
       durationImpactOnDecay: 0.0,
@@ -867,18 +1011,27 @@ export const hammeredDulcimer = {
   durationImpactOnDecay: 0.382,
   stretchedTuning: 0.005,
 
-  attack: 0.013,
-  filterAttack: 0.008,
-  decay: 0.666666,
-  filterDecay: 0.618,
+  attack: 0.008,
+  overtoneAttack: 0.013,
+  decay: 0.618,
+  overtoneDecay: 0.382,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 2.0,
-  highPassPitchTracking: -0.333333, // strings don't really emit fundamentals under 100 hz
-  lowPassPitchTracking: 0.0,
 };
+
+const taikoImag = new Float32Array(20 * 9.3);
+taikoImag[20 * 1] = 0.618;
+taikoImag[20 * 2.1] = 1.0; // 2.11
+taikoImag[20 * 2.9] = 0.618; // 2.92
+taikoImag[20 * 3.75] = 0.382;
+taikoImag[20 * 4.4] = 0.236;
+taikoImag[20 * 5.6] = 0.146; // 5.57
+taikoImag[20 * 7.6] = 0.09;
+taikoImag[20 * 8.5] = 0.056;
+taikoImag[20 * 9.3] = 0.034;
 
 /** @param {Instrument} instrument */
 export const taikoDrum = {
@@ -886,43 +1039,39 @@ export const taikoDrum = {
   oscillators: [
     {
       type: "custom",
-      periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 2.1 (~2.11), 2.9 (~2.92)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236, 0.0, 0.0, 0.0), // 3.7 (~3.75)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.09, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 4.4 (~4.40)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.056, 0.0, 0.0, 0.0, 0.0), // 5.6 (~5.57)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.034, 0.0, 0.0, 0.0, 0.0), // 7.6 (~7.6)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.021, 0.0, 0.0, 0.0, 0.0, 0.0), // 8.5
-          ...Float32Array.of(0.0, 0.0, 0.013, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 9.3 (~9.3)
-        ),
-      },
-      getPitch: (pitch) => pitch / 10.0,
-    },
-    {
-      type: "custom",
       periodicWave: getNoise(
         (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
       ),
       getPitch: () => 5.0,
-      gain: 0.236,
+      gain: 0.382,
       attack: 0.008,
       decay: 0.056,
       durationImpactOnDecay: 0.005,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: taikoImag,
+      },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: taikoImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: (pitch) => pitch / 20.0,
     },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.333333,
 
-  attack: 0.013,
-  filterAttack: 0.0001,
+  attack: 0.008,
+  overtoneAttack: 0.013,
   decay: 0.382,
-  filterDecay: 0.618,
+  overtoneDecay: 0.618,
   sustain: 0.0,
   release: 0.0,
 
@@ -930,34 +1079,49 @@ export const taikoDrum = {
   lowPassFrequency: 2200.0,
 };
 
+const timpaniImag = new Float32Array(20 * 3.15);
+timpaniImag[20 * 1] = 0.618;
+timpaniImag[20 * 1.5] = 1.0;
+timpaniImag[20 * 2.0] = 0.618; // 1.98
+timpaniImag[20 * 2.45] = 0.382; // 2.44
+timpaniImag[20 * 3.15] = 0.236; // 3.16
+
 /** @param {Instrument} instrument */
 export const timpani = {
   ...taikoDrum,
   oscillators: [
     {
-      type: "custom",
-      periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0), // 1.5
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 2.0 (~1.98)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382, 0.0), // 2.45 (~2.44)
-          ...Float32Array.of(0.0, 0.0, 0.236, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 3.15 (~3.16)
-        ),
-      },
-      getPitch: (pitch) => pitch / 20.0,
-    },
-    {
-      ...taikoDrum.oscillators[1],
+      ...taikoDrum.oscillators[0],
       periodicWave: getNoise(
         (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 27.0))) / Math.max(1.0, index - 27.0),
       ),
     },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: timpaniImag,
+      },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: timpaniImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: (pitch) => pitch / 20.0,
+    },
   ],
 };
+
+const bassDrumImag = new Float32Array(20 * 5.45);
+bassDrumImag[20 * 1] = 0.618;
+bassDrumImag[20 * 1.85] = 1.0; // 1.86
+bassDrumImag[20 * 2.7] = 0.618; // 2.72
+bassDrumImag[20 * 3.65] = 0.382; // 3.64
+bassDrumImag[20 * 4.5] = 0.236;
+bassDrumImag[20 * 5.45] = 0.146; // 5.46
 
 /** @param {Instrument} instrument */
 export const bassDrum = {
@@ -966,29 +1130,33 @@ export const bassDrum = {
     {
       type: "custom",
       periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0), // 1.85 (~1.86)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.618, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 2.70 (~2.72)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
-          ...Float32Array.of(0.0, 0.0, 0.382, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // 3.64 (~3.65)
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // 4.50
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), //
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146, 0.0), // 5.46 (~5.45)
-        ),
+        imag: bassDrumImag,
       },
+      stage: "high",
       getPitch: (pitch) => pitch / 20.0,
     },
     {
-      ...taikoDrum.oscillators[1],
+      type: "custom",
+      periodicWave: {
+        imag: bassDrumImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      ...taikoDrum.oscillators[0],
     },
   ],
 };
+
+const snareImag = new Float32Array(20 * 3.45);
+snareImag[20 * 1] = 0.618;
+snareImag[20 * 1.5] = 1.0;
+snareImag[20 * 1.8] = 0.618;
+snareImag[20 * 2.25] = 0.382;
+snareImag[20 * 2.4] = 0.236;
+snareImag[20 * 2.85] = 0.146;
+snareImag[20 * 3.45] = 0.09;
 
 /** @param {Instrument} instrument */
 export const snareDrum = {
@@ -997,22 +1165,21 @@ export const snareDrum = {
     {
       type: "custom",
       periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.618), // 1
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0), // 1.5
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.618, 0.0, 0.0, 0.0, 0.0), // 1.8
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.382, 0.0, 0.0, 0.236, 0.0, 0.0), // 2.25 & 2.4
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146, 0.0, 0.0, 0.0), // 2.85
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.09, 0.0), // 3.45
-        ),
+        imag: snareImag,
       },
+      stage: "high",
       getPitch: (pitch) => pitch / 20.0,
     },
     {
-      ...taikoDrum.oscillators[1],
+      type: "custom",
+      periodicWave: {
+        imag: snareImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      ...taikoDrum.oscillators[0],
     },
   ],
 };
@@ -1034,20 +1201,28 @@ export const marimba = {
     {
       type: "custom",
       periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
         imag: marimbaImag,
       },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: marimbaImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
       getPitch: (pitch) => pitch / 20.0,
     },
   ],
 
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.333333,
+  durationImpactOnDecay: 0.382,
 
-  attack: 0.013,
-  filterAttack: 0.0001,
+  attack: 0.008,
+  overtoneAttack: 0.013,
   decay: 0.382,
-  filterDecay: 0.618,
+  overtoneDecay: 0.236,
   sustain: 0.0,
   release: 0.0,
 
@@ -1071,12 +1246,25 @@ export const xylophone = {
     {
       type: "custom",
       periodicWave: {
-        // biome-ignore format: FIXME the ignoring isn't actually working
         imag: xylophoneImag,
       },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: xylophoneImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
       getPitch: (pitch) => pitch / 20.0,
     },
   ],
+
+  attack: 0.008,
+  overtoneAttack: 0.013,
+  decay: 0.236,
+  overtoneDecay: 0.146,
 };
 
 // Tuned to pure idiophone overtones
@@ -1098,12 +1286,23 @@ export const glockenspiel = {
       periodicWave: {
         imag: glockenSpielImag,
       },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: glockenSpielImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
       getPitch: (pitch) => pitch / 20.0,
     },
   ],
 
-  decay: marimba.decay,
-  filterDecay: marimba.decay * 0.618,
+  attack: 0.013,
+  overtoneAttack: 0.013,
+  decay: 0.382,
+  overtoneDecay: 0.236,
 };
 
 // Plucked versions of string instruments
@@ -1118,13 +1317,13 @@ const makePlucked = (instrument) => {
 
     glide: 0.0,
     attack: 0.013,
-    filterAttack: 0.013,
+    overtoneAttack: 0.013,
     decay: 0.666666,
-    filterDecay: 0.618,
+    overtoneDecay: 0.618,
     sustain: 0.0,
-    filterSustain: 0.0,
+    overtoneSustain: 0.0,
     release: 0.0,
-    filterRelease: 0.0,
+    overtoneRelease: 0.0,
 
     vibratoEffectOnPitch: 20.0,
     vibratoEffectOnVolume: 0.0,
@@ -1157,38 +1356,38 @@ export const pluckedCello = makePlucked(cello);
 /** @type {Instrument} */
 export const pluckedContrabass = makePlucked(contrabass);
 
-// String instruments cause sympathetic vibration.
-// Using extra oscillators in unison to kind of emulate this.
-/** @param {Instrument} instrument */
-const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultiplier = 0.5) => {
-  const mainOscillator = instrument.oscillators[0];
-  const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
-  const decay = (mainOscillator.decay ?? instrument.decay) * decayMultiplier;
-  const release = (mainOscillator.release ?? instrument.release) * decayMultiplier;
+// // String instruments cause sympathetic vibration.
+// // Using extra oscillators in unison to kind of emulate this.
+// /** @param {Instrument} instrument */
+// const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultiplier = 0.5) => {
+//   const mainOscillator = instrument.oscillators[0];
+//   const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
+//   const decay = (mainOscillator.decay ?? instrument.decay) * decayMultiplier;
+//   const release = (mainOscillator.release ?? instrument.release) * decayMultiplier;
 
-  instrument.oscillators.push({
-    ...mainOscillator,
-    gain,
-    decay,
-    release,
-    getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 0.5,
-  });
+//   instrument.oscillators.push({
+//     ...mainOscillator,
+//     gain,
+//     decay,
+//     release,
+//     getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 0.5,
+//   });
 
-  instrument.oscillators.push({
-    ...mainOscillator,
-    gain,
-    decay,
-    release,
-    getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 2.0,
-  });
+//   instrument.oscillators.push({
+//     ...mainOscillator,
+//     gain,
+//     decay,
+//     release,
+//     getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 2.0,
+//   });
 
-  return instrument;
-};
+//   return instrument;
+// };
 
-for (const instrument of [violin, viola, cello, contrabass]) {
-  addSympatheticStrings(instrument, 0.056, 0.764);
-}
+// for (const instrument of [violin, viola, cello, contrabass]) {
+//   addSympatheticStrings(instrument, 0.056, 0.764);
+// }
 
-for (const instrument of [piano, hammeredDulcimer, pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass]) {
-  addSympatheticStrings(instrument, 0.056, 0.764);
-}
+// for (const instrument of [piano, hammeredDulcimer, pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass]) {
+//   addSympatheticStrings(instrument, 0.056, 0.764);
+// }
