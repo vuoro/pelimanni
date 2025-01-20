@@ -74,19 +74,19 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [trumpet, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [trumpet, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [trumpet, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [trumpet, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [trumpet, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [trumpet, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [flute, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [flute, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [flute, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [flute, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [flute, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
-    [glockenspiel, [...plinkingMelody, { transpose: 0, volume: 0.146 }]],
-    [violin, [...melody, { transpose: 12, volume: 0.18 }]],
-    [flute, [...highHarmony, { transpose: 0, volume: 0.146 }]],
-    [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [trombone, [...lowHarmony, { transpose: -12, volume: 0.09 }]],
+    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.236 }]],
+    [glockenspiel, [...plinkingMelody, { transpose: 0, volume: 0.146, velocity: 0.854 }]],
+    [violin, [...melody, { transpose: 12, volume: 0.18, velocity: 0.854 }]],
+    [flute, [...highHarmony, { transpose: 0, volume: 0.146, velocity: 0.618 }]],
+    [oboe, [...midHarmony, { transpose: -12, volume: 0.056, velocity: 0.5 }]],
+    [trombone, [...lowHarmony, { transpose: -12, volume: 0.09, velocity: 0.5 }]],
   ];
 
   return { tracks, cycle };

@@ -82,7 +82,7 @@ export const genericInstrument = Object.seal({
   stretchedTuning: 0.0,
 
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
-  vibratoEffectOnLowPass: 0.0,
+  vibratoEffectOnStage: 0.0,
   /** @type {number} how much vibrato should affect the note frequency (in cents) */
   vibratoEffectOnPitch: 0.0,
   /** @type {number} how much vibrato should affect volume (in gain) */
@@ -139,7 +139,7 @@ export const flute = {
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
 
-  vibratoEffectOnLowPass: 500.0,
+  vibratoEffectOnStage: 0.618,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
 };
 
@@ -209,7 +209,7 @@ export const oboe = {
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
 
-  vibratoEffectOnLowPass: 700.0,
+  vibratoEffectOnStage: 0.618,
   peakingFilters: [
     { frequency: 1400, gain: 2.0, Q: 2.0 },
     { frequency: 2950, gain: 2.0, Q: 2.0 },
@@ -332,7 +332,7 @@ export const clarinet = {
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2092.992,
-  vibratoEffectOnLowPass: 700.0,
+  vibratoEffectOnStage: 0.618,
   peakingFilters: [
     { frequency: 1180, gain: 2.0, Q: 2.0 },
     { frequency: 2700, gain: 2.0, Q: 2.0 },
@@ -1327,7 +1327,7 @@ const makePlucked = (instrument) => {
 
     vibratoEffectOnPitch: 20.0,
     vibratoEffectOnVolume: 0.0,
-    vibratoEffectOnLowpass: 0.0,
+    vibratoEffectOnStage: 0.0,
   };
 
   for (const oscillator of instrument.oscillators) {

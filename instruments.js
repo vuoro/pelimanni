@@ -8,7 +8,7 @@ export const createInstrument = (preset, audioContext) => {
   const {
     oscillators: oscillatorsInPreset,
     vibratoType,
-    vibratoEffectOnLowPass,
+    vibratoEffectOnStage,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
     initialInstability,
@@ -138,7 +138,7 @@ export const createInstrument = (preset, audioContext) => {
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
   const idleVibratoFrequency = 12 / 60;
-  const idleVibratoLowPassTarget = 500;
+  const idleVibratoStageTarget = 0.09;
   const idleVibratoPitchTarget = 2;
   const idleVibratoVolumeTarget = 0.021 * baseVolume;
 
@@ -148,11 +148,18 @@ export const createInstrument = (preset, audioContext) => {
     frequency: idleVibratoFrequency,
   });
 
-  // Low-pass vibrato ("brightness" vibrato)
-  let vibratoLowPassGain = null;
-  if (vibratoEffectOnLowPass > 0.0 || initialInstability > 0.0) {
-    vibratoLowPassGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(vibratoLowPassGain).connect(lowPassFilter.detune);
+  // Brass-style pitch instability
+  let instabilityGain = null;
+  if (initialInstability > 0.0) {
+    instabilityGain = new GainNode(audioContext, { gain: 0.0 });
+    vibratoMain.connect(instabilityGain).connect(lowPassFilter.detune);
+  }
+
+  // Brightness vibrato
+  let vibratoStageGain = null;
+  if (vibratoEffectOnStage > 0.0) {
+    vibratoStageGain = new GainNode(audioContext, { gain: 0.0 });
+    vibratoMain.connect(vibratoStageGain).connect(crossfader.pan);
   }
 
   // Pitch vibrato
@@ -186,14 +193,15 @@ export const createInstrument = (preset, audioContext) => {
     oscillators,
     crossfader,
     vibratoMain,
-    vibratoLowPassGain,
+    instabilityGain,
+    vibratoStageGain,
     vibratoPitchGain,
     vibratoVolumeGain,
     lowPassFilter,
     highPassFilter,
     output,
     idleVibratoFrequency,
-    idleVibratoLowPassTarget,
+    idleVibratoStageTarget,
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
     preset,
@@ -221,11 +229,12 @@ export const playInstrument = (
     oscillators,
     crossfader,
     vibratoMain,
-    vibratoLowPassGain,
+    instabilityGain,
+    vibratoStageGain,
     vibratoPitchGain,
     vibratoVolumeGain,
     idleVibratoFrequency,
-    idleVibratoLowPassTarget,
+    idleVibratoStageTarget,
     idleVibratoPitchTarget,
     idleVibratoVolumeTarget,
     preset,
@@ -246,7 +255,7 @@ export const playInstrument = (
     overtoneRelease = defaultRelease,
     lowPassFrequency,
     highPassFrequency,
-    vibratoEffectOnLowPass,
+    vibratoEffectOnStage,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
     stretchedTuning,
@@ -272,17 +281,17 @@ export const playInstrument = (
   const dynamicVelocity = velocity * situationalDynamics;
   const dynamicSlowness = 1.0 - dynamicVelocity;
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
-  const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.09);
+  const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
 
   const attackDynamics =
     mix(1.0, duration, 0.146) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (1.0 + 0.146 * dynamicSlowness) *
+    (1.0 + 0.236 * dynamicSlowness) *
     situationalDynamics;
   const releaseDynamics =
     mix(1.0, duration, 0.146) *
     (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (1.0 - 0.146 * dynamicSlowness) *
+    (1.0 - 0.236 * dynamicSlowness) *
     situationalDynamics;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
@@ -301,7 +310,7 @@ export const playInstrument = (
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
 
-  const vibratoLowPassTarget = hasVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnLowPass : idleVibratoLowPassTarget;
+  const vibratoStageTarget = hasVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnStage : idleVibratoStageTarget;
   const vibratoPitchTarget = hasVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
   const vibratoVolumeTarget = (hasVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
@@ -317,10 +326,10 @@ export const playInstrument = (
   // Cancel pending events
   crossfader.pan.cancelScheduledValues(startAt);
   vibratoMain.frequency.cancelScheduledValues(startAt);
-  vibratoLowPassGain?.gain.cancelScheduledValues(startAt);
+  instabilityGain?.gain.cancelScheduledValues(startAt);
 
   // Glide and attack
-  crossfader.pan.setTargetAtTime(1.0, startAt, overtoneDynamicAttack);
+  crossfader.pan.setTargetAtTime(dynamicVelocity, startAt, overtoneDynamicAttack);
 
   for (const {
     oscillatorNode,
@@ -358,15 +367,15 @@ export const playInstrument = (
     const instabilityGainDecay = instabilityStopsAt - instabilityDecaysAt;
 
     vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, instabilityGlide);
-    vibratoLowPassGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityGlide);
+    instabilityGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityGlide);
 
-    vibratoLowPassGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay);
+    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay);
     vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityStopsAt, instabilityGlide);
   }
 
   // Fire up vibrato: idle or not
   vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
-  vibratoLowPassGain?.gain.setTargetAtTime(vibratoLowPassTarget, vibratoAt, vibratoGainAttack);
+  vibratoStageGain?.gain.setTargetAtTime(vibratoStageTarget, vibratoAt, vibratoGainAttack);
   vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
   vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
 
@@ -376,7 +385,7 @@ export const playInstrument = (
   const decayTarget = decayDuration / 2.0;
 
   const overtonesDecayAt = startAt + overtoneDynamicAttack * 4.0;
-  const overtoneDecayDynamics = decayDynamics * (1.0 + 0.146 * dynamicSlowness);
+  const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicVelocity);
   const overtonesShouldDecay = overtoneDecay > 0.0 && overtoneSustain !== 1.0 && overtonesDecayAt < endAt;
 
   if (overtonesShouldDecay) {
@@ -384,7 +393,7 @@ export const playInstrument = (
     crossfader.pan.setTargetAtTime(overtoneSustain * 2.0 - 1.0, overtonesDecayAt, overtoneDynamicDecay);
   }
 
-  const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.146 * dynamicSlowness);
+  const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
 
   for (const {
     gainNode,
@@ -416,7 +425,7 @@ export const playInstrument = (
   }
 
   vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, endAt, vibratoRelease);
-  vibratoLowPassGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
+  vibratoStageGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
   vibratoPitchGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
   vibratoVolumeGain?.gain.setTargetAtTime(0.0, endAt, vibratoGainRelease);
 
