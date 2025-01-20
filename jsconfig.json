@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "types": ["vite/client"],
-    "checkJs": true
-  }
-}

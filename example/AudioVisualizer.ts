@@ -1,8 +1,8 @@
-/**
-  @param {ReturnType<typeof import("./AudioSystem.js").AudioSystem>} audioSystem
-  @param {HTMLCanvasElement} canvas
-*/
-export const AudioVisualizer = (audioSystem, canvas) => {
+import { AudioSystem } from "./AudioSystem.js";
+import { Magic } from "./magic.js";
+
+export const AudioVisualizer = new Magic(() => {
+  const audioSystem = AudioSystem.get();
   const analyser = new AnalyserNode(audioSystem.audioContext);
   audioSystem.output.connect(analyser);
 
@@ -20,10 +20,11 @@ export const AudioVisualizer = (audioSystem, canvas) => {
   const frequencyData = new Uint8Array(binCount);
   const timeData = new Float32Array(binCount);
 
+  const canvas = document.getElementById("visualizer") as HTMLCanvasElement;
   canvas.width = canvas.getBoundingClientRect().width * window.devicePixelRatio;
   canvas.height = canvas.getBoundingClientRect().height * window.devicePixelRatio;
 
-  const drawer = canvas.getContext("2d");
+  const drawer = canvas.getContext("2d") as CanvasRenderingContext2D;
   drawer.lineWidth = 2 * window.devicePixelRatio;
   drawer.strokeStyle = "black";
 
@@ -70,22 +71,21 @@ export const AudioVisualizer = (audioSystem, canvas) => {
     }
 
     // Oscilloscope
-    const timeSlice = (width / binCount) * 4.0;
+    const timeSlice = width / binCount;
     let timeX = 0;
     drawer.beginPath();
 
     for (let i = 0; i < binCount; i++) {
       const v = timeData[i];
-      const y = v * height + height / 2 - height / 3;
+      const y = v * (height / 4) + height / 2 - height / 3;
 
       if (i === 0) {
-        drawer.moveTo(timeX * 2.0, y);
+        drawer.moveTo(timeX, y);
       } else {
-        drawer.lineTo(timeX * 2.0, y);
+        drawer.lineTo(timeX, y);
       }
 
       timeX += timeSlice;
-      if (timeX >= width) break;
     }
 
     drawer.stroke();
@@ -93,4 +93,4 @@ export const AudioVisualizer = (audioSystem, canvas) => {
   };
 
   return draw;
-};
+});

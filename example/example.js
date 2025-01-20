@@ -1,42 +1,47 @@
-import { midiToJustFrequency } from "../notes";
-import { scheduleMusic } from "../schedule";
-import { AudioSystem } from "./AudioSystem";
-import { AudioVisualizer } from "./AudioVisualizer";
-import { heavensTower } from "./heavens-tower";
+import { midiToJustFrequency } from "../notes.js";
+import { scheduleMusic } from "../schedule.js";
+import { AudioControls } from "./AudioControls.ts";
+import { AudioSystem } from "./AudioSystem.ts";
+import { AudioVisualizer } from "./AudioVisualizer.ts";
+import { Magic } from "./magic.ts";
+import { Music } from "./Music.ts";
 
-// Example tracks
-const { cycle, tracks } = heavensTower();
+export const Tools = new Magic(() => {
+  const audioSystem = AudioSystem.get();
+  const audioControls = AudioControls.get();
+  const drawVisualizer = AudioVisualizer.get();
 
-// Audio system
-const audioSystem = AudioSystem();
-const playButton = /** @type {HTMLButtonElement} */ (document.getElementById("play"));
-const stopButton = /** @type {HTMLButtonElement} */ (document.getElementById("stop"));
-
-playButton.addEventListener("click", () => audioSystem.audioContext.resume());
-stopButton.addEventListener("click", () => audioSystem.audioContext.suspend());
-
-// Scheduler
-const playAhead = 0.2;
-const scheduleTracks = () => {
-  scheduleMusic(tracks, cycle, audioSystem.audioContext, audioSystem.connectInstrument, {
-    playAhead,
-    numberToFrequency: midiToJustFrequency,
-  });
-};
-
-// Visualizer
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("visualizer"));
-const drawVisualization = AudioVisualizer(audioSystem, canvas);
+  return { audioSystem, audioControls, drawVisualizer };
+});
 
 const loop = () => {
-  drawVisualization();
   requestAnimationFrame(loop);
+
+  const tools = Tools.get();
+
+  if (tools?.drawVisualizer) {
+    // console.log(tools?.audioSystem.limiter.reduction);
+    tools?.drawVisualizer();
+  }
 };
 
 requestAnimationFrame(loop);
 
-// Schedules often, but will be throttled to 1000ms when the page is not visible
-setInterval(scheduleTracks, (playAhead / 2.0) * 1000.0);
+const playAhead = 0.2;
+
+const tryToScheduleMusic = () => {
+  const music = Music.get();
+  const { audioSystem } = Tools.get();
+
+  if (music) {
+    scheduleMusic(music.tracks, music.cycle, audioSystem.audioContext, audioSystem.connectInstrument, {
+      playAhead,
+      numberToFrequency: midiToJustFrequency,
+    });
+  }
+};
+
+setInterval(tryToScheduleMusic, (playAhead / 4.0) * 1000.0);
 
 // Schedules music when page visibility changes, to avoid a gap
-document.addEventListener("visibilitychange", scheduleTracks);
+document.addEventListener("visibilitychange", tryToScheduleMusic);

@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "vite": "^5.4.8"
+    "lit-html": "^3.2.1",
+    "vite": "^6.0.9"
   },
   "packageManager": "pnpm@9.7.0"
 }

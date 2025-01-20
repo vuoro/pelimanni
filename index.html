@@ -8,9 +8,20 @@
     <script type="module" src="./example/example.js" defer></script>
   </head>
   <body>
-    <section>
-      <button type="button" id="play">Play</button>
-      <button type="button" id="stop">Stop</button>
+    <aside id="audio-controls"></aside>
+
+    <section id="instruments"></section>
+
+    <section id="notes">
+      <p>
+        This demo uses instruments and utilities from <a href="https://github.com/vuoro/pelimanni">pelimanni</a>, reverb
+        via <a href="https://khoin.github.io/DattorroReverbNode/">Dattorro's Reverb</a>, and a set of basic Web Audio
+        compressors and filters to keep the volume and ultra/infrasounds in check.
+      </p>
+      <p>
+        The music is an adaptation of a part of <cite>Heaven's Tower</cite> by Naoshi Mizuta, from
+        <cite>Final Fantasy XI Original Soundtrack</cite>.
+      </p>
     </section>
 
     <section>
@@ -39,17 +50,6 @@
         </div>
       </div>
     </section>
-
-    <section id="notes">
-      <p>
-        This demo uses instruments and utilities from <a href="https://github.com/vuoro/pelimanni">pelimanni</a>, reverb
-        via <a href="https://khoin.github.io/DattorroReverbNode/">Dattorro's Reverb</a>, and a set of basic Web Audio
-        compressors and filters to keep the volume and ultra/infrasounds in check.
-      </p>
-      <p>
-        The music is an adaptation of a part of <cite>Heaven's Tower</cite> by Naoshi Mizuta, from
-        <cite>Final Fantasy XI Original Soundtrack</cite>.
-      </p>
-    </section>
+    <section id="sheets"></section>
   </body>
 </html>

@@ -1,7 +1,20 @@
 body {
   display: grid;
-  gap: 1rlh;
-  margin: 2rlh 1rlh;
+  padding: 2rlh 1rlh;
+  margin: 0;
+  gap: 2rlh;
+}
+
+fieldset {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rlh;
+}
+
+label {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: subgrid;
 }
 
 #visualizer {
@@ -9,4 +22,19 @@ body {
   aspect-ratio: 16/9;
   max-height: 50vh;
   border: 2px solid;
+}
+
+#instruments form {
+  display: grid;
+  gap: 0.5rlh;
+  grid-template-columns: auto 1fr;
+}
+
+#notes {
+  display: grid;
+  gap: 1rlh;
+}
+
+#notes > * {
+  margin: 0;
 }
