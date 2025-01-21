@@ -113,7 +113,7 @@ export const createInstrument = (preset, audioContext) => {
         : new OscillatorNode(audioContext, { type, frequency: 440 });
     const gainNode = new GainNode(audioContext, { gain: 0 });
 
-    const gainTarget = (baseVolume * gain) ** 0.41421356;
+    const gainTarget = baseVolume * gain;
 
     oscillatorNode.connect(gainNode);
 
@@ -138,7 +138,7 @@ export const createInstrument = (preset, audioContext) => {
 
   // Vibrato oscillator (also used for instability and "idle vibrato")
   const idleVibratoFrequency = 12 / 60;
-  const idleVibratoStageTarget = 0.09;
+  const idleVibratoStageTarget = 0.056;
   const idleVibratoPitchTarget = 2;
   const idleVibratoVolumeTarget = 0.021 * baseVolume;
 
@@ -283,16 +283,13 @@ export const playInstrument = (
   const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
   const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
 
+  const shortness = 0.5 ** duration;
+  const lengthDynamics = 1.236 - 0.236 * shortness;
+
   const attackDynamics =
-    mix(1.0, duration, 0.146) *
-    (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (1.0 + 0.236 * dynamicSlowness) *
-    situationalDynamics;
+    lengthDynamics * (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 + 0.236 * dynamicSlowness) * situationalDynamics;
   const releaseDynamics =
-    mix(1.0, duration, 0.146) *
-    (0.854 + 0.146 * 2.0 * lowPitchness) *
-    (1.0 - 0.236 * dynamicSlowness) *
-    situationalDynamics;
+    lengthDynamics * (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness) * situationalDynamics;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
@@ -360,17 +357,17 @@ export const playInstrument = (
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
     const instabilityTarget = 70 + 10 * highPitchness;
-    const instabilityEffect = initialInstability * (200.0 + 500.0 * pitchDifferentness);
-    const instabilityGlide = defaultDynamicAttack * 0.146;
-    const instabilityDecaysAt = startAt + instabilityGlide * 4.0;
+    const instabilityEffect = initialInstability * (400.0 + 300.0 * pitchDifferentness);
+    const instabilityAttack = overtoneDynamicAttack * 0.056;
+    const instabilityDecaysAt = Math.min(startAt + instabilityAttack * 4.0, instabilityStopsAt);
 
     const instabilityGainDecay = instabilityStopsAt - instabilityDecaysAt;
 
-    vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, instabilityGlide);
-    instabilityGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityGlide);
+    vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, instabilityAttack);
+    instabilityGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityAttack);
 
-    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay);
-    vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityStopsAt, instabilityGlide);
+    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay / 3.0);
+    vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityDecaysAt, instabilityGainDecay);
   }
 
   // Fire up vibrato: idle or not
@@ -382,7 +379,7 @@ export const playInstrument = (
   // Decay and sustain
   const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
   const decayDuration = endAt - decayAt;
-  const decayTarget = decayDuration / 2.0;
+  const decayTarget = decayDuration / 3.0;
 
   const overtonesDecayAt = startAt + overtoneDynamicAttack * 4.0;
   const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicVelocity);

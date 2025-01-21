@@ -99,25 +99,41 @@ export const genericInstrument = Object.seal({
 });
 
 /** @param {number} v */
-const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (4.0 + Math.random());
+const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (5.0 + Math.random());
 
 /** @param {Float32Array} imag */
-const addSympatheticStrings = (imag, loudness = 0.09) => {
+const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
   const newImag = new Float32Array(imag.length * 12 * 4);
 
   for (let index = 0; index < imag.length; index++) {
-    newImag[index * 12 * 4] += imag[index] * loudness;
-    newImag[index * 12 * 3] += imag[index] * loudness;
+    newImag[index * 12 * 4] += imag[index] * loudness * 0.382;
+    newImag[index * 12 * 3] += imag[index] * loudness * 0.618;
     newImag[index * 12 * 2] += imag[index] * loudness; // higher strings
     newImag[index * 12] += imag[index]; // real string
     newImag[index * 12 * (1 / 2)] += imag[index] * loudness; // lower strings
-    newImag[index * 12 * (1 / 3)] += imag[index] * loudness;
-    newImag[index * 12 * (1 / 4)] += imag[index] * loudness;
+    newImag[index * 12 * (1 / 3)] += imag[index] * loudness * 0.618;
+    newImag[index * 12 * (1 / 4)] += imag[index] * loudness * 0.382;
   }
 
   // console.log(Math.max(...newImag));
 
   return newImag;
+};
+
+/** @param {Oscillator} oscillator */
+const copySympatheticStrings = (oscillator, loudness = 0.146) => {
+  const { gain = 1.0 } = oscillator;
+  const strings = [oscillator];
+
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 2.0, gain: gain * loudness * 0.382 });
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 3.0, gain: gain * loudness * 0.618 });
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 4.0, gain: gain * loudness });
+
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 2.0), gain: gain * loudness });
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 3.0), gain: gain * loudness * 0.618 });
+  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 4.0), gain: gain * loudness * 0.382 });
+
+  return strings;
 };
 
 const getSympatheticStringPitch = (pitch = 440.0) => pitch / 12.0;
@@ -149,18 +165,18 @@ export const flute = {
   glide: 0.001,
 
   attack: 0.034,
-  overtoneAttack: 0.034,
-  decay: 0.236,
-  overtoneDecay: 0.236,
-  sustain: 0.91,
-  overtoneSustain: 0.91,
+  overtoneAttack: 0.021,
+  decay: 0.146,
+  overtoneDecay: 0.382,
+  sustain: 0.854,
+  overtoneSustain: 0.764,
   release: 0.034,
   overtoneRelease: 0.021,
 
   highPassFrequency: 261.624,
   lowPassFrequency: 2349.312,
 
-  vibratoEffectOnStage: 0.618,
+  vibratoEffectOnStage: 1.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
 };
 
@@ -223,7 +239,7 @@ export const oboe = {
   decay: 0.236,
   overtoneDecay: 0.236,
   sustain: 0.91,
-  overtoneSustain: 0.91,
+  overtoneSustain: 0.764,
   release: 0.034,
   overtoneRelease: 0.021,
 
@@ -347,7 +363,7 @@ export const clarinet = {
   decay: 0.236,
   overtoneDecay: 0.236,
   sustain: 0.91,
-  overtoneSustain: 0.91,
+  overtoneSustain: 0.764,
   release: 0.034,
   overtoneRelease: 0.021,
 
@@ -413,11 +429,11 @@ export const saxophone = {
   attack: 0.034,
   overtoneAttack: 0.056,
   decay: 0.236,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.146,
   sustain: 0.854,
-  overtoneSustain: 0.854,
+  overtoneSustain: 0.618,
   release: 0.034,
-  overtoneRelease: 0.034,
+  overtoneRelease: 0.056,
 
   // FIXME: are these sensible? There are too many saxophone variants.
   highPassFrequency: 116.0,
@@ -482,7 +498,7 @@ export const trumpet = {
   decay: 0.236,
   overtoneDecay: 0.382,
   sustain: 0.854,
-  overtoneSustain: 0.854,
+  overtoneSustain: 0.618,
   release: 0.056,
   overtoneRelease: 0.09,
 
@@ -654,7 +670,7 @@ export const tuba = {
 // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
 // https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-const violinImag = addSympatheticStrings(
+const violinImag = addSympatheticStringsToImag(
   Float32Array.of(
     0.0,
     1.0,
@@ -711,7 +727,7 @@ export const violin = {
   attack: 0.09,
   overtoneAttack: 0.056,
   decay: 0.236,
-  overtoneDecay: 0.236,
+  overtoneDecay: 0.382,
   sustain: 1.056,
   overtoneSustain: 0.618,
   release: 0.146,
@@ -733,7 +749,7 @@ export const violin = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
-const violaImag = addSympatheticStrings(
+const violaImag = addSympatheticStringsToImag(
   Float32Array.of(
     0.0,
     0.854,
@@ -796,7 +812,7 @@ export const viola = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://vobarian.com/celloanly/index.html
-const celloImag = addSympatheticStrings(
+const celloImag = addSympatheticStringsToImag(
   Float32Array.of(
     0.0,
     1.0,
@@ -853,7 +869,7 @@ export const cello = {
 };
 
 // Guessed based on cello
-const contrabassImag = addSympatheticStrings(
+const contrabassImag = addSympatheticStringsToImag(
   Float32Array.of(
     0.0,
     1.0,
@@ -917,54 +933,50 @@ export const contrabass = {
 // https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
 // https://www.youtube.com/watch?v=5xjD6SRY8Pg
 // https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
-const pianoImag = addSympatheticStrings(
-  Float32Array.of(
-    0.0,
-    // First 4 are quite high and often in a U shape
-    1.0,
-    0.854,
-    0.5,
-    0.618,
-    // Then there's a pair arcing up
-    0.236,
-    0.382,
-    // And down
-    0.236,
-    0.146,
+const pianoImag = Float32Array.of(
+  0.0,
+  // First 4 are quite high and often in a U shape
+  1.0,
+  0.854,
+  0.5,
+  0.618,
+  // Then there's a pair arcing up
+  0.236,
+  0.382,
+  // And down
+  0.236,
+  0.146,
 
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-    0.003,
-    0.002,
-    0.001,
-  ),
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
   oscillators: [
-    {
+    ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
         imag: pianoImag,
       },
       stage: "high",
-      getPitch: getSympatheticStringPitch,
-    },
-    {
+    }),
+    ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
         imag: pianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getSympatheticStringPitch,
-    },
+    }),
     {
       type: "custom",
       periodicWave: {
@@ -978,7 +990,7 @@ export const piano = {
         ),
       },
       getPitch: () => 44.0,
-      gain: 0.034,
+      gain: 0.236,
       attack: 0.008,
       decay: 0.056,
 
@@ -988,9 +1000,9 @@ export const piano = {
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.382,
-  stretchedTuning: 0.005,
+  // stretchedTuning: 0.005,
 
-  attack: 0.01,
+  attack: 0.008,
   overtoneAttack: 0.013,
   decay: 0.618,
   overtoneDecay: 0.382,
@@ -1004,22 +1016,20 @@ export const piano = {
 export const hammeredDulcimer = {
   ...genericInstrument,
   oscillators: [
-    {
+    ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
         imag: pianoImag,
       },
       stage: "high",
-      getPitch: getSympatheticStringPitch,
-    },
-    {
+    }),
+    ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
         imag: pianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getSympatheticStringPitch,
-    },
+    }),
     {
       type: "custom",
       periodicWave: {
@@ -1033,7 +1043,7 @@ export const hammeredDulcimer = {
         ),
       },
       getPitch: () => 44.0,
-      gain: 0.034,
+      gain: 0.236,
       attack: 0.008,
       decay: 0.056,
 
@@ -1043,12 +1053,12 @@ export const hammeredDulcimer = {
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.382,
-  stretchedTuning: 0.005,
+  // stretchedTuning: 0.005,
 
-  attack: 0.01,
-  overtoneAttack: 0.016,
-  decay: 0.618,
-  overtoneDecay: 0.5,
+  attack: 0.013,
+  overtoneAttack: 0.018,
+  decay: 0.666666,
+  overtoneDecay: 0.414,
   sustain: 0.0,
   release: 0.0,
 
@@ -1077,7 +1087,7 @@ export const taikoDrum = {
         (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
       ),
       getPitch: () => 5.0,
-      gain: 0.382,
+      gain: 0.618,
       attack: 0.008,
       decay: 0.056,
       durationImpactOnDecay: 0.005,
@@ -1304,9 +1314,9 @@ export const xylophone = {
 // Tuned to pure idiophone overtones
 const glockenSpielImag = new Float32Array(20 * 32);
 glockenSpielImag[20 * 1] = 1.0;
-glockenSpielImag[20 * 2.75] = 0.618; // 2.756
+glockenSpielImag[20 * 2.75] = 0.382; // 2.756
 glockenSpielImag[20 * 5.4] = 0.236;
-glockenSpielImag[20 * 8.9] = 0.382;
+glockenSpielImag[20 * 8.9] = 0.618;
 glockenSpielImag[20 * 13.35] = 0.236; // 13.34
 glockenSpielImag[20 * 18.65] = 0.146; // 18.64
 glockenSpielImag[20 * 31.85] = 0.09; // 31.87
@@ -1334,9 +1344,9 @@ export const glockenspiel = {
   ],
 
   attack: 0.013,
-  overtoneAttack: 0.013,
+  overtoneAttack: 0.021,
   decay: 0.382,
-  overtoneDecay: 0.236,
+  overtoneDecay: 0.618,
 };
 
 // Plucked versions of string instruments
@@ -1347,7 +1357,7 @@ const makePlucked = (instrument) => {
     oscillators: [],
 
     decayImpactOnDuration: 1.0,
-    durationImpactOnDecay: 0.236,
+    durationImpactOnDecay: 0.382,
 
     glide: 0.0,
     attack: 0.01,
@@ -1389,39 +1399,3 @@ export const pluckedCello = makePlucked(cello);
 
 /** @type {Instrument} */
 export const pluckedContrabass = makePlucked(contrabass);
-
-// // String instruments cause sympathetic vibration.
-// // Using extra oscillators in unison to kind of emulate this.
-// /** @param {Instrument} instrument */
-// const addSympatheticStrings = (instrument, gainMultiplier = 0.021, decayMultiplier = 0.5) => {
-//   const mainOscillator = instrument.oscillators[0];
-//   const gain = (mainOscillator.gain ?? 1.0) * gainMultiplier;
-//   const decay = (mainOscillator.decay ?? instrument.decay) * decayMultiplier;
-//   const release = (mainOscillator.release ?? instrument.release) * decayMultiplier;
-
-//   instrument.oscillators.push({
-//     ...mainOscillator,
-//     gain,
-//     decay,
-//     release,
-//     getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 0.5,
-//   });
-
-//   instrument.oscillators.push({
-//     ...mainOscillator,
-//     gain,
-//     decay,
-//     release,
-//     getPitch: (pitch) => (mainOscillator.getPitch?.(pitch) ?? pitch) * 2.0,
-//   });
-
-//   return instrument;
-// };
-
-// for (const instrument of [violin, viola, cello, contrabass]) {
-//   addSympatheticStrings(instrument, 0.056, 0.764);
-// }
-
-// for (const instrument of [piano, hammeredDulcimer, pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass]) {
-//   addSympatheticStrings(instrument, 0.056, 0.764);
-// }

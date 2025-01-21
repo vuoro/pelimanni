@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { hammeredDulcimer } from "../instrumentPresets";
+import { pluckedCello, pluckedContrabass, pluckedViola, pluckedViolin } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -60,12 +60,12 @@ export const heavensTower = () => {
   ];
 
   const tracks = [
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [pluckedCello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [pluckedViolin, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [pluckedViola, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    [pluckedCello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    [pluckedViolin, [...melody, { transpose: 12, volume: 0.2 }]],
+    [pluckedViola, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
     // [viola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
     // [cello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
@@ -74,19 +74,19 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [hammeredDulcimer, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [hammeredDulcimer, [...melody, { transpose: 12, volume: 0.2 }]],
-    [hammeredDulcimer, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [hammeredDulcimer, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [hammeredDulcimer, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [hammeredDulcimer, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [hammeredDulcimer, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [hammeredDulcimer, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [hammeredDulcimer, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [hammeredDulcimer, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.236 }]],
-    // [glockenspiel, [...plinkingMelody, { transpose: 0, volume: 0.146, velocity: 0.854 }]],
-    // [violin, [...melody, { transpose: 12, volume: 0.18, velocity: 0.854 }]],
-    // [flute, [...highHarmony, { transpose: 0, volume: 0.146, velocity: 0.618 }]],
-    // [oboe, [...midHarmony, { transpose: -12, volume: 0.056, velocity: 0.5 }]],
-    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.09, velocity: 0.5 }]],
+    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
   ];
 
   return { tracks, cycle };
