@@ -385,9 +385,8 @@ export const clarinet = {
 const saxophoneImag = Float32Array.of(
   0.0,
   0.854,
-  0.764,
   1.0,
-  0.91,
+  0.236,
   0.618,
   0.382,
   0.236,
@@ -427,7 +426,7 @@ export const saxophone = {
   initialInstability: 1.0,
 
   attack: 0.034,
-  overtoneAttack: 0.056,
+  overtoneAttack: 0.09,
   decay: 0.236,
   overtoneDecay: 0.146,
   sustain: 0.854,
@@ -494,7 +493,7 @@ export const trumpet = {
   initialInstability: 1.0,
 
   attack: 0.034,
-  overtoneAttack: 0.056,
+  overtoneAttack: 0.09,
   decay: 0.236,
   overtoneDecay: 0.382,
   sustain: 0.854,

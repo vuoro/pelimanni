@@ -152,7 +152,7 @@ export const createInstrument = (preset, audioContext) => {
   let instabilityGain = null;
   if (initialInstability > 0.0) {
     instabilityGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(instabilityGain).connect(lowPassFilter.detune);
+    vibratoMain.connect(instabilityGain).connect(crossfader.pan);
   }
 
   // Brightness vibrato
@@ -357,17 +357,17 @@ export const playInstrument = (
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
     const instabilityTarget = 70 + 10 * highPitchness;
-    const instabilityEffect = initialInstability * (400.0 + 300.0 * pitchDifferentness);
-    const instabilityAttack = overtoneDynamicAttack * 0.056;
+    const instabilityEffect = initialInstability * pitchDifferentness ** 0.236;
+    const instabilityAttack = overtoneDynamicAttack * 0.013;
     const instabilityDecaysAt = Math.min(startAt + instabilityAttack * 4.0, instabilityStopsAt);
 
     const instabilityGainDecay = instabilityStopsAt - instabilityDecaysAt;
 
     vibratoMain.frequency.setTargetAtTime(instabilityTarget, startAt, instabilityAttack);
-    instabilityGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityAttack);
+    vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityStopsAt, instabilityAttack);
 
-    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay / 3.0);
-    vibratoMain.frequency.setTargetAtTime(idleVibratoTarget, instabilityDecaysAt, instabilityGainDecay);
+    instabilityGain?.gain.setTargetAtTime(instabilityEffect, startAt, instabilityAttack);
+    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay);
   }
 
   // Fire up vibrato: idle or not
