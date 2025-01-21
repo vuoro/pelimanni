@@ -211,7 +211,9 @@ export const createInstrument = (preset, audioContext) => {
   };
 };
 
-/** @param {Number} pitch */
+/**
+  @param {Number} pitch
+*/
 const passPitchThrough = (pitch) => pitch;
 
 export const playInstrument = (
@@ -258,7 +260,6 @@ export const playInstrument = (
     vibratoEffectOnStage,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
-    stretchedTuning,
   } = preset;
 
   const hasVibrato = vibratoAmount > 0.0;
@@ -339,15 +340,7 @@ export const playInstrument = (
     oscillatorNode.frequency.cancelScheduledValues(startAt);
     gainNode.gain.cancelScheduledValues(startAt);
 
-    let pitchTarget = getPitch(pitch);
-
-    if (stretchedTuning !== 0.0) {
-      const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitchTarget);
-      const highPitchness = -fromHighPass / rangeInCents;
-      const relativePitchness = highPitchness * 2.0 - 1.0;
-      pitchTarget *= 1.0 + relativePitchness * stretchedTuning;
-    }
-
+    const pitchTarget = getPitch(pitch);
     const dynamicAttack = attack === defaultAttack ? defaultDynamicAttack : attack * attackDynamics;
 
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, startAt, glide * glideDynamics);

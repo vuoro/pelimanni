@@ -78,9 +78,6 @@ export const genericInstrument = Object.seal({
   /** @type {number} resonance or "Q" of the high pass filter  */
   highPassQ: Math.SQRT1_2,
 
-  /** @type {number} flattens pitches on the low end and sharpens on the high end, for pianos and the like */
-  stretchedTuning: 0.0,
-
   /** @type {number} how much vibrato should affect lowPassFrequency (in cents) */
   vibratoEffectOnStage: 0.0,
   /** @type {number} how much vibrato should affect the note frequency (in cents) */
@@ -105,7 +102,7 @@ const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (5.0 + Math.random());
 const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
   const newImag = new Float32Array(imag.length * 12 * 4);
 
-  for (let index = 0; index < imag.length; index++) {
+  for (let index = 1; index < imag.length; index++) {
     newImag[index * 12 * 4] += imag[index] * loudness * 0.382;
     newImag[index * 12 * 3] += imag[index] * loudness * 0.618;
     newImag[index * 12 * 2] += imag[index] * loudness; // higher strings
@@ -115,28 +112,112 @@ const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
     newImag[index * 12 * (1 / 4)] += imag[index] * loudness * 0.382;
   }
 
-  // console.log(Math.max(...newImag));
-
   return newImag;
 };
 
+const getSympatheticStringPitch = (pitch = 440.0) => pitch / 12.0;
+
 /** @param {Oscillator} oscillator */
-const copySympatheticStrings = (oscillator, loudness = 0.146) => {
-  const { gain = 1.0 } = oscillator;
+const copySympatheticStrings = (oscillator, loudness = 0.09) => {
+  const { gain = 1.0, getPitch } = oscillator;
   const strings = [oscillator];
 
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 2.0, gain: gain * loudness * 0.382 });
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 3.0, gain: gain * loudness * 0.618 });
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * 4.0, gain: gain * loudness });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 2.0,
+    gain: gain * loudness,
+  });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
+    gain: gain * loudness,
+  });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 4.0,
+    gain: gain * loudness,
+  });
 
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 2.0), gain: gain * loudness });
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 3.0), gain: gain * loudness * 0.618 });
-  strings.push({ ...oscillator, getPitch: (pitch) => pitch * (1.0 / 4.0), gain: gain * loudness * 0.382 });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 2.0),
+    gain: gain * loudness,
+  });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
+    gain: gain * loudness,
+  });
+  strings.push({
+    ...oscillator,
+    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 4.0),
+    gain: gain * loudness,
+  });
 
   return strings;
 };
 
-const getSympatheticStringPitch = (pitch = 440.0) => pitch / 12.0;
+const inharmonicityReferenceFrequency = 349.228; // this should vary by note, but oh well
+const a = 5.22964 * 10 ** -6;
+const b = 1.21012 * 10 ** -6;
+const c = 8.3666 * 10 ** -10;
+const d = -0.007927;
+const e = 0.429601;
+
+const inharmonicityCoefficient =
+  a +
+  b * inharmonicityReferenceFrequency +
+  c * inharmonicityReferenceFrequency ** 2 +
+  d / inharmonicityReferenceFrequency +
+  e / inharmonicityReferenceFrequency ** 2;
+
+/** @param {Float32Array} imag */
+const stretchOvertones = (imag) => {
+  if (imag.length > 20) throw new Error("Can't safely stretch overtones in imags with more than 20 entries");
+  const newImag = new Float32Array(imag.length * 200);
+
+  // https://forum.pianoworld.com/ubbthreads.php/topics/2438314/Inharmonicity_Math.html
+  // Fn = n * F (1 + 0.5(n^2 - 1) * B) (Fletcher, Blackham & Stratton 1962)
+  // Fn = frequency of partial (n) in Hertz
+  // n = partial number
+  // B = inharmonicity coefficient
+  // B values vary with note and fundamental frequency.
+
+  // According to http://daffy.uah.edu/piano/page4/page3/index.html, the B curve can be approximated by
+  // B = a + bx + cx^2 + d/x + e/x^2
+  // where x = frequency of note, and
+  // a = 5.22964 x 10^-6
+  // b = 1.21012 x 10^-6
+  // c = 8.3666 x 10^-10
+  // d = -0.007927
+  // e = 0.429601
+  // produces an acceptable fit for a Steinway B.
+
+  // FIXME: since there isn't an off-by-one error here, maybe there is somewhere else?
+  // The first element of imags should not be used for anything, so it shouldn't count here either?
+
+  for (let index = 1; index < imag.length; index++) {
+    const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
+
+    // FIXME: is this needed?
+    // const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
+
+    const offset = Math.round(200 * inharmonicityRatio);
+    newImag[index * 200 + offset] = imag[index];
+
+    console.log(index - 1, inharmonicityRatio, offset / 200, offset);
+  }
+
+  return newImag;
+};
+
+// Tries to match the above
+const getStretchedOvertonesPitch = (pitch = 440.0) => {
+  const fromReference = Math.log2(pitch / inharmonicityReferenceFrequency);
+  const inharmonicityRatio =
+    0.5 * (Math.abs(fromReference) ** 4.0 * Math.sign(fromReference)) * inharmonicityCoefficient;
+  return (pitch * (1.0 + inharmonicityRatio)) / 200.0;
+};
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -856,7 +937,7 @@ export const cello = {
       getPitch: getSympatheticStringPitch,
     },
   ],
-  highPassFrequency: 65.4 * 1.6, // strings don't really emit fundamentals under 100 hz
+  highPassFrequency: 65.4,
   lowPassFrequency: 1760.0,
 
   peakingFilters: [
@@ -912,7 +993,7 @@ export const contrabass = {
       getPitch: getSympatheticStringPitch,
     },
   ],
-  highPassFrequency: 41.2 * 1.5, // strings don't really emit fundamentals under 100 hz
+  highPassFrequency: 41.2,
   lowPassFrequency: 523.25,
 
   peakingFilters: [
@@ -958,6 +1039,8 @@ const pianoImag = Float32Array.of(
   0.001,
 );
 
+const stretchedPianoImag = stretchOvertones(pianoImag);
+
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
@@ -965,41 +1048,38 @@ export const piano = {
     ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
-        imag: pianoImag,
+        imag: stretchedPianoImag,
       },
       stage: "high",
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
-        imag: pianoImag.map(defaultLowStageMapper),
+        imag: stretchedPianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getStretchedOvertonesPitch,
     }),
-    {
-      type: "custom",
-      periodicWave: {
-        // FIXME: this sounds more like an anvil than anything…
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(1.0, 0.0, 0.618, 0.382, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), // low key noise around 40 hz
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382), // hammer noise around 900 hz
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.236, 0.0, 0.0, 0.0, 0.0, 0.146), // high key noise… somewhere
-        ),
-      },
-      getPitch: () => 44.0,
-      gain: 0.236,
-      attack: 0.008,
-      decay: 0.056,
-
-      decayImpactOnDuration: 0.0,
-      durationImpactOnDecay: 0.0,
-    },
+    // {
+    //   type: "custom",
+    //   periodicWave: getNoise((value, index) => {
+    //     let ratio = 0.0;
+    //     ratio += Math.abs(index * 5 - 40); // low key noise
+    //     ratio += Math.abs(index * 5 - 270); // hammer noise
+    //     ratio += Math.abs(index * 5 - 945); // hammer noise * 3.5
+    //     ratio += Math.abs(index * 5 - 2000); // high key noise
+    //     return value * ratio;
+    //   }),
+    //   getPitch: () => 5.0,
+    //   gain: 0.5,
+    //   attack: 0.008,
+    //   decay: 0.056,
+    //   durationImpactOnDecay: 0.005,
+    // },
   ],
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.382,
-  // stretchedTuning: 0.005,
 
   attack: 0.008,
   overtoneAttack: 0.013,
@@ -1007,8 +1087,6 @@ export const piano = {
   overtoneDecay: 0.382,
   sustain: 0.0,
   release: 0.0,
-
-  highPassFrequency: 27.5 * 3.65, // strings don't really emit fundamentals under 100 hz
 };
 
 /** @type {Instrument} */
@@ -1018,41 +1096,42 @@ export const hammeredDulcimer = {
     ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
-        imag: pianoImag,
+        imag: stretchedPianoImag,
       },
       stage: "high",
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
       periodicWave: {
-        imag: pianoImag.map(defaultLowStageMapper),
+        imag: stretchedPianoImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getStretchedOvertonesPitch,
     }),
-    {
-      type: "custom",
-      periodicWave: {
-        // FIXME: this sounds more like an anvil than anything…
-        imag: Float32Array.of(
-          0.0,
-          ...Float32Array.of(0.0, 0.146, 0.0, 0.0, 0.0, 0.09, 0.0, 0.056, 0.0, 0.0), // body noise around 80 hz?
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146), // bounce noise around 900 hz
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382),
-          ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // hammer overtones
-        ),
-      },
-      getPitch: () => 44.0,
-      gain: 0.236,
-      attack: 0.008,
-      decay: 0.056,
+    // {
+    //   type: "custom",
+    //   periodicWave: {
+    //     // FIXME: this sounds more like an anvil than anything…
+    //     imag: Float32Array.of(
+    //       0.0,
+    //       ...Float32Array.of(0.0, 0.146, 0.0, 0.0, 0.0, 0.09, 0.0, 0.056, 0.0, 0.0), // body noise around 80 hz?
+    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146), // bounce noise around 900 hz
+    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382),
+    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // hammer overtones
+    //     ),
+    //   },
+    //   getPitch: () => 44.0,
+    //   gain: 0.236,
+    //   attack: 0.008,
+    //   decay: 0.056,
 
-      decayImpactOnDuration: 0.0,
-      durationImpactOnDecay: 0.0,
-    },
+    //   decayImpactOnDuration: 0.0,
+    //   durationImpactOnDecay: 0.0,
+    // },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
-  // stretchedTuning: 0.005,
+  durationImpactOnDecay: 0.236,
 
   attack: 0.013,
   overtoneAttack: 0.018,
