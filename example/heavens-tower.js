@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { hammeredDulcimer } from "../instrumentPresets";
+import { cello } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -61,12 +61,13 @@ export const heavensTower = () => {
 
   const spectrum = [
     ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((v) => [
-      (v - 4) * 12 + 0,
-      (v - 4) * 12 + 4,
-      (v - 4) * 12 + 5,
-      (v - 4) * 12 + 7,
-      (v - 4) * 12 + 9,
-      (v - 4) * 12 + 10,
+      (v - 4) * 12 + 12,
+      (v - 4) * 12 + 12 - 4,
+      (v - 4) * 12 + 12 - 5,
+      (v - 4) * 12 + 12 - 7,
+      (v - 4) * 12 + 12 - 9,
+      (v - 4) * 12 + 12 - 10,
+      (v - 4) * 12 + 12 - 12,
       e,
     ]),
     { alternate },
@@ -87,13 +88,6 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [hammeredDulcimer, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    [hammeredDulcimer, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [hammeredDulcimer, [...melody, { transpose: 12, volume: 0.2 }]],
-    [hammeredDulcimer, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [hammeredDulcimer, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [hammeredDulcimer, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
-
     // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
     // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
     // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
@@ -101,7 +95,14 @@ export const heavensTower = () => {
     // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [piano, [spectrum]],
+    // [glockenspiel, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    // [glockenspiel, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [glockenspiel, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [glockenspiel, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [glockenspiel, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+
+    [cello, [spectrum, { volume: 0.3 }]],
   ];
 
   return { tracks, cycle };

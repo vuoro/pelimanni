@@ -103,14 +103,16 @@ const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
   const newImag = new Float32Array(imag.length * 12 * 4);
 
   for (let index = 1; index < imag.length; index++) {
-    newImag[index * 12 * 4] += imag[index] * loudness * 0.382;
-    newImag[index * 12 * 3] += imag[index] * loudness * 0.618;
+    newImag[index * 12 * 4] += imag[index] * loudness;
+    newImag[index * 12 * 3] += imag[index] * loudness;
     newImag[index * 12 * 2] += imag[index] * loudness; // higher strings
     newImag[index * 12] += imag[index]; // real string
     newImag[index * 12 * (1 / 2)] += imag[index] * loudness; // lower strings
-    newImag[index * 12 * (1 / 3)] += imag[index] * loudness * 0.618;
-    newImag[index * 12 * (1 / 4)] += imag[index] * loudness * 0.382;
+    newImag[index * 12 * (1 / 3)] += imag[index] * loudness;
+    newImag[index * 12 * (1 / 4)] += imag[index] * loudness;
   }
+
+  console.log(newImag);
 
   return newImag;
 };
@@ -193,19 +195,16 @@ const stretchOvertones = (imag) => {
   // e = 0.429601
   // produces an acceptable fit for a Steinway B.
 
-  // FIXME: since there isn't an off-by-one error here, maybe there is somewhere else?
-  // The first element of imags should not be used for anything, so it shouldn't count here either?
-
   for (let index = 1; index < imag.length; index++) {
     const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
 
     // FIXME: is this needed?
-    // const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
+    const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
 
-    const offset = Math.round(200 * inharmonicityRatio);
+    const offset = Math.round(200 * inharmonicityRatio * correctionForRatiosBetweenOvertones);
     newImag[index * 200 + offset] = imag[index];
 
-    console.log(index - 1, inharmonicityRatio, offset / 200, offset);
+    // console.log(index - 1, inharmonicityRatio, offset / 200, offset);
   }
 
   return newImag;
@@ -1383,10 +1382,7 @@ export const xylophone = {
     },
   ],
 
-  attack: 0.008,
-  overtoneAttack: 0.013,
-  decay: 0.236,
-  overtoneDecay: 0.146,
+  durationImpactOnDecay: 0.0,
 };
 
 // Tuned to pure idiophone overtones
@@ -1421,10 +1417,8 @@ export const glockenspiel = {
     },
   ],
 
-  attack: 0.013,
-  overtoneAttack: 0.021,
   decay: 0.382,
-  overtoneDecay: 0.618,
+  overtoneDecay: 1.0,
 };
 
 // Plucked versions of string instruments

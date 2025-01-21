@@ -281,16 +281,15 @@ export const playInstrument = (
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
   const dynamicVelocity = velocity * situationalDynamics;
   const dynamicSlowness = 1.0 - dynamicVelocity;
-  const glideDynamics = 0.91 + 0.09 * (dynamicSlowness + pitchSameness);
   const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
 
   const shortness = 0.5 ** duration;
   const lengthDynamics = 1.236 - 0.236 * shortness;
 
   const attackDynamics =
-    lengthDynamics * (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 + 0.236 * dynamicSlowness) * situationalDynamics;
+    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * dynamicSlowness) * situationalDynamics;
   const releaseDynamics =
-    lengthDynamics * (0.854 + 0.146 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness) * situationalDynamics;
+    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness) * situationalDynamics;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
@@ -315,7 +314,7 @@ export const playInstrument = (
   // Start and end
   const startAt = at;
   const decayAt = startAt + defaultDynamicAttack * 4.0;
-  let endAt = at + Math.max(duration * 0.618, duration - defaultDynamicRelease);
+  let endAt = at + Math.max(duration * 0.5, duration - defaultDynamicRelease);
 
   const instabilityStopsAt =
     initialInstability > 0.0 ? Math.min(endAt - epsilon * 2.0, startAt + overtoneDynamicAttack * 4.0) : startAt;
@@ -343,13 +342,13 @@ export const playInstrument = (
     const pitchTarget = getPitch(pitch);
     const dynamicAttack = attack === defaultAttack ? defaultDynamicAttack : attack * attackDynamics;
 
-    oscillatorNode.frequency.setTargetAtTime(pitchTarget, startAt, glide * glideDynamics);
+    oscillatorNode.frequency.setTargetAtTime(pitchTarget, startAt, glide);
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, startAt, dynamicAttack);
   }
 
   // Brass-style instability at start of notes
   if (initialInstability > 0.0) {
-    const instabilityTarget = 70 + 10 * highPitchness;
+    const instabilityTarget = 78 + 4 * highPitchness;
     const instabilityEffect = initialInstability * pitchDifferentness ** 0.236;
     const instabilityAttack = overtoneDynamicAttack * 0.013;
     const instabilityDecaysAt = Math.min(startAt + instabilityAttack * 4.0, instabilityStopsAt);
