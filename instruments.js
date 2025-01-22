@@ -221,7 +221,7 @@ export const playInstrument = (
   /** @type {number} */ pitch,
   /** @type {number} */ at,
   /** @type {number} */ duration,
-  velocity = 1.0,
+  velocity = 0.5,
   volume = 1.0,
   vibratoAmount = 0.0,
   vibratoFrequency = 5.0,
@@ -299,10 +299,10 @@ export const playInstrument = (
   const overtoneDynamicRelease =
     overtoneRelease === defaultRelease ? defaultDynamicRelease : overtoneRelease * releaseDynamics;
 
-  const vibratoAttack = defaultDynamicAttack * 0.09;
-  const vibratoRelease = defaultDynamicRelease * 0.09;
-  const vibratoGainAttack = defaultDynamicAttack * 0.236;
-  const vibratoGainRelease = defaultDynamicRelease * 0.236;
+  const vibratoAttack = defaultDynamicAttack * 0.013;
+  const vibratoRelease = defaultDynamicRelease * 0.021;
+  const vibratoGainAttack = defaultDynamicAttack * 0.056;
+  const vibratoGainRelease = defaultDynamicRelease * 0.09;
 
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
@@ -326,7 +326,7 @@ export const playInstrument = (
   instabilityGain?.gain.cancelScheduledValues(startAt);
 
   // Glide and attack
-  crossfader.pan.setTargetAtTime(dynamicVelocity, startAt, overtoneDynamicAttack);
+  crossfader.pan.setTargetAtTime(dynamicVelocity ** 0.414, startAt, overtoneDynamicAttack);
 
   for (const {
     oscillatorNode,

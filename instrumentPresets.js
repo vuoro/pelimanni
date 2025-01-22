@@ -101,7 +101,7 @@ const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (5.0 + Math.random());
 const requiredSympatheticStringElements = 3 * 2;
 
 /** @param {Float32Array} imag */
-const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
+const addSympatheticStringsToImag = (imag, loudness = 0.146) => {
   const newImag = new Float32Array(imag.length * requiredSympatheticStringElements * 3);
 
   for (let index = 1; index < imag.length; index++) {
@@ -118,7 +118,7 @@ const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
 const getSympatheticStringPitch = (pitch = 440.0) => pitch / requiredSympatheticStringElements;
 
 /** @param {Oscillator} oscillator */
-const copySympatheticStrings = (oscillator, loudness = 0.09) => {
+const copySympatheticStrings = (oscillator, loudness = 0.146) => {
   const { gain = 1.0, getPitch } = oscillator;
   const strings = [oscillator];
 
@@ -1014,7 +1014,7 @@ export const piano = {
     // },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
+  durationImpactOnDecay: 0.5,
 
   attack: 0.008,
   overtoneAttack: 0.013,
@@ -1068,15 +1068,15 @@ export const hammeredDulcimer = {
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.236,
 
-  attack: 0.013,
-  overtoneAttack: 0.018,
-  decay: 0.666666,
-  overtoneDecay: 0.414,
+  attack: 0.008,
+  overtoneAttack: 0.016,
+  decay: 0.618,
+  overtoneDecay: 0.382,
   sustain: 0.0,
   release: 0.0,
 
   highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51 * 2.0,
+  lowPassFrequency: 1244.51 * 3.0,
 };
 
 const taikoImag = new Float32Array(20 * 9.3);
@@ -1123,7 +1123,7 @@ export const taikoDrum = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.333333,
+  durationImpactOnDecay: 0.5,
 
   attack: 0.008,
   overtoneAttack: 0.013,
@@ -1132,8 +1132,7 @@ export const taikoDrum = {
   sustain: 0.0,
   release: 0.0,
 
-  highPassFrequency: 44.0,
-  lowPassFrequency: 2200.0,
+  lowPassFrequency: 20000,
 };
 
 const timpaniImag = new Float32Array(20 * 3.15);
@@ -1324,12 +1323,12 @@ export const xylophone = {
 // Tuned to pure idiophone overtones
 const glockenSpielImag = new Float32Array(20 * 32);
 glockenSpielImag[20 * 1] = 1.0;
-glockenSpielImag[20 * 2.75] = 0.382; // 2.756
-glockenSpielImag[20 * 5.4] = 0.236;
-glockenSpielImag[20 * 8.9] = 0.618;
-glockenSpielImag[20 * 13.35] = 0.236; // 13.34
-glockenSpielImag[20 * 18.65] = 0.146; // 18.64
-glockenSpielImag[20 * 31.85] = 0.09; // 31.87
+glockenSpielImag[20 * 2.75] = 0.618; // 2.756
+glockenSpielImag[20 * 5.4] = 0.382;
+glockenSpielImag[20 * 8.9] = 0.764;
+glockenSpielImag[20 * 13.35] = 0.382; // 13.34
+glockenSpielImag[20 * 18.65] = 0.236; // 18.64
+glockenSpielImag[20 * 31.85] = 0.146; // 31.87
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1353,57 +1352,128 @@ export const glockenspiel = {
     },
   ],
 
+  attack: 0.013,
+  overtoneAttack: 0.013,
   decay: 0.382,
   overtoneDecay: 1.0,
 };
 
-// Plucked versions of string instruments
-/** @param {Instrument} instrument */
-const makePlucked = (instrument) => {
-  const plucked = {
-    ...instrument,
-    oscillators: [],
+const plucked = {
+  decayImpactOnDuration: 1.0,
+  durationImpactOnDecay: 0.764,
 
-    decayImpactOnDuration: 1.0,
-    durationImpactOnDecay: 0.382,
+  glide: 0.0,
+  attack: 0.008,
+  overtoneAttack: 0.013,
+  decay: 0.618,
+  overtoneDecay: 0.382,
+  sustain: 0.0,
+  overtoneSustain: 0.0,
+  release: 0.0,
+  overtoneRelease: 0.0,
 
-    glide: 0.0,
-    attack: 0.01,
-    overtoneAttack: 0.016,
-    decay: 0.618,
-    overtoneDecay: 0.382,
-    sustain: 0.0,
-    overtoneSustain: 0.0,
-    release: 0.0,
-    overtoneRelease: 0.0,
+  vibratoEffectOnPitch: 20.0,
+  vibratoEffectOnVolume: 0.0,
+  vibratoEffectOnStage: 0.0, // FIXME: should there be some of this?
+};
 
-    vibratoEffectOnPitch: 20.0,
-    vibratoEffectOnVolume: 0.0,
-    vibratoEffectOnStage: 0.0,
-  };
+const stretchedViolinImag = stretchOvertones(violinImag);
+const stretchedViolaImag = stretchOvertones(violaImag);
+const stretchedCelloImag = stretchOvertones(celloImag);
+const stretchedContrabassImag = stretchOvertones(contrabassImag);
 
-  for (const oscillator of instrument.oscillators) {
-    plucked.oscillators.push({
-      ...oscillator,
-      glide: undefined,
-      attack: undefined,
-      decay: undefined,
-      sustain: undefined,
-      release: undefined,
-    });
-  }
-
-  return plucked;
+/** @type {Instrument} */
+export const pluckedViolin = {
+  ...violin,
+  ...plucked,
+  oscillators: [
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedViolinImag,
+      },
+      stage: "high",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedViolinImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+  ],
 };
 
 /** @type {Instrument} */
-export const pluckedViolin = makePlucked(violin);
+export const pluckedViola = {
+  ...viola,
+  ...plucked,
+  oscillators: [
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedViolaImag,
+      },
+      stage: "high",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedViolaImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+  ],
+};
 
 /** @type {Instrument} */
-export const pluckedViola = makePlucked(viola);
+export const pluckedCello = {
+  ...cello,
+  ...plucked,
+  oscillators: [
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedCelloImag,
+      },
+      stage: "high",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedCelloImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+  ],
+};
 
 /** @type {Instrument} */
-export const pluckedCello = makePlucked(cello);
-
-/** @type {Instrument} */
-export const pluckedContrabass = makePlucked(contrabass);
+export const pluckedContrabass = {
+  ...contrabass,
+  ...plucked,
+  oscillators: [
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedContrabassImag,
+      },
+      stage: "high",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+    ...copySympatheticStrings({
+      type: "custom",
+      periodicWave: {
+        imag: stretchedContrabassImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: getStretchedOvertonesPitch,
+    }),
+  ],
+};

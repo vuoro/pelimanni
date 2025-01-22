@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { cello } from "../instrumentPresets";
+import { piano } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -60,7 +60,7 @@ export const heavensTower = () => {
   ];
 
   const spectrum = [
-    ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((v) => [
+    ...[2, 3, 4, 5, 6, 7].map((v) => [
       (v - 4) * 12 + 12,
       (v - 4) * 12 + 12 - 4,
       (v - 4) * 12 + 12 - 5,
@@ -74,35 +74,35 @@ export const heavensTower = () => {
   ];
 
   const tracks = [
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [pluckedCello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [pluckedViolin, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [pluckedViola, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146,  }]],
+    // [pluckedCello, [...plinkingMelody, { transpose: -12, volume: 0.09,  }]],
+    // [pluckedViolin, [...melody, { transpose: 12, volume: 0.2,  }]],
+    // [pluckedViola, [...highHarmony, { transpose: 0, volume: 0.09,  }]],
+    // [pluckedCello, [...midHarmony, { transpose: -12, volume: 0.056,  }]],
+    // [pluckedContrabass, [...lowHarmony, { transpose: -12, volume: 0.056,  }]],
 
-    // [viola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [cello, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [viola, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [cello, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [viola, [...rhythm, { transpose: 0, volume: 0.146,  }]],
+    // [cello, [...plinkingMelody, { transpose: -12, volume: 0.09,  }]],
+    // [violin, [...melody, { transpose: 12, volume: 0.2,  }]],
+    // [viola, [...highHarmony, { transpose: 0, volume: 0.09,  }]],
+    // [cello, [...midHarmony, { transpose: -12, volume: 0.056,  }]],
+    // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056,  }]],
 
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
+    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
     // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
     // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
     // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
     // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [trombone, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    // [glockenspiel, [...rhythm, { transpose: 0, volume: 0.146, velocity: 0.5 }]],
-    // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [glockenspiel, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [glockenspiel, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [glockenspiel, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [glockenspiel, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    // [piano, [...rhythm, { transpose: 0, volume: 0.146 }]],
+    // [piano, [...plinkingMelody, { transpose: 0, volume: 0.09 }]],
+    // [piano, [...melody, { transpose: 12, volume: 0.2 }]],
+    // [piano, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    // [piano, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    // [piano, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [cello, [spectrum, { volume: 0.3 }]],
+    [piano, [spectrum, { volume: 0.3 }]],
   ];
 
   return { tracks, cycle };
