@@ -147,6 +147,7 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   return strings;
 };
 
+const inharmonicityPrecision = 512;
 const inharmonicityReferenceFrequency = 349.228; // this should vary by note, but oh well
 const a = 5.22964 * 10 ** -6;
 const b = 1.21012 * 10 ** -6;
@@ -163,8 +164,8 @@ const inharmonicityCoefficient =
 
 /** @param {Float32Array} imag */
 const stretchOvertones = (imag) => {
-  if (imag.length > 20) throw new Error("Can't safely stretch overtones in imags with more than 20 entries");
-  const newImag = new Float32Array(imag.length * 200);
+  if (imag.length > 16) throw new Error("Can't safely stretch overtones in imags with more than 16 entries");
+  const newImag = new Float32Array(imag.length * inharmonicityPrecision);
 
   // https://forum.pianoworld.com/ubbthreads.php/topics/2438314/Inharmonicity_Math.html
   // Fn = n * F (1 + 0.5(n^2 - 1) * B) (Fletcher, Blackham & Stratton 1962)
@@ -189,10 +190,10 @@ const stretchOvertones = (imag) => {
     // FIXME: is this needed?
     const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
 
-    const offset = Math.round(200 * inharmonicityRatio * correctionForRatiosBetweenOvertones);
-    newImag[index * 200 + offset] = imag[index];
+    const offset = Math.round(inharmonicityPrecision * inharmonicityRatio * correctionForRatiosBetweenOvertones);
+    newImag[index * inharmonicityPrecision + offset] = imag[index];
 
-    // console.log(index - 1, inharmonicityRatio, offset / 200, offset);
+    // console.log(index - 1, inharmonicityRatio, offset / inharmonicityPrecision, offset);
   }
 
   return newImag;
@@ -203,7 +204,7 @@ const getStretchedOvertonesPitch = (pitch = 440.0) => {
   const fromReference = Math.log2(pitch / inharmonicityReferenceFrequency);
   const inharmonicityRatio =
     0.5 * (Math.abs(fromReference) ** 4.0 * Math.sign(fromReference)) * inharmonicityCoefficient;
-  return (pitch * (1.0 + inharmonicityRatio)) / 200.0;
+  return (pitch * (1.0 + inharmonicityRatio)) / inharmonicityPrecision;
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -256,15 +257,15 @@ export const piccolo = {
   peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
 };
 
+// Sources are very conflicting, must be wide variance between notes
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 const oboeImag = Float32Array.of(
   0.0,
+  0.618,
   0.764,
-  1.0,
+  0.382,
   0.854,
   1.0,
-  0.854,
-  0.764,
   0.618,
   0.382,
   0.236,
@@ -275,10 +276,6 @@ const oboeImag = Float32Array.of(
   0.021,
   0.013,
   0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -340,9 +337,6 @@ const bassoonImag = Float32Array.of(
   0.013,
   0.008,
   0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -401,7 +395,6 @@ const clarinetImag = Float32Array.of(
   0.013,
   0.003,
   0.005,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -467,8 +460,6 @@ const saxophoneImag = Float32Array.of(
   0.008,
   0.005,
   0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -532,10 +523,6 @@ const trumpetImag = Float32Array.of(
   0.021,
   0.013,
   0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -598,9 +585,6 @@ const tromboneImag = Float32Array.of(
   0.013,
   0.008,
   0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -648,9 +632,6 @@ const frenchHornImag = Float32Array.of(
   0.013,
   0.008,
   0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -698,11 +679,6 @@ const tubaImag = Float32Array.of(
   0.034,
   0.021,
   0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -754,12 +730,6 @@ const violinImag = Float32Array.of(
   0.056,
   0.034,
   0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -831,12 +801,6 @@ const violaImag = Float32Array.of(
   0.056,
   0.034,
   0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -892,9 +856,6 @@ const celloImag = Float32Array.of(
   0.013,
   0.008,
   0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -947,8 +908,6 @@ const contrabassImag = Float32Array.of(
   0.008,
   0.005,
   0.003,
-  0.002,
-  0.001,
 );
 
 /** @type {Instrument} */
@@ -1013,9 +972,6 @@ const pianoImag = Float32Array.of(
   0.013,
   0.008,
   0.005,
-  0.003,
-  0.002,
-  0.001,
 );
 
 const stretchedPianoImag = stretchOvertones(pianoImag);
