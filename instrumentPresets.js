@@ -382,6 +382,7 @@ export const contrabassoon = {
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+// https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 const clarinetImag = stretchOvertones(
   Float32Array.of(
     0.0,
@@ -451,23 +452,25 @@ export const clarinet = {
 // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-031-53507-9_7/MediaObjects/539603_1_En_7_Fig13_HTML.png
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
 // TODO: revise these since there are now separate high and low oscillators
-const saxophoneImag = Float32Array.of(
-  0.0,
-  0.854,
-  1.0,
-  0.236,
-  0.618,
-  0.382,
-  0.236,
-  0.146,
-  0.09,
-  0.056,
-  0.034,
-  0.021,
-  0.013,
-  0.008,
-  0.005,
-  0.003,
+const saxophoneImag = stretchOvertones(
+  Float32Array.of(
+    0.0,
+    0.854,
+    1.0,
+    0.236,
+    0.618,
+    0.382,
+    0.236,
+    0.146,
+    0.09,
+    0.056,
+    0.034,
+    0.021,
+    0.013,
+    0.008,
+    0.005,
+    0.003,
+  ),
 );
 
 /** @type {Instrument} */
@@ -479,6 +482,7 @@ export const saxophone = {
       periodicWave: {
         imag: saxophoneImag,
       },
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "high",
     },
     {
@@ -486,6 +490,7 @@ export const saxophone = {
       periodicWave: {
         imag: saxophoneImag.map(defaultLowStageMapper),
       },
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
     },
   ],
