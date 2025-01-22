@@ -451,6 +451,7 @@ export const clarinet = {
 // https://courses.physics.illinois.edu/phys406/sp2017/NSF_REU_Reports/2007_reu/Impedance_Spectrum_for_a_Tenor_Sax_and_a_Bb_Trumpet.pdf
 // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-031-53507-9_7/MediaObjects/539603_1_En_7_Fig13_HTML.png
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
+// https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 // TODO: revise these since there are now separate high and low oscillators
 const saxophoneImag = stretchOvertones(
   Float32Array.of(
@@ -1343,10 +1344,10 @@ const glockenSpielImag = new Float32Array(20 * 32);
 glockenSpielImag[20 * 1] = 1.0;
 glockenSpielImag[20 * 2.75] = 0.618; // 2.756
 glockenSpielImag[20 * 5.4] = 0.382;
-glockenSpielImag[20 * 8.9] = 0.764;
+glockenSpielImag[20 * 8.9] = 0.618;
 glockenSpielImag[20 * 13.35] = 0.382; // 13.34
 glockenSpielImag[20 * 18.65] = 0.236; // 18.64
-glockenSpielImag[20 * 31.85] = 0.146; // 31.87
+glockenSpielImag[20 * 32] = 0.146; // 31.87
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1373,6 +1374,46 @@ export const glockenspiel = {
   attack: 0.013,
   overtoneAttack: 0.013,
   decay: 0.382,
+  overtoneDecay: 0.236,
+};
+
+// https://www.hibberts.co.uk/the-upper-partials-of-bells/
+const bellImag = new Float32Array(20 * 32);
+bellImag[20 * 0.25] = 0.382;
+bellImag[20 * 0.5] = 0.618;
+bellImag[20 * 1.2] = 0.382;
+bellImag[20 * 1.5] = 0.146;
+bellImag[20 * 2.0] = 1.0;
+bellImag[20 * 3.0] = 0.382;
+bellImag[20 * 4.0] = 0.618;
+bellImag[20 * 5.4] = 0.382;
+bellImag[20 * 6.75] = 0.236;
+bellImag[20 * 8] = 0.382;
+bellImag[20 * 16] = 0.236;
+bellImag[20 * 32] = 0.146;
+
+/** @param {Instrument} instrument */
+export const bell = {
+  ...glockenspiel,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: {
+        imag: bellImag,
+      },
+      stage: "high",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+    {
+      type: "custom",
+      periodicWave: {
+        imag: bellImag.map(defaultLowStageMapper),
+      },
+      stage: "low",
+      getPitch: (pitch) => pitch / 20.0,
+    },
+  ],
+
   overtoneDecay: 1.0,
 };
 
