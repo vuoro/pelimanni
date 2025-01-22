@@ -112,8 +112,6 @@ const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
     newImag[index * requiredSympatheticStringElements * (1 / 3)] += imag[index] * loudness;
   }
 
-  console.log(newImag);
-
   return newImag;
 };
 
@@ -739,31 +737,29 @@ export const tuba = {
 // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
 // https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
-const violinImag = addSympatheticStringsToImag(
-  Float32Array.of(
-    0.0,
-    1.0,
-    0.854,
-    0.618,
-    0.5,
-    0.618, // 5
-    0.238,
-    0.382,
-    0.5,
-    0.382,
-    0.236,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-    0.003,
-    0.002,
-    0.001,
-  ),
+const violinImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.854,
+  0.618,
+  0.5,
+  0.618, // 5
+  0.238,
+  0.382,
+  0.5,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 /** @type {Instrument} */
@@ -773,7 +769,7 @@ export const violin = {
     {
       type: "custom",
       periodicWave: {
-        imag: violinImag,
+        imag: addSympatheticStringsToImag(violinImag),
       },
       stage: "high",
       getPitch: getSympatheticStringPitch,
@@ -783,7 +779,7 @@ export const violin = {
       periodicWave: {
         // TODO: manually adjust low stage, based on
         // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
-        imag: violinImag.map(defaultLowStageMapper),
+        imag: addSympatheticStringsToImag(violinImag.map(defaultLowStageMapper)),
       },
       stage: "low",
       getPitch: getSympatheticStringPitch,
@@ -818,31 +814,29 @@ export const violin = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
-const violaImag = addSympatheticStringsToImag(
-  Float32Array.of(
-    0.0,
-    0.854,
-    1.0,
-    0.854,
-    0.764, // 4
-    0.382,
-    0.238,
-    0.382,
-    0.5,
-    0.382,
-    0.236,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-    0.003,
-    0.002,
-    0.001,
-  ),
+const violaImag = Float32Array.of(
+  0.0,
+  0.854,
+  1.0,
+  0.854,
+  0.764, // 4
+  0.382,
+  0.238,
+  0.382,
+  0.5,
+  0.382,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 /** @type {Instrument} */
@@ -852,7 +846,7 @@ export const viola = {
     {
       type: "custom",
       periodicWave: {
-        imag: violaImag,
+        imag: addSympatheticStringsToImag(violaImag),
       },
       stage: "high",
       getPitch: getSympatheticStringPitch,
@@ -860,7 +854,7 @@ export const viola = {
     {
       type: "custom",
       periodicWave: {
-        imag: violaImag.map(defaultLowStageMapper),
+        imag: addSympatheticStringsToImag(violaImag.map(defaultLowStageMapper)),
       },
       stage: "low",
       getPitch: getSympatheticStringPitch,
@@ -881,28 +875,26 @@ export const viola = {
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://vobarian.com/celloanly/index.html
-const celloImag = addSympatheticStringsToImag(
-  Float32Array.of(
-    0.0,
-    1.0,
-    0.618,
-    0.382,
-    0.618, // 4
-    0.382,
-    0.236,
-    0.236,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-    0.003,
-    0.002,
-    0.001,
-  ),
+const celloImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.618,
+  0.382,
+  0.618, // 4
+  0.382,
+  0.236,
+  0.236,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 /** @type {Instrument} */
@@ -912,7 +904,7 @@ export const cello = {
     {
       type: "custom",
       periodicWave: {
-        imag: celloImag,
+        imag: addSympatheticStringsToImag(celloImag),
       },
       stage: "high",
       getPitch: getSympatheticStringPitch,
@@ -920,7 +912,7 @@ export const cello = {
     {
       type: "custom",
       periodicWave: {
-        imag: celloImag.map(defaultLowStageMapper),
+        imag: addSympatheticStringsToImag(celloImag.map(defaultLowStageMapper)),
       },
       stage: "low",
       getPitch: getSympatheticStringPitch,
@@ -938,27 +930,25 @@ export const cello = {
 };
 
 // Guessed based on cello
-const contrabassImag = addSympatheticStringsToImag(
-  Float32Array.of(
-    0.0,
-    1.0,
-    0.618,
-    0.382,
-    0.5, // 4
-    0.333333,
-    0.146,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-    0.003,
-    0.002,
-    0.001,
-  ),
+const contrabassImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.618,
+  0.382,
+  0.5, // 4
+  0.333333,
+  0.146,
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 /** @type {Instrument} */
@@ -968,7 +958,7 @@ export const contrabass = {
     {
       type: "custom",
       periodicWave: {
-        imag: contrabassImag,
+        imag: addSympatheticStringsToImag(contrabassImag),
       },
       stage: "high",
       getPitch: getSympatheticStringPitch,
@@ -976,7 +966,7 @@ export const contrabass = {
     {
       type: "custom",
       periodicWave: {
-        imag: contrabassImag.map(defaultLowStageMapper),
+        imag: addSympatheticStringsToImag(contrabassImag.map(defaultLowStageMapper)),
       },
       stage: "low",
       getPitch: getSympatheticStringPitch,
