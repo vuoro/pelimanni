@@ -98,18 +98,18 @@ export const genericInstrument = Object.seal({
 /** @param {number} v */
 const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (5.0 + Math.random());
 
+const requiredSympatheticStringElements = 3 * 2;
+
 /** @param {Float32Array} imag */
 const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
-  const newImag = new Float32Array(imag.length * 12 * 4);
+  const newImag = new Float32Array(imag.length * requiredSympatheticStringElements * 3);
 
   for (let index = 1; index < imag.length; index++) {
-    newImag[index * 12 * 4] += imag[index] * loudness;
-    newImag[index * 12 * 3] += imag[index] * loudness;
-    newImag[index * 12 * 2] += imag[index] * loudness; // higher strings
-    newImag[index * 12] += imag[index]; // real string
-    newImag[index * 12 * (1 / 2)] += imag[index] * loudness; // lower strings
-    newImag[index * 12 * (1 / 3)] += imag[index] * loudness;
-    newImag[index * 12 * (1 / 4)] += imag[index] * loudness;
+    newImag[index * requiredSympatheticStringElements * 3] += imag[index] * loudness;
+    newImag[index * requiredSympatheticStringElements * 2] += imag[index] * loudness; // higher strings
+    newImag[index * requiredSympatheticStringElements] += imag[index]; // real string
+    newImag[index * requiredSympatheticStringElements * (1 / 2)] += imag[index] * loudness; // lower strings
+    newImag[index * requiredSympatheticStringElements * (1 / 3)] += imag[index] * loudness;
   }
 
   console.log(newImag);
@@ -117,7 +117,7 @@ const addSympatheticStringsToImag = (imag, loudness = 0.236) => {
   return newImag;
 };
 
-const getSympatheticStringPitch = (pitch = 440.0) => pitch / 12.0;
+const getSympatheticStringPitch = (pitch = 440.0) => pitch / requiredSympatheticStringElements;
 
 /** @param {Oscillator} oscillator */
 const copySympatheticStrings = (oscillator, loudness = 0.09) => {
@@ -134,11 +134,6 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
     getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
     gain: gain * loudness,
   });
-  strings.push({
-    ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 4.0,
-    gain: gain * loudness,
-  });
 
   strings.push({
     ...oscillator,
@@ -148,11 +143,6 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   strings.push({
     ...oscillator,
     getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
-    gain: gain * loudness,
-  });
-  strings.push({
-    ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 4.0),
     gain: gain * loudness,
   });
 
