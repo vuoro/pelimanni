@@ -1,7 +1,7 @@
 import { createInstrument, destroyInstrument, playInstrument } from "./instruments.js";
-import { midiToFrequency } from "./notes.js";
+import { midiToJustFrequency } from "./notes.js";
 
-const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToFrequency };
+const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToJustFrequency };
 
 /**
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} InstrumentPreset
@@ -101,7 +101,7 @@ const createSchedule = (audioContext) =>
     connectInstrument: () => {
       throw new Error("Missing `connectInstrument` parameter in `scheduleMusic`");
     },
-    numberToFrequency: midiToFrequency,
+    numberToFrequency: midiToJustFrequency,
     pendingNote: Object.seal({
       pending: false,
       instrumentPreset: null,

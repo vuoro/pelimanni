@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { bell } from "../instrumentPresets";
+import { contrabass, flute, glockenspiel, oboe, pluckedViola, violin } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -88,12 +88,12 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056,  }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056,  }]],
 
-    // [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
-    // [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    // [violin, [...melody, { transpose: 12, volume: 0.2 }]],
-    // [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    // [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
+    [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
+    [violin, [...melody, { transpose: 12, volume: 0.2 }]],
+    [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
+    [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
+    [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
     // [piano, [...rhythm, { transpose: 0, volume: 0.146 }]],
     // [piano, [...plinkingMelody, { transpose: 0, volume: 0.09 }]],
@@ -102,7 +102,7 @@ export const heavensTower = () => {
     // [piano, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [piano, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [bell, [spectrum, { volume: 0.3 }]],
+    // [bell, [spectrum, { volume: 0.3 }]],
   ];
 
   return { tracks, cycle };

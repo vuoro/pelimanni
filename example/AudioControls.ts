@@ -8,7 +8,7 @@ export const AudioControls = new Magic(() => {
 
   const isRunning = audioContext.state === "running";
   const action = () => (isRunning ? audioContext.suspend() : audioContext.resume());
-  const actionTitle = isRunning ? "Stop" : "Play";
+  const actionTitle = isRunning ? "Stop audio" : "Enable audio";
 
   const onStateChange = () => {
     AudioControls.update({ type: "refresh" });
@@ -25,6 +25,10 @@ export const AudioControls = new Magic(() => {
   return render(
     html`
       <fieldset>
+        <button type="button" @click=${action}>${actionTitle}</button>
+      </fieldset>
+
+      <fieldset>
         <legend>Volume</legend>
         ${volumeSlider("Main", mainGain, 1.0)}
         <!-- ${volumeSlider("Effects", effectsGain, 0.5)} -->
@@ -38,10 +42,6 @@ export const AudioControls = new Magic(() => {
       <fieldset>
         <legend>Reverb</legend>
         ${reverbSliders}
-      </fieldset>
-
-      <fieldset>
-        <button type="button" @click=${action}>${actionTitle}</button>
       </fieldset>
     `,
     document.getElementById("audio-controls") as HTMLElement,

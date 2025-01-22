@@ -30,11 +30,26 @@ label {
   grid-template-columns: auto 1fr;
 }
 
-#notes {
+#keyboard .keys {
   display: grid;
-  gap: 1rlh;
+  gap: 1px;
 }
 
-#notes > * {
-  margin: 0;
+.keys .octave {
+  display: flex;
+  gap: 1px;
+}
+
+.keys button {
+  flex-grow: 1;
+  flex-basis: 0;
+  flex-shrink: 0;
+  height: 5rlh;
+  max-width: 3rlh;
+  border: none;
+}
+
+.keys .black {
+  background: black;
+  color: white;
 }

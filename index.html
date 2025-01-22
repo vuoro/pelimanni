@@ -4,26 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pelimanni DEV</title>
+    <link rel="stylesheet" href="./example/reset.css" />
     <link rel="stylesheet" href="./example/example.css" />
     <script type="module" src="./example/example.js" defer></script>
   </head>
   <body>
-    <aside id="audio-controls"></aside>
-
-    <section id="instruments"></section>
-
-    <section id="notes">
-      <p>
-        This demo uses instruments and utilities from <a href="https://github.com/vuoro/pelimanni">pelimanni</a>, reverb
-        via <a href="https://khoin.github.io/DattorroReverbNode/">Dattorro's Reverb</a>, and a set of basic Web Audio
-        compressors and filters to keep the volume and ultra/infrasounds in check.
-      </p>
-      <p>
-        The music is an adaptation of a part of <cite>Heaven's Tower</cite> by Naoshi Mizuta, from
-        <cite>Final Fantasy XI Original Soundtrack</cite>.
-      </p>
-    </section>
-
     <section>
       <canvas id="visualizer"></canvas>
       <div style="display: flex">
@@ -41,15 +26,30 @@
           <div>Mid</div>
         </div>
         <div style="width: 11.5%">
-          <div>2000</div>
+          <div>2k</div>
           <div>Mid-high</div>
         </div>
-        <div style="width: 0%">
-          <div>6000</div>
+        <div style="width: 9.76%">
+          <div>6k</div>
           <div>High</div>
         </div>
       </div>
     </section>
-    <section id="sheets"></section>
+
+    <section id="instruments"></section>
+    <section id="keyboard"></section>
+    <aside id="audio-controls"></aside>
+
+    <section id="notes">
+      <p>
+        This demo uses instruments and utilities from <a href="https://github.com/vuoro/pelimanni">pelimanni</a>, reverb
+        via <a href="https://khoin.github.io/DattorroReverbNode/">Dattorro's Reverb</a>, and a set of basic Web Audio
+        compressors and filters to keep the volume and ultra/infrasounds in check.
+      </p>
+      <p>
+        The music is an adaptation of a part of <cite>Heaven's Tower</cite> by Naoshi Mizuta, from
+        <cite>Final Fantasy XI Original Soundtrack</cite>.
+      </p>
+    </section>
   </body>
 </html>
