@@ -976,6 +976,17 @@ const pianoImag = Float32Array.of(
 
 const stretchedPianoImag = stretchOvertones(pianoImag);
 
+// Piano transients
+// https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=624e7d25054fb6f5e9ab864e48f432d7dc5871fd
+// initial key noise, finger tap: 290 and 445 Hz, lasts 20–30ms, weak, more audible at low velocity
+// later key/hammer noise: 914 hz, 10–20ms attack, strong
+// also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
+// const hammerAndLowKeyNoiseImag = new Float32Array(25);
+// hammerAndLowKeyNoiseImag[1] = 1.0; // 38 hz
+// hammerAndLowKeyNoiseImag[3] = 0.618; // ~100 hz
+// hammerAndLowKeyNoiseImag[7] = 0.382; // ~250 hz
+// hammerAndLowKeyNoiseImag[24] = 1.0; // ~914 hz
+
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
@@ -996,19 +1007,13 @@ export const piano = {
       stage: "low",
       getPitch: getStretchedOvertonesPitch,
     }),
+    // TODO: is it worth having this in a digital instrument?
     // {
     //   type: "custom",
-    //   periodicWave: getNoise((value, index) => {
-    //     let ratio = 0.0;
-    //     ratio += Math.abs(index * 5 - 40); // low key noise
-    //     ratio += Math.abs(index * 5 - 270); // hammer noise
-    //     ratio += Math.abs(index * 5 - 945); // hammer noise * 3.5
-    //     ratio += Math.abs(index * 5 - 2000); // high key noise
-    //     return value * ratio;
-    //   }),
-    //   getPitch: () => 5.0,
-    //   gain: 0.5,
-    //   attack: 0.008,
+    //   periodicWave: { imag: hammerAndLowKeyNoiseImag },
+    //   getPitch: () => 38.0,
+    //   gain: 0.056,
+    //   attack: 0.005,
     //   decay: 0.056,
     //   durationImpactOnDecay: 0.005,
     // },
@@ -1358,6 +1363,26 @@ export const glockenspiel = {
   overtoneDecay: 1.0,
 };
 
+// Plucked string transients
+// https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
+// body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
+// const pluckedStringBodyTapImag = new Float32Array(8 * 10);
+// pluckedStringBodyTapImag[1 * 10] = 1.0;
+// pluckedStringBodyTapImag[5.4 * 10] = 1.0;
+// pluckedStringBodyTapImag[7.5 * 10] = 1.0;
+
+// TODO: is it worth having this in a digital instrument?
+// /** @type {Oscillator} */
+// const pluckedTransientOscillator = {
+//   type: "custom",
+//   periodicWave: { imag: pluckedStringBodyTapImag },
+//   getPitch: () => 104.0 / 10,
+//   gain: 0.09,
+//   attack: 0.005,
+//   decay: 0.034,
+//   durationImpactOnDecay: 0.005,
+// };
+
 const plucked = {
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.764,
@@ -1451,6 +1476,7 @@ export const pluckedCello = {
       stage: "low",
       getPitch: getStretchedOvertonesPitch,
     }),
+    // pluckedTransientOscillator,
   ],
 };
 

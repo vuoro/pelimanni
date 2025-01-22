@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { piano } from "../instrumentPresets";
+import { pluckedCello } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -102,7 +102,7 @@ export const heavensTower = () => {
     // [piano, [...midHarmony, { transpose: -12, volume: 0.056 }]],
     // [piano, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
 
-    [piano, [spectrum, { volume: 0.3 }]],
+    [pluckedCello, [spectrum, { volume: 0.3 }]],
   ];
 
   return { tracks, cycle };
