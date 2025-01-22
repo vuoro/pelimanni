@@ -284,7 +284,7 @@ export const playInstrument = (
   const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
 
   const shortness = 0.5 ** duration;
-  const lengthDynamics = 1.236 - 0.236 * shortness;
+  const lengthDynamics = 1.09 - 2.0 * 0.09 * shortness;
 
   const attackDynamics =
     lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * dynamicSlowness) * situationalDynamics;

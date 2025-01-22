@@ -207,6 +207,10 @@ const getStretchedOvertonesPitch = (pitch = 440.0) => {
   return (pitch * (1.0 + inharmonicityRatio)) / inharmonicityPrecision;
 };
 
+const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
+  return pitch / inharmonicityPrecision;
+};
+
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 const fluteImag = Float32Array.of(0.0, 1.0, 0.854, 0.382, 0.618, 0.236, 0.09, 0.034, 0.013, 0.005, 0.002);
@@ -378,23 +382,25 @@ export const contrabassoon = {
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
-const clarinetImag = Float32Array.of(
-  0.0,
-  1.0,
-  0.236,
-  0.854,
-  0.382,
-  0.618,
-  0.146,
-  0.236,
-  0.056,
-  0.09,
-  0.021,
-  0.034,
-  0.008,
-  0.013,
-  0.003,
-  0.005,
+const clarinetImag = stretchOvertones(
+  Float32Array.of(
+    0.0,
+    1.0,
+    0.236,
+    0.854,
+    0.382,
+    0.618,
+    0.146,
+    0.236,
+    0.056,
+    0.09,
+    0.021,
+    0.034,
+    0.008,
+    0.013,
+    0.003,
+    0.005,
+  ),
 );
 
 /** @type {Instrument} */
@@ -407,6 +413,7 @@ export const clarinet = {
         imag: clarinetImag,
       },
       stage: "high",
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
     {
       type: "custom",
@@ -414,6 +421,7 @@ export const clarinet = {
         imag: clarinetImag.map(defaultLowStageMapper),
       },
       stage: "low",
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
   ],
 
@@ -482,7 +490,7 @@ export const saxophone = {
     },
   ],
   glide: 0.003,
-  initialInstability: 1.0,
+  initialInstability: 0.764,
 
   attack: 0.034,
   overtoneAttack: 0.09,
@@ -545,7 +553,7 @@ export const trumpet = {
     },
   ],
   glide: 0.003,
-  initialInstability: 1.0,
+  initialInstability: 0.764,
 
   attack: 0.034,
   overtoneAttack: 0.09,
@@ -1137,7 +1145,7 @@ export const taikoDrum = {
   sustain: 0.0,
   release: 0.0,
 
-  lowPassFrequency: 20000,
+  lowPassFrequency: 3080, // FIXME: no idea what this should be on any percussion
 };
 
 const timpaniImag = new Float32Array(20 * 3.15);
