@@ -235,7 +235,7 @@ const fluteImag = Float32Array.of(
 /** @type {Instrument} */
 export const flute = {
   ...genericInstrument,
-  group: "Woodwinds",
+  group: "Woodwinds & flutes",
   oscillators: [
     {
       type: "custom",
@@ -258,7 +258,7 @@ export const flute = {
   attack: 0.034,
   overtoneAttack: 0.021,
   decay: 0.146,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.236,
   sustain: 0.854,
   overtoneSustain: 0.764,
   release: 0.034,
@@ -277,6 +277,49 @@ export const piccolo = {
   highPassFrequency: 587.328,
   lowPassFrequency: 4185.984,
   peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
+};
+
+// https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
+// https://www.physicsforums.com/threads/origin-of-harmonics-in-helmholts-type-resonators.799974/
+const ocarinaImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.0,
+  0.09,
+  0.0,
+  0.382,
+  0.0,
+  0.0,
+  0.236,
+  0.0,
+  0.0,
+  0.0,
+  0.146,
+);
+
+/** @type {Instrument} */
+export const ocarina = {
+  ...flute,
+  oscillators: [
+    {
+      type: "custom",
+      periodicWave: { imag: stretchOvertones(ocarinaImag) },
+      stage: "high",
+      getPitch: getStretchedOvertonesPitch,
+    },
+    {
+      type: "custom",
+      periodicWave: { imag: stretchOvertones(ocarinaImag).map(defaultLowStageMapper) },
+      stage: "low",
+      getPitch: getStretchedOvertonesPitch,
+    },
+  ],
+  overtoneDecay: flute.decay * 0.618,
+  highPassFrequency: 261.6,
+  lowPassFrequency: 2793.826,
+  vibratoEffectOnStage: 0.0,
+  vibratoEffectOnPitch: 30,
+  peakingFilters: [],
 };
 
 // Sources are very conflicting, must be wide variance between notes
@@ -303,7 +346,7 @@ const oboeImag = Float32Array.of(
 /** @type {Instrument} */
 export const oboe = {
   ...genericInstrument,
-  group: "Woodwinds",
+  group: "Woodwinds & flutes",
   oscillators: [
     {
       type: "custom",
@@ -426,7 +469,7 @@ const clarinetImag = stretchOvertones(
 /** @type {Instrument} */
 export const clarinet = {
   ...genericInstrument,
-  group: "Woodwinds",
+  group: "Woodwinds & flutes",
   oscillators: [
     {
       type: "custom",
@@ -497,7 +540,7 @@ const saxophoneImag = stretchOvertones(
 /** @type {Instrument} */
 export const saxophone = {
   ...genericInstrument,
-  group: "Woodwinds",
+  group: "Woodwinds & flutes",
   oscillators: [
     {
       type: "custom",
@@ -1496,7 +1539,7 @@ const plucked = {
   release: 0.0,
   overtoneRelease: 0.0,
 
-  vibratoEffectOnPitch: 20.0,
+  vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnStage: 0.0, // FIXME: should there be some of this?
 };
