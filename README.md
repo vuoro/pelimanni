@@ -85,8 +85,6 @@ destroyInstrument(violaInstrument);
 
 `midiToJustFrequency` uses a "12 note 5-limit just intonation" system instead. Some note intervals are more in tune, and some are less. Especially helps make bowed strings sound better. It takes an additional `root` parameter, which is a note number used as a basis of the frequency ratios. I think the closer your notes are to the root, the better they will sound. I'm not sure though, because this stuff is a bit out of my league.
 
-In both functions note 0 is C4. I think this deviates from the midi number standard, but it's nicer this way.
-
 ```js
 import { midiToFrequency, midiToJustFrequency } from "@vuoro/pelimanni/notes.js";
 

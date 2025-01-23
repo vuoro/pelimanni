@@ -49,7 +49,7 @@ export const AudioVisualizer = new Magic(() => {
       const highness = index / areas.length;
       const relativeStart = Math.max(0, Math.log(start - minFrequency) / logMaxFrequency);
       const relativeEnd = Math.log(end - minFrequency) / logMaxFrequency;
-      drawer.fillStyle = `color(display-p3 ${1.0 - 0.764 * highness} ${0.618 - highness * 0.236} ${0.618 + 0.382 * highness} )`;
+      drawer.fillStyle = `color(display-p3 ${1.0 - highness} ${0.764 - 0.236 * highness} ${0.764 + 0.236 * highness} )`;
       drawer.fillRect(relativeStart * width, 0, relativeEnd * width - relativeStart * width, height);
     }
 

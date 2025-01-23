@@ -19,8 +19,8 @@ label {
 
 #visualizer {
   width: 100%;
-  aspect-ratio: 16/9;
-  max-height: 50vh;
+  height: 13rlh;
+  max-height: 25vh;
   border: 2px solid;
 }
 
@@ -36,17 +36,28 @@ label {
 }
 
 .keys .octave {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   gap: 1px;
 }
 
 .keys button {
-  flex-grow: 1;
-  flex-basis: 0;
-  flex-shrink: 0;
-  height: 5rlh;
-  max-width: 3rlh;
+  aspect-ratio: 1 / 1;
+  width: 100%;
   border: none;
+  cursor: pointer;
+}
+
+.keys button:hover {
+  filter: sepia(50%);
+}
+
+.keys:has(button:active) button:hover {
+  filter: sepia(100%);
+}
+
+.keys button * {
+  pointer-events: none;
 }
 
 .keys .black {
