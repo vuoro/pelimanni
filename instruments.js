@@ -379,6 +379,10 @@ export const playInstrument = (
 
   if (overtonesShouldDecay) {
     const overtoneDynamicDecay = mix(overtoneDecay, decayTarget, defaultDurationImpactOnDecay) * overtoneDecayDynamics;
+
+    if (defaultDecayImpactOnDuration > 0.0)
+      endAt = Math.max(endAt, decayAt + overtoneDynamicDecay * 4.0 * defaultDecayImpactOnDuration);
+
     crossfader.pan.setTargetAtTime(overtoneSustain * 2.0 - 1.0, overtonesDecayAt, overtoneDynamicDecay);
   }
 

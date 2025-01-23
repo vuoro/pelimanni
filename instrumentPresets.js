@@ -164,7 +164,8 @@ const inharmonicityCoefficient =
 
 /** @param {Float32Array} imag */
 const stretchOvertones = (imag) => {
-  if (imag.length > 16) throw new Error("Can't safely stretch overtones in imags with more than 16 entries");
+  if (imag.length > 16)
+    throw new Error("Can't safely stretch overtones in imags with more than 16 entries");
   const newImag = new Float32Array(imag.length * inharmonicityPrecision);
 
   // https://forum.pianoworld.com/ubbthreads.php/topics/2438314/Inharmonicity_Math.html
@@ -190,7 +191,9 @@ const stretchOvertones = (imag) => {
     // FIXME: is this needed?
     const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
 
-    const offset = Math.round(inharmonicityPrecision * inharmonicityRatio * correctionForRatiosBetweenOvertones);
+    const offset = Math.round(
+      inharmonicityPrecision * inharmonicityRatio * correctionForRatiosBetweenOvertones,
+    );
     newImag[index * inharmonicityPrecision + offset] = imag[index];
 
     // console.log(index - 1, inharmonicityRatio, offset / inharmonicityPrecision, offset);
@@ -213,7 +216,19 @@ const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
-const fluteImag = Float32Array.of(0.0, 1.0, 0.854, 0.382, 0.618, 0.236, 0.09, 0.034, 0.013, 0.005, 0.002);
+const fluteImag = Float32Array.of(
+  0.0,
+  1.0,
+  0.854,
+  0.382,
+  0.618,
+  0.236,
+  0.09,
+  0.034,
+  0.013,
+  0.005,
+  0.002,
+);
 
 /** @type {Instrument} */
 export const flute = {
@@ -1116,7 +1131,8 @@ export const taikoDrum = {
     {
       type: "custom",
       periodicWave: getNoise(
-        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
+        (value, index) =>
+          (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
       ),
       getPitch: () => 5.0,
       gain: 0.618,
@@ -1168,7 +1184,8 @@ export const timpani = {
     {
       ...taikoDrum.oscillators[0],
       periodicWave: getNoise(
-        (value, index) => (value * Math.min(1.0, Math.max(0.0, index - 27.0))) / Math.max(1.0, index - 27.0),
+        (value, index) =>
+          (value * Math.min(1.0, Math.max(0.0, index - 27.0))) / Math.max(1.0, index - 27.0),
       ),
     },
     {
@@ -1339,15 +1356,30 @@ export const xylophone = {
   durationImpactOnDecay: 0.0,
 };
 
-// Tuned to pure idiophone overtones
 const glockenSpielImag = new Float32Array(20 * 32);
+
+// Pure idiophone overtones
+// glockenSpielImag[20 * 1] = 1.0;
+// glockenSpielImag[20 * 2.75] = 0.618; // 2.756
+// glockenSpielImag[20 * 5.4] = 0.382;
+// glockenSpielImag[20 * 8.9] = 0.618;
+// glockenSpielImag[20 * 13.35] = 0.382; // 13.34
+// glockenSpielImag[20 * 18.65] = 0.236; // 18.64
+// glockenSpielImag[20 * 31.85] = 0.146; // 31.87
+
+// https://www.physics.mcgill.ca/~grant/224/19-224.pdf
 glockenSpielImag[20 * 1] = 1.0;
-glockenSpielImag[20 * 2.75] = 0.618; // 2.756
-glockenSpielImag[20 * 5.4] = 0.382;
-glockenSpielImag[20 * 8.9] = 0.618;
-glockenSpielImag[20 * 13.35] = 0.382; // 13.34
-glockenSpielImag[20 * 18.65] = 0.236; // 18.64
-glockenSpielImag[20 * 32] = 0.146; // 31.87
+glockenSpielImag[20 * 2.7] = 0.618;
+glockenSpielImag[20 * 3.25] = 0.382;
+glockenSpielImag[20 * 5.55] = 0.618;
+glockenSpielImag[20 * 5.15] = 0.382;
+glockenSpielImag[20 * 7.05] = 0.236;
+glockenSpielImag[20 * 8] = 0.146;
+glockenSpielImag[20 * 8.45] = 0.09;
+glockenSpielImag[20 * 10.6] = 0.056;
+glockenSpielImag[20 * 11.25] = 0.034;
+glockenSpielImag[20 * 12.2] = 0.021;
+glockenSpielImag[20 * 13.95] = 0.013;
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1374,7 +1406,7 @@ export const glockenspiel = {
   attack: 0.013,
   overtoneAttack: 0.013,
   decay: 0.382,
-  overtoneDecay: 0.236,
+  overtoneDecay: 0.09,
 };
 
 // https://www.hibberts.co.uk/the-upper-partials-of-bells/
