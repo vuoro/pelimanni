@@ -107,7 +107,8 @@ export const createInstrument = (preset, audioContext) => {
               // If no cosine terms are given, fill them in, with a random phase offset
               // and some slight randomisation for flavour
               real:
-                periodicWave.real ?? periodicWave.imag.map((v) => v * randomisedPhase * (1.0 - Math.random() * 0.013)),
+                periodicWave.real ??
+                periodicWave.imag.map((v) => v * randomisedPhase * (1.0 - Math.random() * 0.013)),
             }),
           })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
@@ -275,21 +276,29 @@ export const playInstrument = (
 
   // NOTE: these will only work if the instrument is played sequentially
   const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
-  const pitchSameness = 0.333 ** Math.abs(Math.log2(instrument.previousPitch / pitch)) * franticness;
+  const pitchSameness =
+    0.333 ** Math.abs(Math.log2(instrument.previousPitch / pitch)) * franticness;
   const pitchDifferentness = 1.0 - pitchSameness;
 
   const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
   const dynamicVelocity = velocity * situationalDynamics;
   const dynamicSlowness = 1.0 - dynamicVelocity;
-  const volumeTarget = volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
+  const volumeTarget =
+    volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
 
   const shortness = 0.5 ** duration;
   const lengthDynamics = 1.09 - 2.0 * 0.09 * shortness;
 
   const attackDynamics =
-    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * dynamicSlowness) * situationalDynamics;
+    lengthDynamics *
+    (1.0 + 0.236 * 2.0 * lowPitchness) *
+    (1.0 + 0.236 * dynamicSlowness) *
+    situationalDynamics;
   const releaseDynamics =
-    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 - 0.236 * dynamicSlowness) * situationalDynamics;
+    lengthDynamics *
+    (1.0 + 0.236 * 2.0 * lowPitchness) *
+    (1.0 - 0.236 * dynamicSlowness) *
+    situationalDynamics;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
@@ -307,9 +316,14 @@ export const playInstrument = (
   const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
 
-  const vibratoStageTarget = hasVibrato ? vibratoAmount ** 0.5 * vibratoEffectOnStage : idleVibratoStageTarget;
-  const vibratoPitchTarget = hasVibrato ? vibratoAmount * vibratoEffectOnPitch : idleVibratoPitchTarget;
-  const vibratoVolumeTarget = (hasVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
+  const vibratoStageTarget = hasVibrato
+    ? vibratoAmount ** 0.5 * vibratoEffectOnStage
+    : idleVibratoStageTarget;
+  const vibratoPitchTarget = hasVibrato
+    ? vibratoAmount * vibratoEffectOnPitch
+    : idleVibratoPitchTarget;
+  const vibratoVolumeTarget =
+    (hasVibrato ? vibratoAmount * -vibratoEffectOnVolume : -idleVibratoVolumeTarget) * volume;
 
   // Start and end
   const startAt = at;
@@ -317,7 +331,9 @@ export const playInstrument = (
   let endAt = at + Math.max(duration * 0.5, duration - defaultDynamicRelease);
 
   const instabilityStopsAt =
-    initialInstability > 0.0 ? Math.min(endAt - epsilon * 2.0, startAt + overtoneDynamicAttack * 4.0) : startAt;
+    initialInstability > 0.0
+      ? Math.min(endAt - epsilon * 2.0, startAt + overtoneDynamicAttack * 4.0)
+      : startAt;
   const vibratoAt = Math.min(endAt - epsilon, instabilityStopsAt + defaultDynamicAttack);
 
   // Cancel pending events
@@ -375,15 +391,21 @@ export const playInstrument = (
 
   const overtonesDecayAt = startAt + overtoneDynamicAttack * 4.0;
   const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicVelocity);
-  const overtonesShouldDecay = overtoneDecay > 0.0 && overtoneSustain !== 1.0 && overtonesDecayAt < endAt;
+  const overtonesShouldDecay =
+    overtoneDecay > 0.0 && overtoneSustain !== 1.0 && overtonesDecayAt < endAt;
 
   if (overtonesShouldDecay) {
-    const overtoneDynamicDecay = mix(overtoneDecay, decayTarget, defaultDurationImpactOnDecay) * overtoneDecayDynamics;
+    const overtoneDynamicDecay =
+      mix(overtoneDecay, decayTarget, defaultDurationImpactOnDecay) * overtoneDecayDynamics;
 
     if (defaultDecayImpactOnDuration > 0.0)
       endAt = Math.max(endAt, decayAt + overtoneDynamicDecay * 4.0 * defaultDecayImpactOnDuration);
 
-    crossfader.pan.setTargetAtTime(overtoneSustain * 2.0 - 1.0, overtonesDecayAt, overtoneDynamicDecay);
+    crossfader.pan.setTargetAtTime(
+      overtoneSustain * 2.0 - 1.0,
+      overtonesDecayAt,
+      overtoneDynamicDecay,
+    );
   }
 
   const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
@@ -401,7 +423,8 @@ export const playInstrument = (
 
     const dynamicDecay = mix(decay, decayTarget, durationImpactOnDecay) * oscillatorDecayDynamics;
 
-    if (decayImpactOnDuration > 0.0) endAt = Math.max(endAt, decayAt + dynamicDecay * 4.0 * decayImpactOnDuration);
+    if (decayImpactOnDuration > 0.0)
+      endAt = Math.max(endAt, decayAt + dynamicDecay * 4.0 * decayImpactOnDuration);
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }

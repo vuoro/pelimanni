@@ -30,37 +30,65 @@ label {
   grid-template-columns: auto 1fr;
 }
 
+#keyboard {
+  display: grid;
+  gap: 0.5rlh;
+}
+
+#keyboard form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rlh;
+}
+
 #keyboard .keys {
   display: grid;
-  gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(15rlh, 1fr));
+  padding: 2px;
+  background: black;
 }
 
 .keys .octave {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1px;
+  grid-template-columns: 1fr 0 1fr 0 1fr 1fr 0 1fr 0 1fr 0 1fr;
+  border: 1px solid;
 }
 
 .keys button {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 2;
   width: 100%;
   border: none;
   cursor: pointer;
-}
-
-.keys button:hover {
-  filter: sepia(50%);
-}
-
-.keys:has(button:active) button:hover {
-  filter: sepia(100%);
-}
-
-.keys button * {
-  pointer-events: none;
+  background: white;
+  border: 0.5px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  line-height: 2;
+  touch-action: manipulation;
 }
 
 .keys .black {
   background: black;
   color: white;
+  width: auto;
+  height: 61.8%;
+  justify-self: center;
+  position: relative;
+  z-index: 1;
+  background: #333;
+  border-bottom-left-radius: 20% 10%;
+  border-bottom-right-radius: 20% 10%;
+}
+
+.keys button:hover {
+  filter: invert(14.6%);
+}
+
+.keys:has(button:active) button:hover {
+  filter: invert(23.6%);
+}
+
+.keys button * {
+  pointer-events: none;
 }

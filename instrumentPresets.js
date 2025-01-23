@@ -11,6 +11,8 @@ import { getNoise } from "./noise";
  */
 
 export const genericInstrument = Object.seal({
+  group: "Misc.",
+
   /**
    * @typedef {object} Oscillator - creates the sound of the note
    * @property {OscillatorType} type
@@ -233,6 +235,7 @@ const fluteImag = Float32Array.of(
 /** @type {Instrument} */
 export const flute = {
   ...genericInstrument,
+  group: "Woodwinds",
   oscillators: [
     {
       type: "custom",
@@ -300,6 +303,7 @@ const oboeImag = Float32Array.of(
 /** @type {Instrument} */
 export const oboe = {
   ...genericInstrument,
+  group: "Woodwinds",
   oscillators: [
     {
       type: "custom",
@@ -422,6 +426,7 @@ const clarinetImag = stretchOvertones(
 /** @type {Instrument} */
 export const clarinet = {
   ...genericInstrument,
+  group: "Woodwinds",
   oscillators: [
     {
       type: "custom",
@@ -492,6 +497,7 @@ const saxophoneImag = stretchOvertones(
 /** @type {Instrument} */
 export const saxophone = {
   ...genericInstrument,
+  group: "Woodwinds",
   oscillators: [
     {
       type: "custom",
@@ -557,6 +563,7 @@ const trumpetImag = Float32Array.of(
 /** @type {Instrument} */
 export const trumpet = {
   ...genericInstrument,
+  group: "Brass",
   oscillators: [
     {
       type: "custom",
@@ -764,6 +771,7 @@ const violinImag = Float32Array.of(
 /** @type {Instrument} */
 export const violin = {
   ...genericInstrument,
+  group: "Strings (bowed)",
   oscillators: [
     {
       type: "custom",
@@ -1019,6 +1027,7 @@ const stretchedPianoImag = stretchOvertones(pianoImag);
 /** @type {Instrument} */
 export const piano = {
   ...genericInstrument,
+  group: "Strings (hammered)",
   oscillators: [
     ...copySympatheticStrings({
       type: "custom",
@@ -1048,10 +1057,10 @@ export const piano = {
     // },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.5,
+  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
-  overtoneAttack: 0.013,
+  overtoneAttack: 0.021,
   decay: 0.618,
   overtoneDecay: 0.382,
   sustain: 0.0,
@@ -1061,6 +1070,7 @@ export const piano = {
 /** @type {Instrument} */
 export const hammeredDulcimer = {
   ...genericInstrument,
+  group: "Strings (hammered)",
   oscillators: [
     ...copySympatheticStrings({
       type: "custom",
@@ -1100,7 +1110,7 @@ export const hammeredDulcimer = {
     // },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.236,
+  durationImpactOnDecay: 0.382,
 
   attack: 0.008,
   overtoneAttack: 0.016,
@@ -1127,6 +1137,7 @@ taikoImag[20 * 9.3] = 0.034;
 /** @param {Instrument} instrument */
 export const taikoDrum = {
   ...genericInstrument,
+  group: "Percussion (drums)",
   oscillators: [
     {
       type: "custom",
@@ -1158,7 +1169,7 @@ export const taikoDrum = {
     },
   ],
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.5,
+  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
   overtoneAttack: 0.013,
@@ -1289,6 +1300,7 @@ marimbaImag[20 * 43] = 0.056; // 42.97
 /** @param {Instrument} instrument */
 export const marimba = {
   ...genericInstrument,
+  group: "Percussion (idiophones)",
   oscillators: [
     {
       type: "custom",
@@ -1309,7 +1321,7 @@ export const marimba = {
   ],
 
   decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
+  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
   overtoneAttack: 0.013,
@@ -1353,7 +1365,7 @@ export const xylophone = {
     },
   ],
 
-  durationImpactOnDecay: 0.0,
+  durationImpactOnDecay: 0.236,
 };
 
 const glockenSpielImag = new Float32Array(20 * 32);
@@ -1470,6 +1482,7 @@ export const bell = {
 // };
 
 const plucked = {
+  group: "Strings (plucked)",
   decayImpactOnDuration: 1.0,
   durationImpactOnDecay: 0.764,
 
