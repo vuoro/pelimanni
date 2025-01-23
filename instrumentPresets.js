@@ -1411,30 +1411,30 @@ export const xylophone = {
   durationImpactOnDecay: 0.236,
 };
 
-const glockenSpielImag = new Float32Array(20 * 32);
+const glockenspielImag = new Float32Array(20 * 32);
 
 // Pure idiophone overtones
-// glockenSpielImag[20 * 1] = 1.0;
-// glockenSpielImag[20 * 2.75] = 0.618; // 2.756
-// glockenSpielImag[20 * 5.4] = 0.382;
-// glockenSpielImag[20 * 8.9] = 0.618;
-// glockenSpielImag[20 * 13.35] = 0.382; // 13.34
-// glockenSpielImag[20 * 18.65] = 0.236; // 18.64
-// glockenSpielImag[20 * 31.85] = 0.146; // 31.87
+// glockenspielImag[20 * 1] = 1.0;
+// glockenspielImag[20 * 2.75] = 0.618; // 2.756
+// glockenspielImag[20 * 5.4] = 0.382;
+// glockenspielImag[20 * 8.9] = 0.618;
+// glockenspielImag[20 * 13.35] = 0.382; // 13.34
+// glockenspielImag[20 * 18.65] = 0.236; // 18.64
+// glockenspielImag[20 * 31.85] = 0.146; // 31.87
 
 // https://www.physics.mcgill.ca/~grant/224/19-224.pdf
-glockenSpielImag[20 * 1] = 1.0;
-glockenSpielImag[20 * 2.7] = 0.618;
-glockenSpielImag[20 * 3.25] = 0.382;
-glockenSpielImag[20 * 5.55] = 0.618;
-glockenSpielImag[20 * 5.15] = 0.382;
-glockenSpielImag[20 * 7.05] = 0.236;
-glockenSpielImag[20 * 8] = 0.146;
-glockenSpielImag[20 * 8.45] = 0.09;
-glockenSpielImag[20 * 10.6] = 0.056;
-glockenSpielImag[20 * 11.25] = 0.034;
-glockenSpielImag[20 * 12.2] = 0.021;
-glockenSpielImag[20 * 13.95] = 0.013;
+glockenspielImag[20 * 1] = 1.0;
+glockenspielImag[20 * 2.7] = 0.618;
+glockenspielImag[20 * 3.25] = 0.382;
+glockenspielImag[20 * 5.55] = 0.618;
+glockenspielImag[20 * 5.15] = 0.382;
+glockenspielImag[20 * 7.05] = 0.236;
+glockenspielImag[20 * 8] = 0.146;
+glockenspielImag[20 * 8.45] = 0.09;
+glockenspielImag[20 * 10.6] = 0.056;
+glockenspielImag[20 * 11.25] = 0.034;
+glockenspielImag[20 * 12.2] = 0.021;
+glockenspielImag[20 * 13.95] = 0.013;
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1443,7 +1443,7 @@ export const glockenspiel = {
     {
       type: "custom",
       periodicWave: {
-        imag: glockenSpielImag,
+        imag: glockenspielImag,
       },
       stage: "high",
       getPitch: (pitch) => pitch / 20.0,
@@ -1451,7 +1451,7 @@ export const glockenspiel = {
     {
       type: "custom",
       periodicWave: {
-        imag: glockenSpielImag.map(defaultLowStageMapper),
+        imag: glockenspielImag.map(defaultLowStageMapper),
       },
       stage: "low",
       getPitch: (pitch) => pitch / 20.0,

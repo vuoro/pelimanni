@@ -24,15 +24,15 @@ The following are all the instrument presets currently implemented.
 
 ```js
   import {
-    flute, piccolo, // flutes
+    flute, piccolo, ocarina, // flutes
     oboe, bassoon, contrabassoon, // double-reed woodwinds
     clarinet, saxophone, // single-reed woodwinds
     trumpet, trombone, frenchHorn, tuba, // brass
     violin, viola, cello, contrabass, // bowed strings
     pluckedViolin, pluckedViola, pluckedCello, pluckedContrabass, // plucked strings
-    piano, hammeredDulcimer // keyboards-likes
+    piano, hammeredDulcimer // hammered strings
     taikoDrum, timpani, bassDrum, snareDrum // drums
-    marimba, xylophone, glockenspiel // idiophones
+    marimba, xylophone, glockenspiel, bell // idiophones
   } from "@vuoro/pelimanni/instrumentPresets.js";
 ```
 
@@ -73,7 +73,7 @@ Each instrument is monophonic (it can only play 1 sound at a time). If you need 
   playInstrument(violaInstrument, frequency, at, duration, velocity, volume, vibratoAmount);
 ```
 
-When you don't need an instrumen anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
+When you don't need an instrument anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
 
 ```js
 destroyInstrument(violaInstrument);
