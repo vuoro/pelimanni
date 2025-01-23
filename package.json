@@ -10,7 +10,8 @@
     "./notes.js": "./notes.js"
   },
   "scripts": {
-    "dev": "vite dev --port 3000"
+    "dev": "vite dev --port 3000",
+    "build": "vite build"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
