@@ -112,7 +112,7 @@ const durationInput = (duration: number) => {
     <div>
       <label>
         <span>Duration (s)</span>
-        <input name="duration" type="number" min="0.001" max="30" step="0.1" .value=${duration}/>
+        <input name="duration" type="number" min="0.01" max="30" step="0.1" .value=${duration}/>
       </label>
     </div>
   `;
@@ -151,7 +151,9 @@ const instrumentSelect = (selected: string) => {
 
   const options = [];
 
-  for (const [group, groupArray] of groupArrays) {
+  for (const [group, groupArray] of [...groupArrays.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
     options.push(html`<optgroup label=${group}>${groupArray}</optgroup>`);
   }
 
