@@ -86,6 +86,8 @@ cite {
   grid-template-columns: repeat(auto-fit, minmax(12rlh, 16rlh));
   gap: 1rlh;
   pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .keys .octave {
