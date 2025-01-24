@@ -1,7 +1,12 @@
 import { html, render } from "lit-html";
 import * as allInstrumentPresets from "../instrumentPresets.js";
-import { createInstrument, destroyInstrument, playInstrument } from "../instruments";
-import { midiToJustFrequency } from "../notes";
+import {
+  attackInstrument,
+  createInstrument,
+  destroyInstrument,
+  releaseInstrument,
+} from "../instruments";
+import { midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
 import { Magic } from "./magic";
 
@@ -13,14 +18,16 @@ export const Keyboard = new Magic(
       duration: number;
       vibratoAmount: number;
       vibratoFrequency: number;
+      keyboardOctave: number;
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
         : "piano") as keyof typeof allInstrumentPresets,
-      velocity: +(localStorage.getItem("velocity") ?? 0.5),
+      velocity: +(localStorage.getItem("velocity") ?? 0.6),
       duration: +(localStorage.getItem("duration") ?? 0.5),
       vibratoAmount: +(localStorage.getItem("vibratoAmount") ?? 0.0),
       vibratoFrequency: +(localStorage.getItem("vibratoFrequency") ?? 5.0),
+      keyboardOctave: +(localStorage.getItem("keyboardOctave") ?? 5),
     },
     message?: {
       instrumentName?: keyof typeof allInstrumentPresets;
@@ -28,6 +35,7 @@ export const Keyboard = new Magic(
       duration?: number;
       vibratoAmount?: number;
       vibratoFrequency?: number;
+      keyboardOctave?: number;
     },
   ) => {
     if (message) {
@@ -36,20 +44,18 @@ export const Keyboard = new Magic(
       }
 
       if (message.velocity !== undefined) state.velocity = message.velocity;
-      if (message.duration !== undefined) state.duration = message.duration;
       if (message.vibratoAmount !== undefined) state.vibratoAmount = message.vibratoAmount;
       if (message.vibratoFrequency !== undefined) state.vibratoFrequency = message.vibratoFrequency;
+      if (message.keyboardOctave !== undefined) state.keyboardOctave = message.keyboardOctave;
     }
-
-    const keys = Keys.get();
 
     const change = (event: Event) => {
       const data = new FormData(event.currentTarget as HTMLFormElement);
       const instrumentName = data.get("instrumentName") as keyof typeof allInstrumentPresets;
       const velocity = data.get("velocity") as string;
-      const duration = data.get("duration") as string;
       const vibratoAmount = data.get("vibratoAmount") as string;
       const vibratoFrequency = data.get("vibratoFrequency") as string;
+      const keyboardOctave = data.get("keyboardOctave") as string;
 
       const current = Keyboard.get();
 
@@ -63,10 +69,6 @@ export const Keyboard = new Magic(
         localStorage.setItem("velocity", velocity);
         Keyboard.update({ velocity: +velocity });
       }
-      if (+duration !== current.duration) {
-        localStorage.setItem("duration", duration);
-        Keyboard.update({ duration: +duration });
-      }
       if (+vibratoAmount !== current.vibratoAmount) {
         localStorage.setItem("vibratoAmount", vibratoAmount);
         Keyboard.update({ vibratoAmount: +vibratoAmount });
@@ -75,19 +77,28 @@ export const Keyboard = new Magic(
         localStorage.setItem("vibratoFrequency", vibratoFrequency);
         Keyboard.update({ vibratoFrequency: +vibratoFrequency });
       }
+      if (+keyboardOctave !== current.keyboardOctave) {
+        localStorage.setItem("keyboardOctave", keyboardOctave);
+        Keyboard.update({ keyboardOctave: +keyboardOctave });
+      }
     };
 
     render(
       html`
+        <h2>Keyboard demo</h2>
         <form @change=${change}>
-          ${instrumentSelect(state.instrumentName)}
-          ${velocityInput(state.velocity)}
-          ${durationInput(state.duration)}
-          ${vibratoAmountInput(state.vibratoAmount)}
-          ${vibratoFrequencyInput(state.vibratoFrequency)}
+          <fieldset>
+            <legend>Settings</legend>
+            ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
+            ${velocityInput(state.velocity)}
+            ${vibratoAmountInput(state.vibratoAmount)}
+            ${vibratoFrequencyInput(state.vibratoFrequency)}
+            ${octaveInput(state.keyboardOctave)}
+          </fieldset>
         </form>
-        ${keys}
-        <p>Hold shift for 2x duration, alt for 0.5x duration, or shift+alt for 4x duration. Keyboard is mapped to octaves 2–5.</p>
+        ${Keys.get()}
+        <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
+        <p>When playing with a keyboard, use the 12345/QWERTY/ASDFG rows. You can adjust their octaves with the "Keyboard octave" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
       `,
       document.getElementById("keyboard") as HTMLElement,
     );
@@ -100,19 +111,8 @@ const velocityInput = (velocity: number) => {
   return html`
     <div>
       <label>
-        <span>Velocity</span>
-        <input name="velocity" type="number" min="0" max="1" step="0.1" .value=${velocity}/>
-      </label>
-    </div>
-  `;
-};
-
-const durationInput = (duration: number) => {
-  return html`
-    <div>
-      <label>
-        <span>Duration (s)</span>
-        <input name="duration" type="number" min="0.01" max="30" step="0.1" .value=${duration}/>
+        <span>Velocity: ${velocity}</span>
+        <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
       </label>
     </div>
   `;
@@ -122,8 +122,8 @@ const vibratoAmountInput = (vibratoAmount: number) => {
   return html`
     <div>
       <label>
-        <span>Vibrato</span>
-        <input name="vibratoAmount" type="number" min="0.0" max="2" step="0.1" .value=${vibratoAmount}/>
+        <span>Vibrato: ${vibratoAmount}</span>
+        <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
       </label>
     </div>
   `;
@@ -133,14 +133,25 @@ const vibratoFrequencyInput = (vibratoFrequency: number) => {
   return html`
     <div>
       <label>
-        <span>Vibrato (hz)</span>
-        <input name="vibratoFrequency" type="number" min="0.0" max="20" step="1" .value=${vibratoFrequency}/>
+        <span>Vibrato: ${vibratoFrequency}hz</span>
+        <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
       </label>
     </div>
   `;
 };
 
-const instrumentSelect = (selected: string) => {
+const octaveInput = (octave: number) => {
+  return html`
+    <div>
+      <label>
+        <span>Keyboard octave: ${octave - 1}</span>
+        <input name="keyboardOctave" type="range" min="2" max="9" step="1" .value=${octave}/>
+      </label>
+    </div>
+  `;
+};
+
+export const instrumentSelect = (selected: string, name: string, label?: string) => {
   const groupArrays = new Map();
 
   for (const name in allInstrumentPresets) {
@@ -160,8 +171,8 @@ const instrumentSelect = (selected: string) => {
   return html`
     <div>
       <label>
-        <span>Instrument</span>
-        <select name="instrumentName">${options}</select>
+        ${label && html`<span>${label}</span>`}
+        <select name=${name}>${options}</select>
       </label>
     </div>
   `;
@@ -189,25 +200,42 @@ const Keys = new Magic(() => {
     pointersDown.add(event.pointerId);
 
     if (!target.dataset.midiNumber) return;
-    const durationMultiplier = getDurationMultiplier(event);
-    playNote(+(target.dataset.midiNumber ?? 0), durationMultiplier);
+    attackWithController(
+      event.pointerId,
+      +(target.dataset.midiNumber ?? 0),
+      event.shiftKey,
+      event.altKey,
+    );
+
+    event.stopPropagation();
   };
 
   const pointerup = (event: PointerEvent) => {
     pointersDown.delete(event.pointerId);
+    releaseWithController(event.pointerId);
+
+    event.stopPropagation();
   };
 
   const pointerout = (event: PointerEvent) => {
-    if (event.currentTarget === event.target) pointersDown.delete(event.pointerId);
+    releaseWithController(event.pointerId);
+
+    event.stopPropagation();
   };
 
   const pointerover = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
     if (!target) return;
 
-    if (!target.dataset.midiNumber || !pointersDown.has(event.pointerId)) return;
-    const durationMultiplier = getDurationMultiplier(event);
-    playNote(+(target.dataset.midiNumber ?? 0), durationMultiplier);
+    if (pointersDown.has(event.pointerId))
+      attackWithController(
+        event.pointerId,
+        +(target.dataset.midiNumber ?? 0),
+        event.shiftKey,
+        event.altKey,
+      );
+
+    event.stopPropagation();
   };
 
   return html`
@@ -222,6 +250,8 @@ const Keys = new Magic(() => {
   `;
 });
 
+const pointersDown = new Set();
+
 const key = (note: number, octave: number, isBlack = false) => {
   const labels = "CCDDEFFGGAAB";
   return html`<button class="${isBlack ? "black" : "white"}" type="button" data-midi-number="${note + octave * 12}">
@@ -229,16 +259,15 @@ const key = (note: number, octave: number, isBlack = false) => {
   </button>`;
 };
 
-const pointersDown = new Set();
-
 document.addEventListener("keydown", (event: KeyboardEvent) => {
-  const { code, repeat, shiftKey, altKey } = event;
-  if (repeat) return;
+  const { code, repeat, metaKey, ctrlKey } = event;
+  if (repeat || metaKey || ctrlKey) return;
 
-  const higherOctave = 12 * 6;
-  const highOctave = 12 * 5;
-  const midOctave = 12 * 4;
-  const lowOctave = 12 * 3;
+  const { keyboardOctave } = Keyboard.get();
+
+  const higherOctave = 12 * (keyboardOctave + 1);
+  const highOctave = 12 * (keyboardOctave + 0);
+  const midOctave = 12 * (keyboardOctave - 1);
 
   const notes = {
     Digit1: 0 + higherOctave,
@@ -279,88 +308,118 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
     Semicolon: 9 + midOctave,
     Quote: 10 + midOctave,
     Backslash: 11 + midOctave,
-
-    Backquote: 0 + lowOctave,
-    KeyZ: 1 + lowOctave,
-    KeyX: 2 + lowOctave,
-    KeyC: 3 + lowOctave,
-    KeyV: 4 + lowOctave,
-    KeyB: 5 + lowOctave,
-    KeyN: 6 + lowOctave,
-    KeyM: 7 + lowOctave,
-    Comma: 8 + lowOctave,
-    Period: 9 + lowOctave,
-    Slash: 10 + lowOctave,
-    // ShiftRight: 11 + lowOctave,
   };
 
   const note = notes[code as keyof typeof notes];
-
   if (note === undefined) return;
 
-  const durationMultiplier = getDurationMultiplier(event);
-  playNote(note, durationMultiplier);
+  attackWithController(code, note, event.shiftKey, event.altKey);
 });
 
-const getDurationMultiplier = (event: KeyboardEvent | PointerEvent) => {
-  if (event.shiftKey && event.altKey) return 4.0;
-  if (event.shiftKey) return 2.0;
-  if (event.altKey) return 0.5;
-};
+document.addEventListener("keyup", (event: KeyboardEvent) => {
+  const { code, repeat } = event;
+  if (repeat) return;
+  releaseWithController(code);
+});
 
-const freeInstruments = new Set<ReturnType<typeof createInstrument>>();
-const playingInstruments = new Set<ReturnType<typeof createInstrument>>();
+document.addEventListener("visibilitychange", () => {
+  pointersDown.clear();
 
-const playNote = (midiNumber = 0, durationMultiplier = 1.0) => {
-  const { instrumentName, velocity, duration, vibratoAmount, vibratoFrequency } = Keyboard.get();
+  for (const [controllerId] of playingControllers) {
+    releaseWithController(controllerId);
+  }
+});
+
+document.body.addEventListener("pointerup", (event: PointerEvent) => {
+  pointersDown.delete(event.pointerId);
+  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId);
+});
+
+document.body.addEventListener("pointerout", (event: PointerEvent) => {
+  if (event.target !== event.currentTarget) return;
+
+  pointersDown.delete(event.pointerId);
+  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId);
+});
+
+type Instrument = ReturnType<typeof createInstrument>;
+type ControllerId = PointerEvent["pointerId"] | KeyboardEvent["code"];
+const freeInstruments = new Set<Instrument>();
+const playingControllers = new Map<ControllerId, Instrument>();
+
+const attackWithController = (
+  controllerId: ControllerId,
+  midiNumber = 0,
+  shiftKey = false,
+  altKey = false,
+) => {
+  const { instrumentName, velocity, vibratoAmount, vibratoFrequency } = Keyboard.get();
   const { audioContext, connectInstrument } = AudioSystem.get();
 
   if (audioContext.state !== "running") audioContext.resume();
 
+  const isAlreadyPlaying = playingControllers.has(controllerId);
+  if (isAlreadyPlaying) releaseWithController(controllerId);
+
   const preset = allInstrumentPresets[instrumentName];
 
-  // Save instruments that are done playing their notes
-  for (const instrument of playingInstruments) {
-    if (instrument.willPlayUntil < audioContext.currentTime) {
-      playingInstruments.delete(instrument);
-      freeInstruments.add(instrument);
-      console.log("save", instrumentName);
-    }
-  }
+  let instrument: Instrument | null = null;
 
-  let instrument: ReturnType<typeof createInstrument>;
-
-  // Find an instrument, and cull any that that haven't been used for a while
   for (const freeInstrument of freeInstruments) {
     if (!instrument && freeInstrument.preset === preset) {
+      // Use instrument
+      console.log("adopting", controllerId);
       instrument = freeInstrument;
-      freeInstruments.delete(instrument);
-      continue;
-    }
-
-    if (freeInstrument.willPlayUntil < audioContext.currentTime - 5) {
       freeInstruments.delete(freeInstrument);
+    } else if (freeInstrument.previousEndAt + 5 < audioContext.currentTime) {
+      // Destroy long unused instrument
+      console.log("destroying");
       destroyInstrument(freeInstrument);
-      console.log("destroy", instrumentName);
+      freeInstruments.delete(freeInstrument);
     }
   }
 
+  // Create new instrument if needed
   if (!instrument) {
-    instrument = createInstrument(allInstrumentPresets[instrumentName], audioContext);
+    console.log("creating", controllerId);
+    instrument = createInstrument(preset, audioContext);
     connectInstrument(instrument);
-    console.log("create", instrumentName);
   }
 
-  playingInstruments.add(instrument);
+  playingControllers.set(controllerId, instrument);
 
-  playInstrument(
+  attackInstrument(
     instrument,
-    midiToJustFrequency(midiNumber),
-    audioContext.currentTime,
-    duration * durationMultiplier,
-    velocity,
-    0.5,
-    vibratoAmount,
+    midiToFrequency(midiNumber),
+    audioContext.currentTime + (isAlreadyPlaying ? 0.04 : 0.0),
+    shiftKey && !altKey ? 1.0 : altKey && !shiftKey ? 0.0 : velocity,
+    0.382,
+    shiftKey && altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );
+
+  const key = document.querySelector(`[data-midi-number="${midiNumber}"]`) as HTMLButtonElement;
+
+  if (key) {
+    key.classList.add("active");
+    key.dataset.controller = `${controllerId}`;
+  }
+};
+
+const releaseWithController = (controllerId: ControllerId) => {
+  const { audioContext } = AudioSystem.get();
+  const instrument = playingControllers.get(controllerId);
+  if (!instrument) return;
+
+  releaseInstrument(instrument, audioContext.currentTime);
+
+  playingControllers.delete(controllerId);
+  freeInstruments.add(instrument);
+
+  const key = document.querySelector(`[data-controller="${controllerId}"]`) as HTMLButtonElement;
+
+  if (key) {
+    key.classList.remove("active");
+    key.dataset.controller = "free";
+  }
 };

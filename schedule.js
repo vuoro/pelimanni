@@ -1,4 +1,5 @@
 import { createInstrument, destroyInstrument, playInstrument } from "./instruments.js";
+import { midiToFrequency } from "./notes.js";
 
 const defaultOptions = { playAhead: 0.2 };
 
@@ -27,7 +28,6 @@ export const scheduleMusic = (
   options = defaultOptions,
 ) => {
   const playAhead = options.playAhead ?? defaultOptions.playAhead;
-  const numberToFrequency = options.numberToFrequency ?? defaultOptions.numberToFrequency;
 
   const { currentTime } = audioContext;
   if (audioContext.state !== "running") return;
@@ -38,7 +38,6 @@ export const scheduleMusic = (
     schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
 
   schedule.connectInstrument = connectInstrument;
-  schedule.numberToFrequency = numberToFrequency;
 
   // TODO: use baseLatency to better align sounds with visuals?
 
@@ -81,7 +80,7 @@ export const scheduleMusic = (
     // Destroy inactive instruments, and remove instrumentSets with no instruments remaining
     for (const [preset, instrumentSet] of schedule.instruments) {
       for (const instrument of instrumentSet) {
-        if (schedule.scheduledUpTo - instrument.willPlayUntil > cycle * 8.0) {
+        if (schedule.scheduledUpTo - instrument.previousEndAt > cycle * 8.0) {
           destroyInstrument(instrument);
           instrumentSet.delete(instrument);
         }
@@ -307,13 +306,7 @@ const schedulePart = (
 /**
  @param {Schedule} schedule
  */
-const playPendingNote = ({
-  connectInstrument,
-  numberToFrequency,
-  pendingNote,
-  audioContext,
-  instruments,
-}) => {
+const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instruments }) => {
   const {
     instrumentPreset,
     note,
@@ -334,7 +327,7 @@ const playPendingNote = ({
     instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
 
   for (const potentialInstrument of instrumentSet) {
-    if (potentialInstrument.willPlayUntil <= at) {
+    if (potentialInstrument.previousEndAt <= at) {
       instrument = potentialInstrument;
       break;
     }
@@ -350,10 +343,10 @@ const playPendingNote = ({
   // Play the note
   playInstrument(
     instrument,
-    numberToFrequency(note, undefined, root),
+    midiToFrequency(note, undefined, root),
     at,
     duration,
-    velocity,
+    velocity ?? 0.764 + 0.146 * Math.sin(at),
     volume,
     vibrato,
     vibratoFrequency,

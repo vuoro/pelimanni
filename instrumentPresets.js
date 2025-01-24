@@ -1098,6 +1098,11 @@ export const piano = {
   overtoneDecay: 0.382,
   sustain: 0.0,
   release: 0.236,
+
+  // Fake vibrato
+  vibratoEffectOnPitch: 30.0,
+  vibratoEffectOnVolume: 0.0,
+  vibratoEffectOnStage: 0.236,
 };
 
 /** @type {Instrument} */
@@ -1150,6 +1155,11 @@ export const hammeredDulcimer = {
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 3.0,
+
+  // Fake vibrato
+  vibratoEffectOnPitch: 30.0,
+  vibratoEffectOnVolume: 0.0,
+  vibratoEffectOnStage: 0.236,
 };
 
 const taikoImag = new Float32Array(20 * 9.3);
@@ -1516,7 +1526,7 @@ const plucked = {
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
-  vibratoEffectOnStage: 0.0, // FIXME: should there be some of this?
+  vibratoEffectOnStage: 0.236,
 };
 
 const stretchedViolinImag = stretchOvertones(violinImag);

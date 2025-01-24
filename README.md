@@ -207,7 +207,7 @@ The parameters are:
 - your `cycle` from earlier above
 - your `AudioContext`
 - your `connectInstrument` function from above
-- (optional) options: `{ playAhead: 0.2, numberToFrequency: midiToFrequency }`
+- (optional) options: `{ playAhead: 0.2 }`
 
 ```js
 import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";

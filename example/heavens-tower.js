@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { contrabass, flute, glockenspiel, oboe, pluckedViola, violin } from "../instrumentPresets";
+import { bell, contrabass, flute, oboe, pluckedViola, violin } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -15,7 +15,11 @@ export const heavensTower = () => {
   const rhythm = [9, 14, 16, 14, 21, 14, 16, 14];
 
   const a7_14 = [7, 14, { alternate, vibrato: 0.5 }];
-  const plinkingMelody = [[2, 7, 9, e, 2, 7, 9, e], [9, 12, 14, 16, 9, 12, a7_14, [e, e, x]], { alternate }];
+  const plinkingMelody = [
+    [2, 7, 9, e, 2, 7, 9, e],
+    [9, 12, 14, 16, 9, 12, a7_14, [e, e, x]],
+    { alternate },
+  ];
 
   const midHarmony = [
     [17, 12, { chord }],
@@ -54,7 +58,11 @@ export const heavensTower = () => {
   const melody = [
     [[a8_7, vl9], e, e, e, e, e, e, e],
     [a2_242, e, e, e, e, e, e, [4, 5]],
-    [[[5, 7], e, [10, v12], e, e, e, v11, [e, 12]], [[4, 5, v4], e, e, e, e, e, e, [v2, e, e, 4]], { alternate }],
+    [
+      [[5, 7], e, [10, v12], e, e, e, v11, [e, 12]],
+      [[4, 5, v4], e, e, e, e, e, e, [v2, e, e, 4]],
+      { alternate },
+    ],
     [[[11, vl9], e, e, e, e, e, e, [5, 7]], [[2, v0], e, e, e, e, e, e, e], { alternate }],
     { alternate },
   ];
@@ -88,12 +96,12 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056,  }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056,  }]],
 
-    [pluckedViola, [...rhythm, { transpose: 0, volume: 0.146 }]],
-    [glockenspiel, [...plinkingMelody, { transpose: -12, volume: 0.09 }]],
-    [violin, [...melody, { transpose: 12, volume: 0.2 }]],
-    [flute, [...highHarmony, { transpose: 0, volume: 0.09 }]],
-    [oboe, [...midHarmony, { transpose: -12, volume: 0.056 }]],
-    [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056 }]],
+    [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.146 }]],
+    [bell, [...plinkingMelody, { transpose: 12 * 4, volume: 0.09 }]],
+    [violin, [...melody, { transpose: 12 * 6, volume: 0.2 }]],
+    [flute, [...highHarmony, { transpose: 12 * 5, volume: 0.09 }]],
+    [oboe, [...midHarmony, { transpose: 12 * 4, volume: 0.056 }]],
+    [contrabass, [...lowHarmony, { transpose: 12 * 4, volume: 0.056 }]],
 
     // [piano, [...rhythm, { transpose: 0, volume: 0.146 }]],
     // [piano, [...plinkingMelody, { transpose: 0, volume: 0.09 }]],

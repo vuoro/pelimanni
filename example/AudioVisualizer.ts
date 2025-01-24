@@ -1,6 +1,14 @@
 import { AudioSystem } from "./AudioSystem.js";
 import { Magic } from "./magic.js";
 
+const canvas = document.getElementById("visualizer")?.querySelector("canvas") as HTMLCanvasElement;
+
+const resizeObserver = new ResizeObserver(() => {
+  canvas.width = canvas.getBoundingClientRect().width * window.devicePixelRatio;
+  canvas.height = canvas.getBoundingClientRect().height * window.devicePixelRatio;
+});
+resizeObserver.observe(canvas);
+
 export const AudioVisualizer = new Magic(() => {
   const audioSystem = AudioSystem.get();
   const analyser = new AnalyserNode(audioSystem.audioContext);
@@ -15,17 +23,14 @@ export const AudioVisualizer = new Magic(() => {
   const maxFrequency = 16000;
   const logMaxFrequency = Math.log(maxFrequency);
 
-  const binCount = Math.floor(analyser.frequencyBinCount * (maxFrequency / (audioSystem.audioContext.sampleRate / 2)));
+  const binCount = Math.floor(
+    analyser.frequencyBinCount * (maxFrequency / (audioSystem.audioContext.sampleRate / 2)),
+  );
 
   const frequencyData = new Uint8Array(binCount);
   const timeData = new Float32Array(binCount);
 
-  const canvas = document.getElementById("visualizer") as HTMLCanvasElement;
-  canvas.width = canvas.getBoundingClientRect().width * window.devicePixelRatio;
-  canvas.height = canvas.getBoundingClientRect().height * window.devicePixelRatio;
-
   const drawer = canvas.getContext("2d") as CanvasRenderingContext2D;
-  drawer.lineWidth = 2 * window.devicePixelRatio;
   drawer.strokeStyle = "black";
 
   const areas = [
@@ -41,16 +46,29 @@ export const AudioVisualizer = new Magic(() => {
     analyser.getFloatTimeDomainData(timeData);
 
     const { width, height } = canvas;
+    drawer.lineWidth = window.devicePixelRatio;
     drawer.clearRect(0, 0, width, height);
 
     // Areas
     for (let index = 0; index < areas.length; index++) {
       const { start, end } = areas[index];
-      const highness = index / areas.length;
+      const highness = index / (areas.length - 1);
       const relativeStart = Math.max(0, Math.log(start - minFrequency) / logMaxFrequency);
       const relativeEnd = Math.log(end - minFrequency) / logMaxFrequency;
-      drawer.fillStyle = `color(display-p3 ${1.0 - highness} ${0.764 - 0.236 * highness} ${0.764 + 0.236 * highness} )`;
-      drawer.fillRect(relativeStart * width, 0, relativeEnd * width - relativeStart * width, height);
+      const brightness = (0.764 + 0.236 * highness) * 255;
+      drawer.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+      drawer.fillRect(
+        relativeStart * width,
+        0,
+        relativeEnd * width - relativeStart * width,
+        height,
+      );
+      drawer.strokeRect(
+        relativeStart * width,
+        0,
+        relativeEnd * width - relativeStart * width,
+        height,
+      );
     }
 
     // Frequency graph
@@ -63,7 +81,8 @@ export const AudioVisualizer = new Magic(() => {
       // const barScale = Math.log(i) / logBinCount;
       // const nextBarScale = Math.log(i + 1) / logBinCount;
       const barScale = Math.log((i / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
-      const nextBarScale = Math.log(((i + 1) / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
+      const nextBarScale =
+        Math.log(((i + 1) / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
       const barOffset = width * barScale;
       const barWidth = nextBarScale * width - barOffset;
 
@@ -77,7 +96,7 @@ export const AudioVisualizer = new Magic(() => {
 
     for (let i = 0; i < binCount; i++) {
       const v = timeData[i];
-      const y = v * (height / 4) + height / 2 - height / 3;
+      const y = v * height + height / 2 - height / 3;
 
       if (i === 0) {
         drawer.moveTo(timeX, y);

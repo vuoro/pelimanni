@@ -31,11 +31,10 @@ requestAnimationFrame(loop);
 const playAhead = 0.2;
 
 const tryToScheduleMusic = () => {
-  return;
   const music = Music.get();
   const { audioSystem } = Tools.get();
 
-  if (music) {
+  if (music?.shouldPlay) {
     scheduleMusic(
       music.tracks,
       music.cycle,

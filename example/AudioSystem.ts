@@ -3,7 +3,9 @@ import type { createInstrument } from "../instruments.js";
 import dattorroReverb from "./dattorro-reverb.js?url";
 import { Magic } from "./magic";
 
-const allInstruments = new Map(Object.entries(instrumentPresets).map(([name, preset]) => [preset, name]));
+const allInstruments = new Map(
+  Object.entries(instrumentPresets).map(([name, preset]) => [preset, name]),
+);
 
 export const AudioSystem = new Magic(
   (previousAudioSystem?: {
@@ -30,8 +32,11 @@ export const AudioSystem = new Magic(
     const musicGain = new GainNode(audioContext, { gain: 0.5 });
     const effectsGain = new GainNode(audioContext, { gain: 0.5 });
     const mainGain = new GainNode(audioContext, { gain: 1.0 });
-    const effectsCompressor = new DynamicsCompressorNode(audioContext, { threshold: -24, ratio: 12 });
-    const musicCompressor = new DynamicsCompressorNode(audioContext, { threshold: -24, ratio: 12 });
+    const effectsCompressor = new DynamicsCompressorNode(audioContext, {
+      threshold: -12,
+      ratio: 12,
+    });
+    const musicCompressor = new DynamicsCompressorNode(audioContext, { threshold: -12, ratio: 12 });
     const limiter = new DynamicsCompressorNode(audioContext, {
       threshold: 0,
       ratio: 1,
@@ -89,7 +94,12 @@ export const AudioSystem = new Magic(
 
       const panningPosition = (panningCycle * panningIndex++) % panningPositions;
       const pan = panningSpread * ((panningPosition / panningPositions) * 2.0 - 1.0);
-      console.log("connecting instrument", allInstruments.get(instrument?.preset), "panned by", pan);
+      console.log(
+        "connecting instrument",
+        allInstruments.get(instrument?.preset),
+        "panned by",
+        pan,
+      );
 
       const panner = new StereoPannerNode(audioContext, { pan });
 

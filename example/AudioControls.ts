@@ -8,7 +8,7 @@ export const AudioControls = new Magic(() => {
 
   const isRunning = audioContext.state === "running";
   const action = () => (isRunning ? audioContext.suspend() : audioContext.resume());
-  const actionTitle = isRunning ? "Stop audio" : "Enable audio";
+  const actionTitle = isRunning ? "Suspend audio" : "Enable audio";
 
   const onStateChange = () => {
     AudioControls.update({ type: "refresh" });
@@ -24,25 +24,26 @@ export const AudioControls = new Magic(() => {
 
   return render(
     html`
-      <fieldset>
+      <form>
+        <h2>Audio settings</h2>
         <button type="button" @click=${action}>${actionTitle}</button>
-      </fieldset>
 
-      <fieldset>
-        <legend>Volume</legend>
-        ${volumeSlider("Main", mainGain, 1.0)}
-        <!-- ${volumeSlider("Effects", effectsGain, 0.5)} -->
-        ${volumeSlider("Music", musicGain, 0.5)}
-      </fieldset>
+        <fieldset>
+          <legend>Volume</legend>
+          ${volumeSlider("Main", mainGain, 1.0)}
+          <!-- ${volumeSlider("Effects", effectsGain, 0.5)} -->
+          ${volumeSlider("Music", musicGain, 0.5)}
+        </fieldset>
 
-      <datalist id="gain-steps">
-        <option value="0.5"></option>
-      </datalist>
+        <datalist id="gain-steps">
+          <option value="0.5"></option>
+        </datalist>
 
-      <fieldset>
-        <legend>Reverb</legend>
-        ${reverbSliders}
-      </fieldset>
+        <fieldset>
+          <legend><a href="https://khoin.github.io/DattorroReverbNode/">Dattorro's Reverb</a></legend>
+          ${reverbSliders}
+        </fieldset>
+      </form>
     `,
     document.getElementById("audio-controls") as HTMLElement,
   );
@@ -51,7 +52,11 @@ export const AudioControls = new Magic(() => {
 const volumeSlider = (title: string, gainNode: GainNode, maxGain: number) => {
   const handleInput = ({ target }: Event) => {
     if (!(target instanceof HTMLInputElement)) return;
-    gainNode.gain.setTargetAtTime(Number.parseFloat(target.value) * maxGain, gainNode.context.currentTime, 0.001);
+    gainNode.gain.setTargetAtTime(
+      Number.parseFloat(target.value) * maxGain,
+      gainNode.context.currentTime,
+      0.001,
+    );
   };
 
   return html`

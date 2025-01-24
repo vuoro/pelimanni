@@ -1,33 +1,42 @@
 import { html, render, type TemplateResult } from "lit-html";
-import { live } from "lit-html/directives/live.js";
 import * as allInstruments from "../instrumentPresets.js";
 import type { InstrumentPreset, Playable } from "../schedule.js";
+import { AudioSystem } from "./AudioSystem.js";
 import { heavensTower } from "./heavens-tower.js";
+import { instrumentSelect } from "./Keyboard.js";
 import { Magic } from "./magic.js";
 
 export const Music = new Magic(
   (
     previousMusic?: {
       cycle: number;
-      instruments: Map<number, InstrumentPreset>;
+      instruments: Map<number, string>;
       tracks: [InstrumentPreset, Playable][];
+      shouldPlay: boolean;
     },
-    message?: { type: string; slot: number; name: string },
+    message?: { type: string; key: number; value: string | boolean | number },
   ) => {
     // const song = import.meta.env.DEV ? party1() : heavensTower();
     const song = heavensTower();
 
-    const instrumentsByName = new Map(Object.entries(allInstruments));
-
     let instruments = previousMusic?.instruments;
+    let shouldPlay = previousMusic?.shouldPlay || false;
 
     if (!instruments) {
       instruments = new Map();
 
       let slot = 0;
       for (const [instrument] of song.tracks) {
-        instruments.set(slot, instrument as InstrumentPreset);
+        let name = "unknown";
 
+        for (const key in allInstruments) {
+          if (instrument === allInstruments[key]) {
+            name = key;
+            break;
+          }
+        }
+
+        instruments.set(slot, name);
         slot++;
       }
     }
@@ -35,8 +44,13 @@ export const Music = new Magic(
     if (message) {
       switch (message.type) {
         case "slots": {
-          const { slot, name } = message;
-          instruments.set(slot, instrumentsByName.get(name) as InstrumentPreset);
+          const { key: slot, value: name } = message;
+          instruments.set(slot, name);
+          break;
+        }
+        case "shouldPlay": {
+          const { value: should } = message;
+          shouldPlay = !!should;
           break;
         }
         default: {
@@ -47,49 +61,77 @@ export const Music = new Magic(
 
     const handleChange = (event: Event) => {
       const { name: slot, value: name } = event.target as HTMLSelectElement;
-      Music.update({ type: "slots", slot: +slot, name });
+      Music.update({ type: "slots", key: +slot, value: name });
     };
 
     const trackOptions: TemplateResult[] = [];
 
     for (let slot = 0; slot < song.tracks.length; slot++) {
-      const instrumentOptions: TemplateResult[] = [];
-
-      for (const name in allInstruments) {
-        const instrument = allInstruments[name as keyof typeof allInstruments];
-        instrumentOptions.push(html`
-          <option value=${name} ?selected=${live(instruments.get(slot) === instrument)}>${name}</option>
-        `);
-      }
-
       trackOptions.push(html`
-        <label>
-          Track #${slot}
-          <select name=${slot}>
-            <option ?selected=${live(instruments.get(slot) === null)}>-- no instrument --</option>
-            ${instrumentOptions}
-          </select>
-        </label>
+        ${instrumentSelect(instruments.get(slot), slot)}
       `);
     }
 
-    render(
-      html`<form @change=${handleChange}>${trackOptions}</form>`,
-      document.getElementById("instruments") as HTMLElement,
-    );
-
     const { cycle } = song;
     const tracks = [];
+    const trackControls = [];
     let slot = 0;
 
     for (const [, playable] of song.tracks) {
-      const instrument = instruments.get(slot);
+      const instrumentName = instruments.get(slot);
+      const instrument = allInstruments[instrumentName];
+
+      trackControls.push(html`
+        <fieldset>
+          <legend>Track ${slot}</legend>
+          ${trackOptions[slot]}
+          <code>
+            ${JSON.stringify(
+              playable,
+              (key, value) => (value === null ? "PAUSE" : value === undefined ? "EXTENDER" : value),
+              2,
+            )
+              .replace(/"PAUSE"/g, "x")
+              .replace(/"EXTENDER"/g, "e")}
+          </code>
+        </fieldset>
+      `);
+
       slot++;
       if (!instrument) continue;
 
       tracks.push([instrument, playable] as [InstrumentPreset, Playable]);
     }
 
-    return { cycle, tracks, instruments };
+    render(
+      html`
+        <form @change=${handleChange}>
+          <h2>Sequencing demo</h2>
+          <p>
+            Plays an adaptation of a part from <cite>Heaven's Tower</cite> by Naoshi Mizuta, from
+            <cite>Final Fantasy XI Original Soundtrack</cite>
+          </p>
+          ${playButton(shouldPlay)}
+          ${trackControls}
+        </form>
+        `,
+      document.getElementById("instruments") as HTMLElement,
+    );
+
+    return { cycle, tracks, instruments, shouldPlay };
   },
 );
+
+const playButton = (shouldPlay: boolean) => {
+  const title = shouldPlay ? "Stop demo song" : "Play demo song";
+  const onClick = () => {
+    const { audioContext } = AudioSystem.get();
+    if (audioContext.state !== "running") audioContext.resume();
+
+    Music.update({ type: "shouldPlay", value: !shouldPlay });
+  };
+
+  return html`
+    <button type="button" @click=${onClick}>${title}</button>
+  `;
+};
