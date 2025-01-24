@@ -1,4 +1,3 @@
-import { midiToJustFrequency } from "../notes.js";
 import { scheduleMusic } from "../schedule.js";
 import { AudioControls } from "./AudioControls.ts";
 import { AudioSystem } from "./AudioSystem.ts";
@@ -37,10 +36,15 @@ const tryToScheduleMusic = () => {
   const { audioSystem } = Tools.get();
 
   if (music) {
-    scheduleMusic(music.tracks, music.cycle, audioSystem.audioContext, audioSystem.connectInstrument, {
-      playAhead,
-      numberToFrequency: midiToJustFrequency,
-    });
+    scheduleMusic(
+      music.tracks,
+      music.cycle,
+      audioSystem.audioContext,
+      audioSystem.connectInstrument,
+      {
+        playAhead,
+      },
+    );
   }
 };
 

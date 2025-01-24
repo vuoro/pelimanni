@@ -83,19 +83,13 @@ destroyInstrument(violaInstrument);
 
 `midiToFrequency` converts numbers to note frequencies using the western standard "12 note equal temperament" system: every note interval is slightly out of tune, but sounds fine.
 
-`midiToJustFrequency` uses a "12 note 5-limit just intonation" system instead. Some note intervals are more in tune, and some are less. Especially helps make bowed strings sound better. It takes an additional `root` parameter, which is a note number used as a basis of the frequency ratios. I think the closer your notes are to the root, the better they will sound. I'm not sure though, because this stuff is a bit out of my league.
-
 ```js
-import { midiToFrequency, midiToJustFrequency } from "@vuoro/pelimanni/notes.js";
+import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
 
 const tuning = 440.0; // optional
 
 const frequency = midiToFrequency(5, tuning);
 playInstrument(violaInstrument, frequency, at, duration);
-
-const root = 0; // optional
-const nicerFrequency = midiToJustFrequency(5, tuning, root);
-playInstrument(violaInstrument, nicerFrequency, at + 1.0, duration);
 ```
 
 ## Sequencing notes into music
@@ -147,8 +141,7 @@ You can also add configuration objects to the ends of the arrays, for more contr
 // `volume` is how loud it should be: don't go above 1.0
 // `vibrato` makes most of the note waver: off at 0.0, very aggressive at 1.0
 // `vibratoFrequency` determines the wavering frequency: ~5.0 seems common
-// `root` is for use with `midiToJustFrequency` (see earlier above)
-[0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, vibratoFrequency: 5.0, root: 0 }]
+[0, { velocity: 1.0, volume: 1.0, vibrato: 1.0, vibratoFrequency: 5.0 }]
 
 // Multiple objects are ok: later ones will be merged over earlier ones.
 // Both of these end up the same:

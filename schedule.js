@@ -1,7 +1,6 @@
 import { createInstrument, destroyInstrument, playInstrument } from "./instruments.js";
-import { midiToJustFrequency } from "./notes.js";
 
-const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToJustFrequency };
+const defaultOptions = { playAhead: 0.2 };
 
 /**
  * @typedef {typeof import("./instrumentPresets.js").genericInstrument} InstrumentPreset
@@ -11,7 +10,6 @@ const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToJustFrequency 
  * @property {number=} vibrato - amount of vibrato
  * @property {number=} vibratoFrequency - frequency of vibrato
  * @property {number=} transpose - added to the note's midi number
- * @property {number=} root - used with `midiToJustFrequency`
  * @property {boolean=} alternate - sequentially pick just one entry, instead of subdividing time
  * @property {boolean=} chord - play all entries at the same time, instead of subdividing time
  * @typedef {(PlayableOptions | number | undefined | Playable)[]} Playable
@@ -21,7 +19,13 @@ const defaultOptions = { playAhead: 0.2, numberToFrequency: midiToJustFrequency 
  * @param {AudioContext} audioContext
  * @param {ConnectInstrument} connectInstrument
  */
-export const scheduleMusic = (tracks, cycle, audioContext, connectInstrument, options = defaultOptions) => {
+export const scheduleMusic = (
+  tracks,
+  cycle,
+  audioContext,
+  connectInstrument,
+  options = defaultOptions,
+) => {
   const playAhead = options.playAhead ?? defaultOptions.playAhead;
   const numberToFrequency = options.numberToFrequency ?? defaultOptions.numberToFrequency;
 
@@ -30,7 +34,8 @@ export const scheduleMusic = (tracks, cycle, audioContext, connectInstrument, op
 
   /** @type {Schedule} */
   const schedule =
-    schedules.get(audioContext) || schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
+    schedules.get(audioContext) ||
+    schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
 
   schedule.connectInstrument = connectInstrument;
   schedule.numberToFrequency = numberToFrequency;
@@ -101,7 +106,6 @@ const createSchedule = (audioContext) =>
     connectInstrument: () => {
       throw new Error("Missing `connectInstrument` parameter in `scheduleMusic`");
     },
-    numberToFrequency: midiToJustFrequency,
     pendingNote: Object.seal({
       pending: false,
       instrumentPreset: null,
@@ -303,14 +307,31 @@ const schedulePart = (
 /**
  @param {Schedule} schedule
  */
-const playPendingNote = ({ connectInstrument, numberToFrequency, pendingNote, audioContext, instruments }) => {
-  const { instrumentPreset, note, root, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
+const playPendingNote = ({
+  connectInstrument,
+  numberToFrequency,
+  pendingNote,
+  audioContext,
+  instruments,
+}) => {
+  const {
+    instrumentPreset,
+    note,
+    root,
+    at,
+    duration,
+    velocity,
+    volume,
+    vibrato,
+    vibratoFrequency,
+  } = pendingNote;
   pendingNote.pending = false;
 
   // Find a free instrument
   let instrument = null;
   const instrumentSet =
-    instruments.get(instrumentPreset) || instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
+    instruments.get(instrumentPreset) ||
+    instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
 
   for (const potentialInstrument of instrumentSet) {
     if (potentialInstrument.willPlayUntil <= at) {
