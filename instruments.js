@@ -273,33 +273,18 @@ export const playInstrument = (
 
   const highPitchness = -fromHighPass / rangeInCents;
   const lowPitchness = 1.0 - highPitchness;
-  const relativePitchness = highPitchness * 2.0 - 1.0;
 
-  // NOTE: these will only work if the instrument is played sequentially
-  const franticness = 0.236 ** Math.max(0.0, at - instrument.willPlayUntil);
-  const pitchSameness =
-    0.333 ** Math.abs(Math.log2(instrument.previousPitch / pitch)) * franticness;
-  const pitchDifferentness = 1.0 - pitchSameness;
-
-  const situationalDynamics = 0.91 + 0.09 * 2.0 * pitchDifferentness;
-  const dynamicVelocity = velocity * situationalDynamics;
-  const dynamicSlowness = 1.0 - dynamicVelocity;
-  const volumeTarget =
-    volume * (1.0 - 0.09 * Math.abs(relativePitchness) - dynamicSlowness * 0.146);
+  const strongness = velocity;
+  const weakness = 1.0 - strongness;
+  const volumeTarget = volume * (1.0 - weakness * 0.146);
 
   const shortness = 0.5 ** duration;
   const lengthDynamics = 1.09 - 2.0 * 0.09 * shortness;
 
   const attackDynamics =
-    lengthDynamics *
-    (1.0 + 0.236 * 2.0 * lowPitchness) *
-    (1.0 + 0.236 * dynamicSlowness) *
-    situationalDynamics;
+    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * weakness);
   const releaseDynamics =
-    lengthDynamics *
-    (1.0 + 0.236 * 2.0 * lowPitchness) *
-    (1.0 - 0.236 * dynamicSlowness) *
-    situationalDynamics;
+    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 - 0.236 * weakness);
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
@@ -314,7 +299,7 @@ export const playInstrument = (
   const vibratoGainAttack = defaultDynamicAttack * 0.056;
   const vibratoGainRelease = defaultDynamicRelease * 0.09;
 
-  const idleVibratoTarget = idleVibratoFrequency * situationalDynamics;
+  const idleVibratoTarget = idleVibratoFrequency;
   const vibratoTarget = hasVibrato ? vibratoFrequency : idleVibratoTarget;
 
   const vibratoStageTarget = hasVibrato
@@ -337,7 +322,7 @@ export const playInstrument = (
   instabilityGain?.gain.cancelScheduledValues(startAt);
 
   // Glide and attack
-  crossfader.pan.setTargetAtTime(dynamicVelocity ** 0.414, startAt, overtoneDynamicAttack);
+  crossfader.pan.setTargetAtTime(strongness, startAt, overtoneDynamicAttack);
 
   for (const {
     oscillatorNode,
@@ -364,7 +349,7 @@ export const playInstrument = (
     instabilityStopsAt += defaultDynamicAttack * 4.0;
 
     const instabilityTarget = 78 + 4 * highPitchness;
-    const instabilityEffect = initialInstability * (0.854 + 0.146 * 2.0 * dynamicSlowness);
+    const instabilityEffect = initialInstability * (0.854 + 0.146 * 2.0 * weakness);
     const instabilityAttack = overtoneDynamicAttack * 0.013;
     const instabilityDecaysAt = Math.min(startAt + instabilityAttack * 4.0, instabilityStopsAt);
 
@@ -392,7 +377,7 @@ export const playInstrument = (
   const decayTarget = decayDuration / 3.0;
 
   const overtonesDecayAt = startAt + overtoneDynamicAttack * 4.0;
-  const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * dynamicVelocity);
+  const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * strongness);
   const overtonesShouldDecay =
     overtoneDecay > 0.0 && overtoneSustain !== 1.0 && overtonesDecayAt < endAt;
 
@@ -410,7 +395,7 @@ export const playInstrument = (
     );
   }
 
-  const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * dynamicSlowness);
+  const oscillatorDecayDynamics = decayDynamics * (1.0 - 0.236 * weakness);
 
   for (const {
     gainNode,
