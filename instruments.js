@@ -263,7 +263,8 @@ export const playInstrument = (
     vibratoEffectOnVolume,
   } = preset;
 
-  const hasVibrato = vibratoAmount > 0.0;
+  const canVibrato = vibratoStageGain || vibratoPitchGain || vibratoVolumeGain;
+  const hasVibrato = vibratoAmount > 0.0 && canVibrato;
 
   // Frequencies
   const rangeInCents = 1200.0 * Math.log2(lowPassFrequency / highPassFrequency);
@@ -330,12 +331,6 @@ export const playInstrument = (
   const decayAt = startAt + defaultDynamicAttack * 4.0;
   let endAt = at + Math.max(duration * 0.5, duration - defaultDynamicRelease);
 
-  const instabilityStopsAt =
-    initialInstability > 0.0
-      ? Math.min(endAt - epsilon * 2.0, startAt + overtoneDynamicAttack * 4.0)
-      : startAt;
-  const vibratoAt = Math.min(endAt - epsilon, instabilityStopsAt + defaultDynamicAttack);
-
   // Cancel pending events
   crossfader.pan.cancelScheduledValues(startAt);
   vibratoMain.frequency.cancelScheduledValues(startAt);
@@ -363,9 +358,13 @@ export const playInstrument = (
   }
 
   // Brass-style instability at start of notes
+  let instabilityStopsAt = startAt;
+
   if (initialInstability > 0.0) {
+    instabilityStopsAt += defaultDynamicAttack * 4.0;
+
     const instabilityTarget = 78 + 4 * highPitchness;
-    const instabilityEffect = initialInstability * pitchDifferentness ** 0.236;
+    const instabilityEffect = initialInstability * (0.854 + 0.146 * 2.0 * dynamicSlowness);
     const instabilityAttack = overtoneDynamicAttack * 0.013;
     const instabilityDecaysAt = Math.min(startAt + instabilityAttack * 4.0, instabilityStopsAt);
 
@@ -379,10 +378,13 @@ export const playInstrument = (
   }
 
   // Fire up vibrato: idle or not
-  vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
-  vibratoStageGain?.gain.setTargetAtTime(vibratoStageTarget, vibratoAt, vibratoGainAttack);
-  vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
-  vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
+  if (canVibrato) {
+    const vibratoAt = instabilityStopsAt + defaultDynamicAttack;
+    vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
+    vibratoStageGain?.gain.setTargetAtTime(vibratoStageTarget, vibratoAt, vibratoGainAttack);
+    vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
+    vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
+  }
 
   // Decay and sustain
   const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
