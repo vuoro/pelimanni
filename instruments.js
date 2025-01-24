@@ -93,8 +93,6 @@ export const createInstrument = (preset, audioContext) => {
     sustain,
     release,
     glide,
-    decayImpactOnDuration,
-    durationImpactOnDecay,
     getPitch = passPitchThrough,
   } of oscillatorsInPreset) {
     const oscillatorNode =
@@ -131,8 +129,6 @@ export const createInstrument = (preset, audioContext) => {
       sustain,
       release,
       glide,
-      decayImpactOnDuration,
-      durationImpactOnDecay,
       getPitch,
     });
   }
@@ -215,7 +211,7 @@ export const createInstrument = (preset, audioContext) => {
 /**
   @param {Number} pitch
 */
-const passPitchThrough = (pitch) => pitch;
+const passPitchThrough = (pitch = 440.0) => pitch;
 
 export const playInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
@@ -228,7 +224,6 @@ export const playInstrument = (
   vibratoFrequency = 5.0,
 ) => {
   const {
-    epsilon,
     oscillators,
     crossfader,
     vibratoMain,
@@ -244,8 +239,6 @@ export const playInstrument = (
   } = instrument;
 
   const {
-    decayImpactOnDuration: defaultDecayImpactOnDuration,
-    durationImpactOnDecay: defaultDurationImpactOnDecay,
     initialInstability,
     attack: defaultAttack,
     decay: defaultDecay,
@@ -278,13 +271,8 @@ export const playInstrument = (
   const weakness = 1.0 - strongness;
   const volumeTarget = volume * (1.0 - weakness * 0.146);
 
-  const shortness = 0.5 ** duration;
-  const lengthDynamics = 1.09 - 2.0 * 0.09 * shortness;
-
-  const attackDynamics =
-    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * weakness);
-  const releaseDynamics =
-    lengthDynamics * (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 - 0.236 * weakness);
+  const attackDynamics = (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 + 0.236 * weakness);
+  const releaseDynamics = (1.0 + 0.236 * 2.0 * lowPitchness) * (1.0 - 0.236 * weakness);
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
@@ -314,7 +302,7 @@ export const playInstrument = (
   // Start and end
   const startAt = at;
   const decayAt = startAt + defaultDynamicAttack * 4.0;
-  let endAt = at + Math.max(duration * 0.5, duration - defaultDynamicRelease);
+  const endAt = at + Math.max(duration * 0.5, duration - defaultDynamicRelease);
 
   // Cancel pending events
   crossfader.pan.cancelScheduledValues(startAt);
@@ -373,8 +361,6 @@ export const playInstrument = (
 
   // Decay and sustain
   const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
-  const decayDuration = endAt - decayAt;
-  const decayTarget = decayDuration / 3.0;
 
   const overtonesDecayAt = startAt + overtoneDynamicAttack * 4.0;
   const overtoneDecayDynamics = decayDynamics * (1.0 + 0.236 * strongness);
@@ -382,11 +368,7 @@ export const playInstrument = (
     overtoneDecay > 0.0 && overtoneSustain !== 1.0 && overtonesDecayAt < endAt;
 
   if (overtonesShouldDecay) {
-    const overtoneDynamicDecay =
-      mix(overtoneDecay, decayTarget, defaultDurationImpactOnDecay) * overtoneDecayDynamics;
-
-    if (defaultDecayImpactOnDuration > 0.0)
-      endAt = Math.max(endAt, decayAt + overtoneDynamicDecay * 4.0 * defaultDecayImpactOnDuration);
+    const overtoneDynamicDecay = overtoneDecay * overtoneDecayDynamics;
 
     crossfader.pan.setTargetAtTime(
       overtoneSustain * 2.0 - 1.0,
@@ -402,16 +384,11 @@ export const playInstrument = (
     gainTarget,
     decay = defaultDecay,
     sustain = defaultSustain,
-    durationImpactOnDecay = defaultDurationImpactOnDecay,
-    decayImpactOnDuration = defaultDecayImpactOnDuration,
   } of oscillators) {
     const shouldDecay = decay > 0.0 && sustain !== 1.0 && decayAt < endAt;
     if (!shouldDecay) continue;
 
-    const dynamicDecay = mix(decay, decayTarget, durationImpactOnDecay) * oscillatorDecayDynamics;
-
-    if (decayImpactOnDuration > 0.0)
-      endAt = Math.max(endAt, decayAt + dynamicDecay * 4.0 * decayImpactOnDuration);
+    const dynamicDecay = decay * oscillatorDecayDynamics;
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
@@ -453,7 +430,3 @@ export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
   vibratoMain.stop();
   vibratoMain.disconnect();
 };
-
-function mix(a = 0.0, b = 1.0, amount = 0.5) {
-  return a + amount * (b - a);
-}

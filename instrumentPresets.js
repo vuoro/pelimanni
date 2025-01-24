@@ -24,8 +24,6 @@ export const genericInstrument = Object.seal({
    * @property {Sustain=} sustain
    * @property {Release=} release
    * @property {Glide=} glide
-   * @property {number=} decayImpactOnDuration - see below
-   * @property {number=} durationImpactOnDecay - see below
    * @property {(pitch: Number) => Number=} getPitch - lets you modify the pitch before it gets played
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
@@ -57,11 +55,6 @@ export const genericInstrument = Object.seal({
   overtoneSustain: undefined,
   /** @type {Release=} */
   overtoneRelease: undefined,
-
-  /** @type {number} how much decay can extend the note's duration; 1.0 = by ~95% of the decay's duration */
-  decayImpactOnDuration: 0.0,
-  /** @type {number} how much note duration can extend decay's duration; 1.0 = similar to piano keys */
-  durationImpactOnDecay: 0.0,
 
   // Controls the maximum and minimum frequencies of the notes and their harmonics.
   // I've taken my values from these sources:
@@ -126,23 +119,23 @@ const copySympatheticStrings = (oscillator, loudness = 0.146) => {
 
   strings.push({
     ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 2.0,
+    getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 2.0,
     gain: gain * loudness,
   });
   strings.push({
     ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
+    getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
     gain: gain * loudness,
   });
 
   strings.push({
     ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 2.0),
+    getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 2.0),
     gain: gain * loudness,
   });
   strings.push({
     ...oscillator,
-    getPitch: (pitch) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
+    getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
     gain: gain * loudness,
   });
 
@@ -1096,18 +1089,15 @@ export const piano = {
     //   gain: 0.056,
     //   attack: 0.005,
     //   decay: 0.056,
-    //   durationImpactOnDecay: 0.005,
     // },
   ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
   overtoneAttack: 0.021,
   decay: 0.618,
   overtoneDecay: 0.382,
   sustain: 0.0,
-  release: 0.0,
+  release: 0.236,
 };
 
 /** @type {Instrument} */
@@ -1148,19 +1138,15 @@ export const hammeredDulcimer = {
     //   attack: 0.008,
     //   decay: 0.056,
 
-    //   decayImpactOnDuration: 0.0,
-    //   durationImpactOnDecay: 0.0,
     // },
   ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.382,
 
   attack: 0.008,
   overtoneAttack: 0.016,
   decay: 0.618,
   overtoneDecay: 0.382,
   sustain: 0.0,
-  release: 0.0,
+  release: 0.236,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 3.0,
@@ -1192,7 +1178,6 @@ export const taikoDrum = {
       gain: 0.618,
       attack: 0.008,
       decay: 0.056,
-      durationImpactOnDecay: 0.005,
     },
     {
       type: "custom",
@@ -1200,7 +1185,7 @@ export const taikoDrum = {
         imag: taikoImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1208,18 +1193,16 @@ export const taikoDrum = {
         imag: taikoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
   overtoneAttack: 0.013,
   decay: 0.382,
   overtoneDecay: 0.618,
   sustain: 0.0,
-  release: 0.0,
+  release: 0.09,
 
   lowPassFrequency: 3080, // FIXME: no idea what this should be on any percussion
 };
@@ -1248,7 +1231,7 @@ export const timpani = {
         imag: timpaniImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1256,7 +1239,7 @@ export const timpani = {
         imag: timpaniImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
 };
@@ -1279,7 +1262,7 @@ export const bassDrum = {
         imag: bassDrumImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1287,7 +1270,7 @@ export const bassDrum = {
         imag: bassDrumImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       ...taikoDrum.oscillators[0],
@@ -1314,7 +1297,7 @@ export const snareDrum = {
         imag: snareImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1322,7 +1305,7 @@ export const snareDrum = {
         imag: snareImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       ...taikoDrum.oscillators[0],
@@ -1351,7 +1334,7 @@ export const marimba = {
         imag: marimbaImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1359,19 +1342,16 @@ export const marimba = {
         imag: marimbaImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
-
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.618,
 
   attack: 0.008,
   overtoneAttack: 0.013,
   decay: 0.382,
   overtoneDecay: 0.236,
   sustain: 0.0,
-  release: 0.0,
+  release: 0.09,
 
   lowPassFrequency: 20000,
 };
@@ -1396,7 +1376,7 @@ export const xylophone = {
         imag: xylophoneImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1404,11 +1384,9 @@ export const xylophone = {
         imag: xylophoneImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
-
-  durationImpactOnDecay: 0.236,
 };
 
 const glockenspielImag = new Float32Array(20 * 32);
@@ -1446,7 +1424,7 @@ export const glockenspiel = {
         imag: glockenspielImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1454,7 +1432,7 @@ export const glockenspiel = {
         imag: glockenspielImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
 
@@ -1489,7 +1467,7 @@ export const bell = {
         imag: bellImag,
       },
       stage: "high",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
       type: "custom",
@@ -1497,7 +1475,7 @@ export const bell = {
         imag: bellImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
 
@@ -1521,13 +1499,10 @@ export const bell = {
 //   gain: 0.09,
 //   attack: 0.005,
 //   decay: 0.034,
-//   durationImpactOnDecay: 0.005,
 // };
 
 const plucked = {
   group: "Strings (plucked)",
-  decayImpactOnDuration: 1.0,
-  durationImpactOnDecay: 0.764,
 
   glide: 0.0,
   attack: 0.008,
@@ -1536,8 +1511,8 @@ const plucked = {
   overtoneDecay: 0.382,
   sustain: 0.0,
   overtoneSustain: 0.0,
-  release: 0.0,
-  overtoneRelease: 0.0,
+  release: 0.09,
+  overtoneRelease: 0.09,
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
