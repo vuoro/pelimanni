@@ -141,7 +141,7 @@ cite {
   justify-content: center;
   align-items: end;
   line-height: 2;
-  touch-action: pan-y;
+  touch-action: none;
   pointer-events: all;
   font-weight: 200;
   padding-bottom: 0.25rlh;
