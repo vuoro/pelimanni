@@ -229,6 +229,7 @@ const keys = (blackKeysSet: Set<string>) => {
     releaseWithController(event.pointerId);
 
     event.stopPropagation();
+    event.preventDefault();
   };
 
   const pointerout = (event: PointerEvent) => {
