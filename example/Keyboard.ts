@@ -96,7 +96,7 @@ export const Keyboard = new Magic(
           </fieldset>
         </form>
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
-        <p>When playing with a keyboard, use 12345…/QWERTY…/ASDFG/>ZXCV rows. You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
+        <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
       `,
       document.getElementById("keyboard") as HTMLElement,
     );
@@ -269,7 +269,7 @@ const keyLabels = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "
 
 const key = (note: number, octave: number, isBlack = false) => {
   const midiNumber = note + octave * 12;
-  const disabled = midiNumber < 16 || midiNumber > 136;
+  const disabled = midiNumber < 17 || midiNumber > 136;
   if (disabled) return;
 
   return html`

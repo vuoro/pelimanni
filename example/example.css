@@ -24,12 +24,11 @@ form {
 label {
   display: grid;
   gap: 0.25rlh;
-  font-size: 85.4%;
 }
 
 fieldset {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rlh, 16rlh));
+  grid-template-columns: repeat(auto-fit, minmax(15rlh, max-content));
   align-items: start;
   gap: 1rlh;
   border: none;
@@ -158,7 +157,17 @@ cite {
   justify-self: center;
   position: relative;
   z-index: 1;
-  border-radius: 0 0 0.25rlh 0.25rlh;
+}
+
+.white + .white + .black button,
+.black:first-child button {
+  border-bottom-left-radius: 0.25rlh;
+}
+
+.black:has(+ .white + .white) button,
+.black:has(+ .white:last-child) button,
+.black:last-child button {
+  border-bottom-right-radius: 0.25rlh;
 }
 
 .key button:hover {
