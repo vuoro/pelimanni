@@ -284,7 +284,7 @@ export const attackInstrument = (
   const volumeTarget = volume * (1.0 - weakness * 0.146);
   const overtoneTarget = 0.09 + 0.91 * strongness;
 
-  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (0.764 + 0.236 * 2.0 * weakness);
+  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * weakness);
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const overtoneDynamicAttack =
@@ -364,7 +364,7 @@ export const attackInstrument = (
 
   // Decay and sustain
   const decayAt = dynamicStartAt + defaultDynamicAttack * 4.0;
-  const decayDynamics = 0.764 + 0.236 * 2.0 * lowPitchness;
+  const decayDynamics = 1.0 + 0.382 * lowPitchness;
 
   const overtonesDecayAt = dynamicStartAt + overtoneDynamicAttack * 4.0;
   const overtoneDecayDynamics = decayDynamics * (1.0 + 0.618 * weakness);
@@ -405,6 +405,7 @@ export const attackInstrument = (
 export const releaseInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ endAt,
+  releaseEarly = true,
 ) => {
   const {
     rangeInCents,
@@ -431,9 +432,8 @@ export const releaseInstrument = (
   const lowPitchness = 1.0 - highPitchness;
 
   const strongness = velocity;
-  const weakness = 1.0 - strongness;
 
-  const releaseDynamics = (1.0 + 0.236 * 2.0 * lowPitchness) * (1.236 - 0.236 * 2.0 * weakness);
+  const releaseDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * strongness);
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
 
   const overtoneDynamicRelease =
@@ -442,11 +442,13 @@ export const releaseInstrument = (
   const vibratoRelease = defaultDynamicRelease * 0.021;
   const vibratoGainRelease = defaultDynamicRelease * 0.09;
 
-  const dynamicEndAt = Math.max(
-    crossfader.context.currentTime,
-    instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
-    endAt - defaultDynamicRelease,
-  );
+  const dynamicEndAt = releaseEarly
+    ? Math.max(
+        crossfader.context.currentTime,
+        instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
+        endAt - (1.0 - strongness * 0.5) * defaultDynamicRelease,
+      )
+    : endAt;
 
   cancelPendingEvents(instrument, dynamicEndAt);
 
@@ -466,7 +468,7 @@ export const releaseInstrument = (
   vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
   instabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
 
-  instrument.previousEndAt = dynamicEndAt;
+  instrument.previousEndAt = releaseEarly ? dynamicEndAt : dynamicEndAt + defaultDynamicRelease;
 };
 
 const cancelPendingEvents = (

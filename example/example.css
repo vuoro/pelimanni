@@ -30,6 +30,7 @@ label {
 fieldset {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rlh, 16rlh));
+  align-items: start;
   gap: 1rlh;
   border: none;
   border-top: 1px solid;
@@ -38,7 +39,7 @@ fieldset {
 
 legend {
   font-weight: bold;
-  padding-right: 0.25rlh;
+  padding: 0.25rlh 0.25rlh 0.25rlh 0;
   font-size: 123.6%;
 }
 
@@ -52,6 +53,13 @@ input[type="range"]::-webkit-slider-runnable-track {
   background-color: light-dark(black, #333);
   border-radius: 0.5rlh;
   border: 1px solid black;
+}
+
+.black-key-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 1rlh);
+  gap: 0.25rlh;
+  margin-top: 0.25rlh;
 }
 
 pre {
@@ -69,38 +77,62 @@ cite {
 
 #visualizer {
   gap: 0.25rlh;
+  border: 1px solid;
+  /* position: sticky;
+  top: 1rlh;
+  z-index: 10;
+  box-shadow: 0 0 1rlh black; */
 }
 
 #visualizer canvas {
   height: 7rlh;
   width: 100%;
-  border: 1px solid;
   display: block;
 }
 
 #keyboard {
+  --key-columns: 1fr 0 1fr 0 1fr 1fr 0 1fr 0 1fr 0 1fr;
 }
 
-#keyboard .keys {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rlh, 16rlh));
-  gap: 1rlh;
-  pointer-events: none;
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rlh 0;
   -webkit-user-select: none;
   user-select: none;
 }
 
-.keys .octave {
+/* .keys .octave {
   display: grid;
-  grid-template-columns: 1fr 0 1fr 0 1fr 1fr 0 1fr 0 1fr 0 1fr;
+  grid-template-columns: var(--key-columns);
   border: 0.5px solid light-dark(black, #999);
+  border-radius: calc(0.375rlh + 1px);
+} */
+
+.key {
+  --key-width: calc(1.75rlh + 1vmin);
+  --key-height: calc(var(--key-width) * 2.5);
+  width: var(--key-width);
+  pointer-events: none;
 }
 
-.keys button {
-  aspect-ratio: 1 / 2;
-  width: 100%;
-  border: 0.5px solid light-dark(black, #999);
+.black:not(.black + .black) {
+  width: 0;
+  display: grid;
+  justify-content: center;
+}
+
+.black + .black {
+  padding-left: calc(var(--key-width) * 0.5);
+}
+
+.key button {
   cursor: pointer;
+  width: var(--key-width);
+  height: var(--key-height);
+  border: 0.5px solid light-dark(black, #999);
+  outline: 0.5px solid light-dark(black, #999);
   background-color: light-dark(white, #222);
   display: flex;
   justify-content: center;
@@ -108,32 +140,54 @@ cite {
   line-height: 2;
   touch-action: pan-y;
   pointer-events: all;
-  font-size: 87.5%;
+  font-weight: 200;
+  padding-bottom: 0.25rlh;
 }
 
-.keys .black {
+.key button:disabled {
+  filter: contrast(50%) brightness(50%);
+  pointer-events: none;
+}
+
+.black button {
+  height: calc(var(--key-height) * 0.5);
   background-color: black;
-  border-width: 0.5px 1px 1px 1px;
+  border-color: light-dark(white, #999);
+  outline-color: light-dark(white, #999);
   color: white;
-  width: auto;
-  height: 61.8%;
   justify-self: center;
   position: relative;
   z-index: 1;
-  border-bottom-left-radius: 20% 10%;
-  border-bottom-right-radius: 20% 10%;
+  border-radius: 0 0 0.25rlh 0.25rlh;
 }
 
-.keys button:hover {
+.key button:hover {
   filter: invert(14.6%);
 }
 
-.keys button.active {
+.key button.active {
   filter: invert(23.6%);
 }
 
-.keys button * {
+.key button * {
   pointer-events: none;
+}
+
+.key-0 {
+}
+.key-1 {
+}
+.key-2 {
+}
+.key-3 {
+}
+.key-4 {
+}
+.key-5 {
+}
+.key-6 {
+}
+.key-7 {
 }
 
 h1 {

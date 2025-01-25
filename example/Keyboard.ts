@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, nothing, render } from "lit-html";
 import * as allInstrumentPresets from "../instrumentPresets.js";
 import {
   attackInstrument,
@@ -18,24 +18,26 @@ export const Keyboard = new Magic(
       duration: number;
       vibratoAmount: number;
       vibratoFrequency: number;
-      keyboardOctave: number;
+      keyboardOffset: number;
+      blackKeys: string[];
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
         : "piano") as keyof typeof allInstrumentPresets,
-      velocity: +(localStorage.getItem("velocity") ?? 0.6),
+      velocity: +(localStorage.getItem("velocity") ?? 0.7),
       duration: +(localStorage.getItem("duration") ?? 0.5),
       vibratoAmount: +(localStorage.getItem("vibratoAmount") ?? 0.0),
       vibratoFrequency: +(localStorage.getItem("vibratoFrequency") ?? 5.0),
-      keyboardOctave: +(localStorage.getItem("keyboardOctave") ?? 5),
+      keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 60),
+      blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
     },
     message?: {
-      instrumentName?: keyof typeof allInstrumentPresets;
-      velocity?: number;
-      duration?: number;
-      vibratoAmount?: number;
-      vibratoFrequency?: number;
-      keyboardOctave?: number;
+      instrumentName: keyof typeof allInstrumentPresets;
+      velocity: number;
+      vibratoAmount: number;
+      vibratoFrequency: number;
+      keyboardOffset: number;
+      blackKeys: string[];
     },
   ) => {
     if (message) {
@@ -43,62 +45,58 @@ export const Keyboard = new Magic(
         state.instrumentName = message.instrumentName;
       }
 
-      if (message.velocity !== undefined) state.velocity = message.velocity;
-      if (message.vibratoAmount !== undefined) state.vibratoAmount = message.vibratoAmount;
-      if (message.vibratoFrequency !== undefined) state.vibratoFrequency = message.vibratoFrequency;
-      if (message.keyboardOctave !== undefined) state.keyboardOctave = message.keyboardOctave;
+      state.velocity = message.velocity;
+      state.vibratoAmount = message.vibratoAmount;
+      state.vibratoFrequency = message.vibratoFrequency;
+      state.keyboardOffset = message.keyboardOffset;
+      state.blackKeys = message.blackKeys;
     }
 
-    const change = (event: Event) => {
+    const onInput = (event: Event) => {
       const data = new FormData(event.currentTarget as HTMLFormElement);
       const instrumentName = data.get("instrumentName") as keyof typeof allInstrumentPresets;
       const velocity = data.get("velocity") as string;
       const vibratoAmount = data.get("vibratoAmount") as string;
       const vibratoFrequency = data.get("vibratoFrequency") as string;
-      const keyboardOctave = data.get("keyboardOctave") as string;
+      const keyboardOffset = data.get("keyboardOffset") as string;
+      const blackKeys = data.getAll("blackKeys") as string[];
 
-      const current = Keyboard.get();
+      localStorage.setItem("instrumentName", instrumentName);
+      localStorage.setItem("velocity", velocity);
+      localStorage.setItem("vibratoAmount", vibratoAmount);
+      localStorage.setItem("vibratoFrequency", vibratoFrequency);
+      localStorage.setItem("keyboardOffset", keyboardOffset);
+      localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
 
-      if (instrumentName !== current.instrumentName && instrumentName in allInstrumentPresets) {
-        localStorage.setItem("instrumentName", instrumentName);
-        Keyboard.update({
-          instrumentName,
-        });
-      }
-      if (+velocity !== current.velocity) {
-        localStorage.setItem("velocity", velocity);
-        Keyboard.update({ velocity: +velocity });
-      }
-      if (+vibratoAmount !== current.vibratoAmount) {
-        localStorage.setItem("vibratoAmount", vibratoAmount);
-        Keyboard.update({ vibratoAmount: +vibratoAmount });
-      }
-      if (+vibratoFrequency !== current.vibratoFrequency) {
-        localStorage.setItem("vibratoFrequency", vibratoFrequency);
-        Keyboard.update({ vibratoFrequency: +vibratoFrequency });
-      }
-      if (+keyboardOctave !== current.keyboardOctave) {
-        localStorage.setItem("keyboardOctave", keyboardOctave);
-        Keyboard.update({ keyboardOctave: +keyboardOctave });
-      }
+      Keyboard.update({
+        instrumentName,
+        velocity: +velocity,
+        vibratoAmount: +vibratoAmount,
+        vibratoFrequency: +vibratoFrequency,
+        keyboardOffset: +keyboardOffset,
+        blackKeys,
+      });
     };
+
+    const blackKeysSet = new Set(state.blackKeys);
 
     render(
       html`
         <h2>Keyboard demo</h2>
-        <form @change=${change}>
+        ${keys(blackKeysSet)}
+        <form @input=${onInput}>
           <fieldset>
             <legend>Settings</legend>
             ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
+            ${blackKeysInput(blackKeysSet)}
             ${velocityInput(state.velocity)}
             ${vibratoAmountInput(state.vibratoAmount)}
             ${vibratoFrequencyInput(state.vibratoFrequency)}
-            ${octaveInput(state.keyboardOctave)}
+            ${keyboardOffsetInput(state.keyboardOffset)}
           </fieldset>
         </form>
-        ${Keys.get()}
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
-        <p>When playing with a keyboard, use the 12345/QWERTY/ASDFG rows. You can adjust their octaves with the "Keyboard octave" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
+        <p>When playing with a keyboard, use 12345…/QWERTY…/ASDFG/>ZXCV rows. You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
       `,
       document.getElementById("keyboard") as HTMLElement,
     );
@@ -109,45 +107,63 @@ export const Keyboard = new Magic(
 
 const velocityInput = (velocity: number) => {
   return html`
-    <div>
-      <label>
-        <span>Velocity: ${velocity}</span>
-        <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
-      </label>
-    </div>
+    <label>
+      <span>Velocity: ${velocity}</span>
+      <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
+    </label>
   `;
 };
 
 const vibratoAmountInput = (vibratoAmount: number) => {
   return html`
-    <div>
-      <label>
-        <span>Vibrato: ${vibratoAmount}</span>
-        <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
-      </label>
-    </div>
+    <label>
+      <span>Vibrato: ${vibratoAmount}</span>
+      <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
+    </label>
   `;
 };
 
 const vibratoFrequencyInput = (vibratoFrequency: number) => {
   return html`
-    <div>
-      <label>
-        <span>Vibrato: ${vibratoFrequency}hz</span>
-        <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
-      </label>
-    </div>
+    <label>
+      <span>Vibrato: ${vibratoFrequency}hz</span>
+      <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
+    </label>
   `;
 };
 
-const octaveInput = (octave: number) => {
+const keyboardOffsetInput = (keyboardOffset: number) => {
+  return html`
+    <label>
+      <span>Keyboard offset: ${keyboardOffset}</span>
+      <input name="keyboardOffset" type="range" min="28" max="102" step="1" .value=${keyboardOffset}/>
+    </label>
+  `;
+};
+
+const blackKeysInput = (blackKeysSet: Set<string>) => {
+  const checkboxes = [];
+
+  for (let index = 0; index < 12; index++) {
+    checkboxes.push(html`
+      <label>
+        <span>${keyLabels[index]}</span>
+        <input
+          aria-label="Key ${index} of octave"
+          type="checkbox"
+          name="blackKeys"
+          value=${index}
+          ?checked=${blackKeysSet.has(`${index}`)}
+        />
+      </label>
+    `);
+  }
+
   return html`
     <div>
-      <label>
-        <span>Keyboard octave: ${octave - 1}</span>
-        <input name="keyboardOctave" type="range" min="2" max="9" step="1" .value=${octave}/>
-      </label>
-    </div>
+      <label for="blackKeys">Black keys</label>
+      <div class="black-key-checkboxes">${checkboxes}</div>
+    <div>
   `;
 };
 
@@ -169,32 +185,30 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
   }
 
   return html`
-    <div>
-      <label>
-        ${label && html`<span>${label}</span>`}
-        <select name=${name}>${options}</select>
-      </label>
-    </div>
+    <label>
+      ${label && html`<span>${label}</span>`}
+      <select name=${name}>${options}</select>
+    </label>
   `;
 };
 
-const Keys = new Magic(() => {
+const keys = (blackKeysSet: Set<string>) => {
   const keys = [];
 
-  for (let octave = 1; octave < 11; octave++) {
-    const octaveKeys = [];
+  for (let octave = 1; octave < 12; octave++) {
+    // const octaveKeys = [];
 
     for (let note = 0; note < 12; note++) {
-      const isBlack = note === 1 || note === 3 || note === 6 || note === 8 || note === 10;
-      octaveKeys.push(key(note, octave, isBlack));
+      const isBlack = blackKeysSet.has(`${note}`);
+      keys.push(key(note, octave, isBlack));
     }
 
-    keys.push(html`<div class="octave">${octaveKeys}</div>`);
+    // keys.push(html`<div class="octave">${octaveKeys}</div>`);
   }
 
   const pointerdown = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
-    if (!target) return;
+    if (!target || target === event.currentTarget) return;
 
     target.releasePointerCapture(event.pointerId);
     pointersDown.add(event.pointerId);
@@ -225,7 +239,7 @@ const Keys = new Magic(() => {
 
   const pointerover = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
-    if (!target) return;
+    if (!target || target === event.currentTarget) return;
 
     if (pointersDown.has(event.pointerId))
       attackWithController(
@@ -248,66 +262,93 @@ const Keys = new Magic(() => {
       ${keys}
     </div>
   `;
-});
+};
 
 const pointersDown = new Set();
+const keyLabels = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 const key = (note: number, octave: number, isBlack = false) => {
-  const labels = "CCDDEFFGGAAB";
-  return html`<button class="${isBlack ? "black" : "white"}" type="button" data-midi-number="${note + octave * 12}">
-    <span>${labels[note]}<sup>${octave - 1}</sup></span>
-  </button>`;
+  const midiNumber = note + octave * 12;
+  const disabled = midiNumber < 16 || midiNumber > 136;
+  if (disabled) return;
+
+  return html`
+    <div class="key ${isBlack ? "black" : "white"} key-${note}">
+      <button
+        type="button"
+        ?disabled=${disabled}
+        data-midi-number="${midiNumber}"
+      >
+        <span>
+          ${keyLabels[note]}${note === 0 ? html`<sup>${octave - 1}</sup>` : nothing}
+        </span>
+      </button>
+    </div>
+  `;
 };
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   const { code, repeat, metaKey, ctrlKey } = event;
   if (repeat || metaKey || ctrlKey) return;
 
-  const { keyboardOctave } = Keyboard.get();
+  const { keyboardOffset } = Keyboard.get();
 
-  const higherOctave = 12 * (keyboardOctave + 1);
-  const highOctave = 12 * (keyboardOctave + 0);
-  const midOctave = 12 * (keyboardOctave - 1);
+  const lowOctave = keyboardOffset - 1 * 12;
+  const midOctave = keyboardOffset + 0 * 12;
+  const highOctave = keyboardOffset + 1 * 12;
+  const higherOctave = keyboardOffset + 2 * 12;
 
   const notes = {
-    Digit1: 0 + higherOctave,
-    Digit2: 1 + higherOctave,
-    Digit3: 2 + higherOctave,
-    Digit4: 3 + higherOctave,
-    Digit5: 4 + higherOctave,
-    Digit6: 5 + higherOctave,
-    Digit7: 6 + higherOctave,
-    Digit8: 7 + higherOctave,
-    Digit9: 8 + higherOctave,
-    Digit0: 9 + higherOctave,
-    Minus: 10 + higherOctave,
-    Equal: 11 + higherOctave,
+    Digit1: 0 + lowOctave,
+    Digit2: 1 + lowOctave,
+    Digit3: 2 + lowOctave,
+    Digit4: 3 + lowOctave,
+    Digit5: 4 + lowOctave,
+    Digit6: 5 + lowOctave,
+    Digit7: 6 + lowOctave,
+    Digit8: 7 + lowOctave,
+    Digit9: 8 + lowOctave,
+    Digit0: 9 + lowOctave,
+    Minus: 10 + lowOctave,
+    Equal: 11 + lowOctave,
 
-    KeyQ: 0 + highOctave,
-    KeyW: 1 + highOctave,
-    KeyE: 2 + highOctave,
-    KeyR: 3 + highOctave,
-    KeyT: 4 + highOctave,
-    KeyY: 5 + highOctave,
-    KeyU: 6 + highOctave,
-    KeyI: 7 + highOctave,
-    KeyO: 8 + highOctave,
-    KeyP: 9 + highOctave,
-    BracketLeft: 10 + highOctave,
-    BracketRight: 11 + highOctave,
+    KeyQ: 0 + midOctave,
+    KeyW: 1 + midOctave,
+    KeyE: 2 + midOctave,
+    KeyR: 3 + midOctave,
+    KeyT: 4 + midOctave,
+    KeyY: 5 + midOctave,
+    KeyU: 6 + midOctave,
+    KeyI: 7 + midOctave,
+    KeyO: 8 + midOctave,
+    KeyP: 9 + midOctave,
+    BracketLeft: 10 + midOctave,
+    BracketRight: 11 + midOctave,
 
-    KeyA: 0 + midOctave,
-    KeyS: 1 + midOctave,
-    KeyD: 2 + midOctave,
-    KeyF: 3 + midOctave,
-    KeyG: 4 + midOctave,
-    KeyH: 5 + midOctave,
-    KeyJ: 6 + midOctave,
-    KeyK: 7 + midOctave,
-    KeyL: 8 + midOctave,
-    Semicolon: 9 + midOctave,
-    Quote: 10 + midOctave,
-    Backslash: 11 + midOctave,
+    KeyA: 0 + highOctave,
+    KeyS: 1 + highOctave,
+    KeyD: 2 + highOctave,
+    KeyF: 3 + highOctave,
+    KeyG: 4 + highOctave,
+    KeyH: 5 + highOctave,
+    KeyJ: 6 + highOctave,
+    KeyK: 7 + highOctave,
+    KeyL: 8 + highOctave,
+    Semicolon: 9 + highOctave,
+    Quote: 10 + highOctave,
+    Backslash: 11 + highOctave,
+
+    Backquote: 0 + higherOctave,
+    KeyZ: 1 + higherOctave,
+    KeyX: 2 + higherOctave,
+    KeyC: 3 + higherOctave,
+    KeyV: 4 + higherOctave,
+    KeyB: 5 + higherOctave,
+    KeyN: 6 + higherOctave,
+    KeyM: 7 + higherOctave,
+    Comma: 8 + higherOctave,
+    Period: 9 + higherOctave,
+    Slash: 10 + higherOctave,
   };
 
   const note = notes[code as keyof typeof notes];
@@ -366,7 +407,11 @@ const attackWithController = (
   let instrument: Instrument | null = null;
 
   for (const freeInstrument of freeInstruments) {
-    if (!instrument && freeInstrument.preset === preset) {
+    if (
+      !instrument &&
+      freeInstrument.preset === preset &&
+      freeInstrument.previousEndAt < audioContext.currentTime
+    ) {
       // Use instrument
       console.log("adopting", controllerId);
       instrument = freeInstrument;
@@ -391,7 +436,7 @@ const attackWithController = (
   attackInstrument(
     instrument,
     midiToFrequency(midiNumber),
-    audioContext.currentTime + (isAlreadyPlaying ? 0.04 : 0.0),
+    audioContext.currentTime,
     shiftKey && !altKey ? 1.0 : altKey && !shiftKey ? 0.0 : velocity,
     0.382,
     shiftKey && altKey ? 1.0 : vibratoAmount,
@@ -411,7 +456,7 @@ const releaseWithController = (controllerId: ControllerId) => {
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
 
-  releaseInstrument(instrument, audioContext.currentTime);
+  releaseInstrument(instrument, audioContext.currentTime, false);
 
   playingControllers.delete(controllerId);
   freeInstruments.add(instrument);

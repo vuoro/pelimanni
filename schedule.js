@@ -346,7 +346,7 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
     midiToFrequency(note, undefined, root),
     at,
     duration,
-    velocity ?? 0.764 + 0.146 * Math.sin(at),
+    velocity ?? 0.764 + 0.236 * Math.sin(at),
     volume,
     vibrato,
     vibratoFrequency,
