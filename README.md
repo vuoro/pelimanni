@@ -2,7 +2,7 @@
 
 Synth classical instruments for the Web Audio API, and some utilities for making dynamically looping music with them.
 
-Demo: https://music.vuoro.dev/
+Demo: https://pelimanni.vuoro.dev/
 
 # Usage
 
@@ -81,14 +81,14 @@ destroyInstrument(violaInstrument);
 
 ## Note number to frequency conversion
 
-`midiToFrequency` converts numbers to note frequencies using the western standard "12 note equal temperament" system: every note interval is slightly out of tune, but sounds fine.
+`midiToFrequency` converts "MIDI numbers" to note frequencies using the western standard "12 note equal temperament" system: every note interval is slightly out of tune, but sounds fine.
 
 ```js
 import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
 
 const tuning = 440.0; // optional
 
-const frequency = midiToFrequency(5, tuning);
+const frequency = midiToFrequency(60, tuning);
 playInstrument(violaInstrument, frequency, at, duration);
 ```
 
@@ -215,7 +215,7 @@ import { scheduleMusic } from "@vuoro/pelimanni/schedule.js";
 const options = { playAhead: 0.2 };
 const callScheduleMusic = () => scheduleMusic(tracks, cycle, audioContext, connectInstrument, options);
 
-setInterval(callScheduleMusic, options.playAhead / 4.0 * 1000.0);
+setInterval(callScheduleMusic, (options.playAhead / 4.0) * 1000.0);
 document.addEventListener("visibilitychange", tryToScheduleMusic);
 ```
 
@@ -229,10 +229,10 @@ Internally each instrument uses the following:
 2. Another `OscillatorNode`: shared for vibrato, LFO effects, and brass-style initial note instability.
 3. A low-pass and a high-pass `BiquadfilterNode`.
 4. Up to 6 peaking `BiquadfilterNode`s for shaping the timbre.
-6. Up to 4 `GainNode`s.
-7. And lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
+6. A `StereoPanner`, a `ChannelSplitter`, and at least 3 `GainNode`s.
+7. Lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 
-I try to avoid object allocation as much as possible in the scheduler and instrument playback, to minimise garbage collection pauses.
+I try to avoid object allocation in the scheduler and instrument playback, to minimise garbage collection pauses.
 
 `scheduleMusic` has to loop through the `tracks` arrays once or twice whenever it's called, which means very large sets of tracks might spend a fair amount of main thread CPU time.
 
@@ -241,3 +241,4 @@ I try to avoid object allocation as much as possible in the scheduler and instru
 - https://strudel.cc
 - https://www.soundonsound.com/series/synth-secrets-sound-sound
 - https://en.xen.wiki
+- various blog posts and research papers, mentioned in the comments of `instrumentPresets.js`
