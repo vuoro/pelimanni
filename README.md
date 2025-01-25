@@ -8,7 +8,7 @@ Demo: https://pelimanni.vuoro.dev/
 
 This readme is a combination of tutorial, examples, and documentation. It'd be nicer to keep them separate, but this is all I have time for, sadly. Also, working with audio is rather complex and can even be dangerous (see the warnings about connecting instruments later on), so this kind of format may be the safest option.
 
-**Big disclaimer:** I'm an audio newbie! At the time of writing it's been 3 months since I first started even looking into audio, and I've never seriously played an instrument. On top of it all I'm also somewhat hearing-impaired. So please don't expect faithful recreations of instrument timbres or splendid musicality. That said, if you're an audio pro and have suggestions for improvements, please let me know!
+**Big disclaimer:** I'm an audio newbie! At the time of writing it's been 6 months since I first started even looking into audio, and I've never seriously played an instrument. On top of it all I'm also somewhat hearing-impaired. So please don't expect faithful recreations of instrument timbres or splendid musicality. That said, if you're an audio pro and have suggestions for improvements, please let me know!
 
 ## Installation
 
