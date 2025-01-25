@@ -98,6 +98,10 @@ cite {
   flex-wrap: wrap;
   align-items: stretch;
   gap: 1rlh 0;
+}
+
+.keys,
+.keys * {
   -webkit-user-select: none;
   user-select: none;
 }
