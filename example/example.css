@@ -160,6 +160,7 @@ cite {
 }
 
 .white + .white + .black button,
+.white:first-child + .black button,
 .black:first-child button {
   border-bottom-left-radius: 0.25rlh;
 }
