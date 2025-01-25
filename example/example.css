@@ -163,6 +163,7 @@ cite {
   .black button {
     outline: none;
     border-width: 0 0.5px;
+    border-top: 1px solid black;
   }
 }
 
