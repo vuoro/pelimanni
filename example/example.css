@@ -159,6 +159,13 @@ cite {
   z-index: 1;
 }
 
+@media (prefers-color-scheme: light) {
+  .black button {
+    outline: none;
+    border-width: 0 0.5px;
+  }
+}
+
 .white + .white + .black button,
 .white:first-child + .black button,
 .black:first-child button {
