@@ -238,6 +238,11 @@ const keys = (blackKeysSet: Set<string>) => {
     event.stopPropagation();
   };
 
+  const contextmenu = (event: Event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
   const pointerover = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
     if (!target || target === event.currentTarget) return;
@@ -259,6 +264,7 @@ const keys = (blackKeysSet: Set<string>) => {
       @pointerup=${pointerup}
       @pointerout=${pointerout}
       @pointerover=${pointerover}
+      @contextmenu=${contextmenu}
     >
       ${keys}
     </div>

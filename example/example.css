@@ -97,7 +97,7 @@ cite {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 1rlh 0;
+  gap: 1.5rlh 0;
 }
 
 .keys,
