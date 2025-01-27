@@ -96,7 +96,7 @@ export const heavensTower = () => {
     // [cello, [...midHarmony, { transpose: -12, volume: 0.056,  }]],
     // [contrabass, [...lowHarmony, { transpose: -12, volume: 0.056,  }]],
 
-    [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.146 }]],
+    [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.146, velocity: 0.5 }]],
     [bell, [...plinkingMelody, { transpose: 12 * 4, volume: 0.09 }]],
     [violin, [...melody, { transpose: 12 * 6, volume: 0.2 }]],
     [flute, [...highHarmony, { transpose: 12 * 5, volume: 0.09 }]],

@@ -322,14 +322,14 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
   }
 
   // Play the note
-  const longness = 0.5 ** duration;
+  const longness = 1.0 - 0.5 ** duration;
 
   playInstrument(
     instrument,
     midiToFrequency(note, undefined),
     at,
     duration,
-    velocity ?? 0.764 + 0.236 * Math.sin(at),
+    velocity ?? 0.764 + 0.236 * Math.sin(at * 0.236),
     1.0 + 2.0 * longness,
     1.0 + 2.0 * longness,
     volume,
