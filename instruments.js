@@ -9,6 +9,7 @@ export const createInstrument = (preset, audioContext) => {
     oscillators: oscillatorsInPreset,
     vibratoType,
     vibratoEffectOnPitch,
+    vibratoEffectOnStage,
     vibratoEffectOnVolume,
     initialInstability,
     peakingFilters,
@@ -155,8 +156,11 @@ export const createInstrument = (preset, audioContext) => {
   }
 
   // Brightness vibrato for everyone
-  const vibratoStageGain = new GainNode(audioContext, { gain: 0.0 });
-  vibratoMain.connect(vibratoStageGain).connect(crossfader.pan);
+  let vibratoStageGain = null;
+  if (vibratoEffectOnStage > 0.0) {
+    vibratoStageGain = new GainNode(audioContext, { gain: 0.0 });
+    vibratoMain.connect(vibratoStageGain).connect(crossfader.pan);
+  }
 
   // Pitch vibrato
   let vibratoPitchGain = null;
