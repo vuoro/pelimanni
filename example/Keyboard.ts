@@ -249,6 +249,7 @@ const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
 
   const pointerdown = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
+    event.stopPropagation();
     if (!target || target === event.currentTarget) return;
 
     target.releasePointerCapture(event.pointerId);
@@ -261,8 +262,6 @@ const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
       event.shiftKey,
       event.altKey,
     );
-
-    event.stopPropagation();
   };
 
   const pointerup = (event: PointerEvent) => {
@@ -286,6 +285,7 @@ const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
 
   const pointerover = (event: PointerEvent) => {
     const target = event.target as HTMLElement;
+    event.stopPropagation();
     if (!target || target === event.currentTarget) return;
 
     if (pointersDown.has(event.pointerId))
@@ -295,8 +295,6 @@ const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
         event.shiftKey,
         event.altKey,
       );
-
-    event.stopPropagation();
   };
 
   return html`
