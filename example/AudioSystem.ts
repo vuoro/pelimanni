@@ -179,14 +179,14 @@ export const configureReverb = (
 export const defaultReverbOptions = {
   preDelay: 0.034, // could be up to 0.04ms before being obvious
   bandwidth: 0.987,
-  inputDiffusion1: 0.236,
-  inputDiffusion2: 0.382,
-  decay: 0.414,
+  inputDiffusion1: 0.382,
+  inputDiffusion2: 0.5,
+  decay: 0.236,
   decayDiffusion1: 0.764,
   decayDiffusion2: 0.618,
   damping: 0.013,
-  excursionRate: 0.09,
+  excursionRate: 0.236,
   excursionDepth: 0.146,
-  dry: Math.SQRT1_2,
-  wet: 1.0 - Math.SQRT1_2,
+  dry: 0.618,
+  wet: 0.382,
 };
