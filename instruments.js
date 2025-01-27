@@ -466,7 +466,7 @@ export const releaseInstrument = (
   vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
   instabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
 
-  instrument.previousEndAt = releaseEarly ? dynamicEndAt : dynamicEndAt + defaultDynamicRelease;
+  instrument.previousEndAt = dynamicEndAt;
 };
 
 const cancelPendingEvents = (
