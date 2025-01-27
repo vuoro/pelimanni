@@ -82,11 +82,11 @@ export const Keyboard = new Magic(
 
     render(
       html`
-        <h2>Keyboard demo</h2>
+        <h2>Playable demo</h2>
         ${keys(blackKeysSet)}
         <form @input=${onInput}>
           <fieldset>
-            <legend>Settings</legend>
+            <legend>Play settings</legend>
             ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
             ${blackKeysInput(blackKeysSet)}
             ${velocityInput(state.velocity)}

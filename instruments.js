@@ -337,14 +337,14 @@ export const attackInstrument = (
     instabilityStopsAt += defaultDynamicAttack * 4.0;
 
     const instabilityTarget = 78 + 4 * highPitchness;
-    const instabilityEffect = initialInstability * (0.854 + 0.146 * 2.0 * weakness);
-    const instabilityAttack = defaultDynamicAttack * 0.013;
+    const instabilityEffect = initialInstability;
+    const instabilityAttack = defaultDynamicAttack * 0.008;
     const instabilityDecaysAt = Math.min(
       dynamicStartAt + instabilityAttack * 4.0,
       instabilityStopsAt,
     );
 
-    const instabilityGainDecay = instabilityStopsAt - instabilityDecaysAt;
+    const instabilityGainDecay = (instabilityStopsAt - instabilityDecaysAt) / 3.0;
 
     vibratoMain.frequency.setTargetAtTime(instabilityTarget, dynamicStartAt, instabilityAttack);
     vibratoMain.frequency.setTargetAtTime(
