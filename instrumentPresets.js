@@ -45,7 +45,7 @@ export const genericInstrument = Object.seal({
   /** @type {Release} */
   release: 0.0,
   /** @type {Glide} */
-  glide: 0.0,
+  glide: 0.00001,
 
   /** @type {Attack=} */
   overtoneAttack: undefined,
@@ -1082,7 +1082,7 @@ export const piano = {
   ],
 
   attack: 0.008,
-  overtoneAttack: 0.021,
+  overtoneAttack: 0.018,
   decay: 0.618,
   overtoneDecay: 0.236,
   sustain: 0.0,
@@ -1356,7 +1356,8 @@ export const marimba = {
   release: 0.09,
   overtoneRelease: 0.056,
 
-  lowPassFrequency: 20000,
+  highPassFrequency: 65.41,
+  lowPassFrequency: 2093.005,
 };
 
 // https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
@@ -1451,6 +1452,8 @@ export const glockenspiel = {
   decay: 0.382,
   overtoneDecay: 0.09,
   overtoneRelease: 0.021,
+
+  lowPassFrequency: 4186.009,
 };
 
 // https://www.hibberts.co.uk/the-upper-partials-of-bells/

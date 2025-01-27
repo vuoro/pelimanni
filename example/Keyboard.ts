@@ -20,18 +20,20 @@ export const Keyboard = new Magic(
       duration: number;
       vibratoAmount: number;
       vibratoFrequency: number;
+      sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
         : "piano") as keyof typeof allInstrumentPresets,
-      velocity: +(localStorage.getItem("velocity") ?? 0.7),
+      velocity: +(localStorage.getItem("velocity") ?? 0.8),
       attackMultiplier: +(localStorage.getItem("attackMultiplier") ?? 1.0),
       releaseMultiplier: +(localStorage.getItem("releaseMultiplier") ?? 1.0),
       duration: +(localStorage.getItem("duration") ?? 0.5),
       vibratoAmount: +(localStorage.getItem("vibratoAmount") ?? 0.0),
       vibratoFrequency: +(localStorage.getItem("vibratoFrequency") ?? 5.0),
+      sustain: +(localStorage.getItem("sustain") ?? 0.0),
       keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 60),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
     },
@@ -42,6 +44,7 @@ export const Keyboard = new Magic(
       releaseMultiplier: number;
       vibratoAmount: number;
       vibratoFrequency: number;
+      sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
     },
@@ -58,6 +61,7 @@ export const Keyboard = new Magic(
       const releaseMultiplier = data.get("releaseMultiplier") as string;
       const vibratoAmount = data.get("vibratoAmount") as string;
       const vibratoFrequency = data.get("vibratoFrequency") as string;
+      const sustain = data.get("sustain") as string;
       const keyboardOffset = data.get("keyboardOffset") as string;
       const blackKeys = data.getAll("blackKeys") as string[];
 
@@ -67,6 +71,7 @@ export const Keyboard = new Magic(
       localStorage.setItem("releaseMultiplier", releaseMultiplier);
       localStorage.setItem("vibratoAmount", vibratoAmount);
       localStorage.setItem("vibratoFrequency", vibratoFrequency);
+      localStorage.setItem("sustain", sustain);
       localStorage.setItem("keyboardOffset", keyboardOffset);
       localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
 
@@ -77,6 +82,7 @@ export const Keyboard = new Magic(
         releaseMultiplier: +releaseMultiplier,
         vibratoAmount: +vibratoAmount,
         vibratoFrequency: +vibratoFrequency,
+        sustain: +sustain,
         keyboardOffset: +keyboardOffset,
         blackKeys,
       });
@@ -87,8 +93,8 @@ export const Keyboard = new Magic(
       allInstrumentPresets[state.instrumentName as keyof typeof allInstrumentPresets];
     const keyboard = keys(
       blackKeysSet,
-      frequencyToMidi(instrumentPreset?.highPassFrequency ?? 20.0) - 1,
-      frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 20000.0) + 1,
+      frequencyToMidi(instrumentPreset?.highPassFrequency ?? 20.0) - 5,
+      frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 20000.0) + 5,
     );
 
     render(
@@ -99,13 +105,14 @@ export const Keyboard = new Magic(
           <fieldset>
             <legend>Play settings</legend>
             ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
-            ${blackKeysInput(blackKeysSet)}
             ${velocityInput(state.velocity)}
+            ${sustainInput(state.sustain)}
             ${attackMultiplierInput(state.attackMultiplier)}
             ${releaseMultiplierInput(state.releaseMultiplier)}
             ${vibratoAmountInput(state.vibratoAmount)}
             ${vibratoFrequencyInput(state.vibratoFrequency)}
             ${keyboardOffsetInput(state.keyboardOffset)}
+            ${blackKeysInput(blackKeysSet)}
           </fieldset>
         </form>
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
@@ -121,7 +128,7 @@ export const Keyboard = new Magic(
 const velocityInput = (velocity: number) => {
   return html`
     <label>
-      <span>Brightness: ${velocity}</span>
+      <span>Brightness: ${velocity * 100}%</span>
       <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
     </label>
   `;
@@ -130,7 +137,7 @@ const velocityInput = (velocity: number) => {
 const attackMultiplierInput = (attackMultiplier: number) => {
   return html`
     <label>
-      <span>Attack multiplier: ${attackMultiplier}</span>
+      <span>Attack time &times; ${attackMultiplier}</span>
       <input name="attackMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${attackMultiplier}/>
     </label>
   `;
@@ -139,7 +146,7 @@ const attackMultiplierInput = (attackMultiplier: number) => {
 const releaseMultiplierInput = (releaseMultiplier: number) => {
   return html`
     <label>
-      <span>Release multiplier: ${releaseMultiplier}</span>
+      <span>Release time &times; ${releaseMultiplier}</span>
       <input name="releaseMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${releaseMultiplier}/>
     </label>
   `;
@@ -159,6 +166,15 @@ const vibratoFrequencyInput = (vibratoFrequency: number) => {
     <label>
       <span>Vibrato frequency: ${vibratoFrequency} hz</span>
       <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
+    </label>
+  `;
+};
+
+const sustainInput = (sustain: number) => {
+  return html`
+    <label>
+      <span>Sustain after release: ${sustain * 100}%</span>
+      <input name="sustain" type="range" min="0.0" max="1.0" step="0.05" .value=${sustain}/>
     </label>
   `;
 };
@@ -488,8 +504,15 @@ const releaseWithController = (controllerId: ControllerId) => {
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
 
-  const { releaseMultiplier } = Keyboard.get();
-  releaseInstrument(instrument, audioContext.currentTime, releaseMultiplier, false);
+  const { releaseMultiplier, sustain } = Keyboard.get();
+
+  const sustainedDuration = Math.max(
+    0.0,
+    audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 4.0,
+  );
+  const remainingDecay = Math.max(0.0, instrument.previousDecay * 4.0 - sustainedDuration);
+  const releaseAt = audioContext.currentTime + remainingDecay * sustain;
+  releaseInstrument(instrument, releaseAt, releaseMultiplier, false);
 
   playingControllers.delete(controllerId);
   freeInstruments.add(instrument);

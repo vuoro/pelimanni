@@ -210,6 +210,8 @@ export const createInstrument = (preset, audioContext) => {
     previousEndAt: audioContext.currentTime,
     previousPitch: 440.0,
     previousVelocity: 0.5,
+    previousAttack: 0.0,
+    previousDecay: 0.0,
   };
 };
 
@@ -397,6 +399,7 @@ export const attackInstrument = (
   }
 
   const oscillatorDecayDynamics = decayDynamics * (1.0 + 0.618 * strongness);
+  const defaultDynamicDecay = defaultDecay * oscillatorDecayDynamics;
 
   for (const {
     gainNode,
@@ -407,7 +410,7 @@ export const attackInstrument = (
     const shouldDecay = decay > 0.0 && sustain !== 1.0;
     if (!shouldDecay) continue;
 
-    const dynamicDecay = decay * oscillatorDecayDynamics;
+    const dynamicDecay = decay === defaultDecay ? defaultDecay : decay * oscillatorDecayDynamics;
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
@@ -416,6 +419,8 @@ export const attackInstrument = (
   instrument.previousEndAt = Number.POSITIVE_INFINITY;
   instrument.previousPitch = pitch;
   instrument.previousVelocity = velocity;
+  instrument.previousAttack = defaultDynamicAttack;
+  instrument.previousDecay = defaultDynamicDecay;
 };
 
 export const releaseInstrument = (
