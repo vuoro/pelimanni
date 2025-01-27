@@ -246,8 +246,8 @@ export const flute = {
     },
   ],
 
-  attack: 0.034,
-  overtoneAttack: 0.034,
+  attack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.146,
   overtoneDecay: 0.236,
   sustain: 0.854,
@@ -355,8 +355,8 @@ export const oboe = {
     },
   ],
 
-  attack: 0.034,
-  overtoneAttack: 0.034,
+  attack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.236,
   overtoneDecay: 0.236,
   sustain: 0.91,
@@ -479,8 +479,8 @@ export const clarinet = {
     },
   ],
 
-  attack: 0.034,
-  overtoneAttack: 0.034,
+  attack: 0.056,
+  overtoneAttack: 0.056,
   decay: 0.236,
   overtoneDecay: 0.236,
   sustain: 0.91,
@@ -550,8 +550,8 @@ export const saxophone = {
 
   initialInstability: 1.0,
 
-  attack: 0.034,
-  overtoneAttack: 0.056,
+  attack: 0.056,
+  overtoneAttack: 0.09,
   decay: 0.236,
   overtoneDecay: 0.382,
   sustain: 0.854,
@@ -613,8 +613,8 @@ export const trumpet = {
 
   initialInstability: 0.764,
 
-  attack: 0.034,
-  overtoneAttack: 0.09,
+  attack: 0.056,
+  overtoneAttack: 0.146,
   decay: 0.236,
   overtoneDecay: 0.382,
   sustain: 0.854,

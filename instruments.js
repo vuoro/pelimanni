@@ -224,12 +224,23 @@ export const playInstrument = (
   /** @type {number} */ at,
   /** @type {number} */ duration,
   velocity = 0.5,
+  attackMultiplier = 1.0,
+  releaseMultiplier = 1.0,
   volume = 1.0,
   vibratoAmount = 0.0,
   vibratoFrequency = 5.0,
 ) => {
-  attackInstrument(instrument, pitch, at, velocity, volume, vibratoAmount, vibratoFrequency);
-  releaseInstrument(instrument, at + duration);
+  attackInstrument(
+    instrument,
+    pitch,
+    at,
+    velocity,
+    attackMultiplier,
+    volume,
+    vibratoAmount,
+    vibratoFrequency,
+  );
+  releaseInstrument(instrument, at + duration, releaseMultiplier);
 };
 
 export const attackInstrument = (
@@ -237,6 +248,7 @@ export const attackInstrument = (
   /** @type {number} */ pitch,
   /** @type {number} */ at,
   velocity = 0.5,
+  attackMultiplier = 1.0,
   volume = 1.0,
   vibratoAmount = 0.0,
   vibratoFrequency = 5.0,
@@ -288,7 +300,7 @@ export const attackInstrument = (
   const volumeTarget = volume * (1.0 - weakness * 0.146);
   const overtoneTarget = 0.09 + 0.91 * strongness;
 
-  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * weakness);
+  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * weakness) * attackMultiplier;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const overtoneDynamicAttack =
@@ -409,6 +421,7 @@ export const attackInstrument = (
 export const releaseInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ endAt,
+  releaseMultiplier = 1.0,
   releaseEarly = true,
 ) => {
   const {
@@ -437,7 +450,8 @@ export const releaseInstrument = (
 
   const strongness = velocity;
 
-  const releaseDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * strongness);
+  const releaseDynamics =
+    (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * strongness) * releaseMultiplier;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
 
   const overtoneDynamicRelease =
