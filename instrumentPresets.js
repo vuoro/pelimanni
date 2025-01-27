@@ -1323,15 +1323,15 @@ export const snareDrum = {
   ],
 };
 
-// Tuned so that the 2nd harmonic is at about 4.0
+// https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
 const marimbaImag = new Float32Array(20 * 43);
 marimbaImag[20 * 1] = 1.0;
-marimbaImag[20 * 4] = 0.236; // 3.92
-marimbaImag[20 * 10] = 0.146; // 9.24
-marimbaImag[20 * 16.25] = 0.618; // 16.27
-marimbaImag[20 * 24.2] = 0.146; // 24.22
-marimbaImag[20 * 33.55] = 0.09; // 33.56
-marimbaImag[20 * 43] = 0.056; // 42.97
+marimbaImag[20 * 4] = 0.618; // 3.92
+marimbaImag[20 * 10] = 0.236; // 9.24
+marimbaImag[20 * 16] = 0.034; // 16.27
+marimbaImag[20 * 24] = 0.021; // 24.22
+marimbaImag[20 * 33.55] = 0.013; // 33.56
+marimbaImag[20 * 43] = 0.008; // 42.97
 
 /** @param {Instrument} instrument */
 export const marimba = {
@@ -1357,7 +1357,7 @@ export const marimba = {
   ],
 
   attack: 0.008,
-  overtoneAttack: 0.013,
+  overtoneAttack: 0.018,
   decay: 0.382,
   overtoneDecay: 0.236,
   sustain: 0.0,
@@ -1366,15 +1366,17 @@ export const marimba = {
   lowPassFrequency: 20000,
 };
 
-// Tuned so that the 2nd harmonic is at about 3.0
+// https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
 const xylophoneImag = new Float32Array(20 * 24);
 xylophoneImag[20 * 1] = 1.0;
-xylophoneImag[20 * 3] = 0.236;
-xylophoneImag[20 * 6] = 0.5; // 6.16
-xylophoneImag[20 * 10] = 0.146; // 10.29
-xylophoneImag[20 * 14] = 0.618; // 14.01
-xylophoneImag[20 * 19.65] = 0.382; // 19.66
-xylophoneImag[20 * 24] = 0.236; // 24.02
+xylophoneImag[20 * 3] = 0.382;
+xylophoneImag[20 * 5] = 0.5;
+// xylophoneImag[20 * 6] = 0.5; // 6.16
+xylophoneImag[20 * 7] = 0.146;
+xylophoneImag[20 * 10] = 0.034; // 10.29
+xylophoneImag[20 * 14] = 0.021; // 14.01
+xylophoneImag[20 * 19.65] = 0.013; // 19.66
+xylophoneImag[20 * 24] = 0.008; // 24.02
 
 /** @param {Instrument} instrument */
 export const xylophone = {
@@ -1397,6 +1399,9 @@ export const xylophone = {
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
   ],
+
+  attack: 0.008,
+  overtoneAttack: 0.013,
 };
 
 const glockenspielImag = new Float32Array(20 * 32);
@@ -1412,17 +1417,17 @@ const glockenspielImag = new Float32Array(20 * 32);
 
 // https://www.physics.mcgill.ca/~grant/224/19-224.pdf
 glockenspielImag[20 * 1] = 1.0;
-glockenspielImag[20 * 2.7] = 0.618;
-glockenspielImag[20 * 3.25] = 0.382;
-glockenspielImag[20 * 5.55] = 0.618;
-glockenspielImag[20 * 5.15] = 0.382;
-glockenspielImag[20 * 7.05] = 0.236;
-glockenspielImag[20 * 8] = 0.146;
-glockenspielImag[20 * 8.45] = 0.09;
-glockenspielImag[20 * 10.6] = 0.056;
-glockenspielImag[20 * 11.25] = 0.034;
-glockenspielImag[20 * 12.2] = 0.021;
-glockenspielImag[20 * 13.95] = 0.013;
+glockenspielImag[20 * 2.7] = 0.382;
+glockenspielImag[20 * 3.25] = 0.236;
+glockenspielImag[20 * 5.55] = 0.382;
+glockenspielImag[20 * 5.15] = 0.236;
+glockenspielImag[20 * 7.05] = 0.146;
+glockenspielImag[20 * 8] = 0.09;
+glockenspielImag[20 * 8.45] = 0.056;
+glockenspielImag[20 * 10.6] = 0.034;
+glockenspielImag[20 * 11.25] = 0.021;
+glockenspielImag[20 * 12.2] = 0.013;
+glockenspielImag[20 * 13.95] = 0.008;
 
 /** @param {Instrument} instrument */
 export const glockenspiel = {
@@ -1446,7 +1451,7 @@ export const glockenspiel = {
     },
   ],
 
-  attack: 0.013,
+  attack: 0.008,
   overtoneAttack: 0.013,
   decay: 0.382,
   overtoneDecay: 0.09,
