@@ -246,14 +246,12 @@ export const flute = {
     },
   ],
 
-  glide: 0.001,
-
   attack: 0.034,
-  overtoneAttack: 0.021,
+  overtoneAttack: 0.034,
   decay: 0.146,
   overtoneDecay: 0.236,
   sustain: 0.854,
-  overtoneSustain: 0.764,
+  overtoneSustain: 0.618,
   release: 0.034,
   overtoneRelease: 0.021,
 
@@ -356,7 +354,6 @@ export const oboe = {
       stage: "low",
     },
   ],
-  glide: 0.001,
 
   attack: 0.034,
   overtoneAttack: 0.034,
@@ -482,8 +479,6 @@ export const clarinet = {
     },
   ],
 
-  glide: 0.001,
-
   attack: 0.034,
   overtoneAttack: 0.034,
   decay: 0.236,
@@ -494,7 +489,7 @@ export const clarinet = {
   overtoneRelease: 0.021,
 
   highPassFrequency: 164.812,
-  lowPassFrequency: 2092.992,
+  lowPassFrequency: 2093.005,
   vibratoEffectOnStage: 0.618,
   peakingFilters: [
     { frequency: 1180, gain: 2.0, Q: 2.0 },
@@ -552,21 +547,20 @@ export const saxophone = {
       stage: "low",
     },
   ],
-  glide: 0.003,
-  initialInstability: 0.764,
+
+  initialInstability: 1.0,
 
   attack: 0.034,
-  overtoneAttack: 0.09,
+  overtoneAttack: 0.056,
   decay: 0.236,
-  overtoneDecay: 0.146,
+  overtoneDecay: 0.382,
   sustain: 0.854,
   overtoneSustain: 0.618,
   release: 0.034,
   overtoneRelease: 0.056,
 
-  // FIXME: are these sensible? There are too many saxophone variants.
   highPassFrequency: 116.0,
-  lowPassFrequency: 1244.0 * 2.0,
+  lowPassFrequency: 1318.51,
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
@@ -616,7 +610,7 @@ export const trumpet = {
       stage: "low",
     },
   ],
-  glide: 0.003,
+
   initialInstability: 0.764,
 
   attack: 0.034,
@@ -629,7 +623,7 @@ export const trumpet = {
   overtoneRelease: 0.09,
 
   highPassFrequency: 184.996,
-  lowPassFrequency: 1174.656 * 2.0,
+  lowPassFrequency: 1318.51,
 
   vibratoEffectOnPitch: 30,
   peakingFilters: [
@@ -679,7 +673,7 @@ export const trombone = {
     },
   ],
   highPassFrequency: 58.27,
-  lowPassFrequency: 698.464 * 2.0,
+  lowPassFrequency: 698.464,
   peakingFilters: [
     { frequency: 520, gain: 2.0, Q: 2.0 },
     { frequency: 1500, gain: 2.0, Q: 2.0 },
@@ -726,7 +720,7 @@ export const frenchHorn = {
     },
   ],
   highPassFrequency: 55.0,
-  lowPassFrequency: 698.46 * 2.0,
+  lowPassFrequency: 698.46,
   peakingFilters: [
     { frequency: 340, gain: 2.0, Q: 2.0 },
     { frequency: 750, gain: 2.0, Q: 2.0 },
@@ -773,11 +767,8 @@ export const tuba = {
     },
   ],
   highPassFrequency: 36.71,
-  lowPassFrequency: 349.23 * 2.0,
-  peakingFilters: [
-    { frequency: 230, gain: 2.0, Q: 2.0 },
-    { frequency: 400, gain: 2.0, Q: 2.0 },
-  ],
+  lowPassFrequency: 349.23,
+  peakingFilters: [{ frequency: 230, gain: 2.0, Q: 2.0 }],
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -788,20 +779,20 @@ export const tuba = {
 const violinImag = Float32Array.of(
   0.0,
   1.0,
-  0.854,
+  0.764,
   0.618,
-  0.5,
+  0.382,
   0.618, // 5
   0.238,
-  0.382,
-  0.5,
-  0.382,
+  0.382, // 7
   0.236,
   0.146,
   0.09,
   0.056,
   0.034,
   0.021,
+  0.013,
+  0.008,
 );
 
 /** @type {Instrument} */
@@ -829,15 +820,13 @@ export const violin = {
     },
   ],
 
-  glide: 0.001,
-
   // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
   attack: 0.09,
-  overtoneAttack: 0.056,
+  overtoneAttack: 0.09,
   decay: 0.236,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.236,
   sustain: 1.056,
-  overtoneSustain: 0.618,
+  overtoneSustain: 0.854,
   release: 0.146,
   overtoneRelease: 0.09,
 
@@ -859,13 +848,13 @@ export const violin = {
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
 const violaImag = Float32Array.of(
   0.0,
-  0.854,
   1.0,
-  0.854,
-  0.764, // 4
+  0.91,
+  0.382,
+  0.618, // 4
   0.382,
   0.238,
-  0.382,
+  0.382, // 7
   0.5,
   0.382,
   0.236,
@@ -919,8 +908,8 @@ const celloImag = Float32Array.of(
   0.382,
   0.618, // 4
   0.382,
-  0.236,
-  0.236,
+  0.09,
+  0.236, // 7
   0.146,
   0.09,
   0.056,
@@ -969,10 +958,10 @@ const contrabassImag = Float32Array.of(
   1.0,
   0.618,
   0.382,
-  0.5, // 4
-  0.333333,
-  0.146,
-  0.146,
+  0.618, // 4
+  0.382,
+  0.09,
+  0.146, // 7
   0.09,
   0.056,
   0.034,
@@ -1095,9 +1084,10 @@ export const piano = {
   attack: 0.008,
   overtoneAttack: 0.021,
   decay: 0.618,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.236,
   sustain: 0.0,
-  release: 0.236,
+  release: 0.09,
+  overtoneRelease: 0.056,
 
   // Fake vibrato
   vibratoEffectOnPitch: 30.0,
@@ -1147,11 +1137,12 @@ export const hammeredDulcimer = {
   ],
 
   attack: 0.008,
-  overtoneAttack: 0.016,
+  overtoneAttack: 0.013,
   decay: 0.618,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.236,
   sustain: 0.0,
-  release: 0.236,
+  release: 0.146,
+  overtoneRelease: 0.056,
 
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 3.0,
@@ -1185,9 +1176,9 @@ export const taikoDrum = {
           (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
       ),
       getPitch: () => 5.0,
-      gain: 0.618,
+      gain: 0.382,
       attack: 0.008,
-      decay: 0.056,
+      decay: 0.034,
     },
     {
       type: "custom",
@@ -1208,11 +1199,12 @@ export const taikoDrum = {
   ],
 
   attack: 0.008,
-  overtoneAttack: 0.013,
-  decay: 0.382,
-  overtoneDecay: 0.618,
+  overtoneAttack: 0.021,
+  decay: 0.618,
+  overtoneDecay: 0.236,
   sustain: 0.0,
   release: 0.09,
+  overtoneRelease: 0.034,
 
   lowPassFrequency: 3080, // FIXME: no idea what this should be on any percussion
 };
@@ -1362,6 +1354,7 @@ export const marimba = {
   overtoneDecay: 0.236,
   sustain: 0.0,
   release: 0.09,
+  overtoneRelease: 0.056,
 
   lowPassFrequency: 20000,
 };
@@ -1402,6 +1395,8 @@ export const xylophone = {
 
   attack: 0.008,
   overtoneAttack: 0.013,
+  decay: 0.236,
+  overtoneDecay: 0.146,
 };
 
 const glockenspielImag = new Float32Array(20 * 32);
@@ -1455,6 +1450,7 @@ export const glockenspiel = {
   overtoneAttack: 0.013,
   decay: 0.382,
   overtoneDecay: 0.09,
+  overtoneRelease: 0.021,
 };
 
 // https://www.hibberts.co.uk/the-upper-partials-of-bells/
@@ -1522,12 +1518,12 @@ const plucked = {
   glide: 0.0,
   attack: 0.008,
   overtoneAttack: 0.013,
-  decay: 0.618,
-  overtoneDecay: 0.382,
+  decay: 0.382,
+  overtoneDecay: 0.146,
   sustain: 0.0,
   overtoneSustain: 0.0,
   release: 0.09,
-  overtoneRelease: 0.09,
+  overtoneRelease: 0.034,
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
