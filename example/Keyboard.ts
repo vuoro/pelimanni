@@ -116,7 +116,7 @@ export const Keyboard = new Magic(
           </fieldset>
         </form>
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
-        <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full velocity, alt for lowest velocity, or shift+alt for full vibrato.</p>
+        <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
       `,
       document.getElementById("keyboard") as HTMLElement,
     );
@@ -267,14 +267,14 @@ const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
 
   const pointerup = (event: PointerEvent) => {
     pointersDown.delete(event.pointerId);
-    releaseWithController(event.pointerId);
+    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 
     event.stopPropagation();
     event.preventDefault();
   };
 
   const pointerout = (event: PointerEvent) => {
-    releaseWithController(event.pointerId);
+    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 
     event.stopPropagation();
   };
@@ -406,7 +406,7 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 document.addEventListener("keyup", (event: KeyboardEvent) => {
   const { code, repeat } = event;
   if (repeat) return;
-  releaseWithController(code);
+  releaseWithController(code, event.shiftKey, event.altKey);
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -419,14 +419,16 @@ document.addEventListener("visibilitychange", () => {
 
 document.body.addEventListener("pointerup", (event: PointerEvent) => {
   pointersDown.delete(event.pointerId);
-  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId);
+  if (playingControllers.has(event.pointerId))
+    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 });
 
 document.body.addEventListener("pointerout", (event: PointerEvent) => {
   if (event.target !== event.currentTarget) return;
 
   pointersDown.delete(event.pointerId);
-  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId);
+  if (playingControllers.has(event.pointerId))
+    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 });
 
 type Instrument = ReturnType<typeof createInstrument>;
@@ -447,7 +449,7 @@ const attackWithController = (
   if (audioContext.state !== "running") audioContext.resume();
 
   const isAlreadyPlaying = playingControllers.has(controllerId);
-  if (isAlreadyPlaying) releaseWithController(controllerId);
+  if (isAlreadyPlaying) releaseWithController(controllerId, shiftKey, altKey);
 
   const preset = allInstrumentPresets[instrumentName];
 
@@ -484,10 +486,10 @@ const attackWithController = (
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
-    shiftKey && !altKey ? 1.0 : altKey && !shiftKey ? 0.0 : velocity,
+    velocity,
     attackMultiplier,
     0.382,
-    shiftKey && altKey ? 1.0 : vibratoAmount,
+    altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );
 
@@ -499,7 +501,7 @@ const attackWithController = (
   }
 };
 
-const releaseWithController = (controllerId: ControllerId) => {
+const releaseWithController = (controllerId: ControllerId, shiftKey = false, altKey = false) => {
   const { audioContext } = AudioSystem.get();
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
@@ -511,7 +513,7 @@ const releaseWithController = (controllerId: ControllerId) => {
     audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 4.0,
   );
   const remainingDecay = Math.max(0.0, instrument.previousDecay * 4.0 - sustainedDuration);
-  const releaseAt = audioContext.currentTime + remainingDecay * sustain;
+  const releaseAt = audioContext.currentTime + remainingDecay * (shiftKey ? 1.0 : sustain);
   releaseInstrument(instrument, releaseAt, releaseMultiplier, false);
 
   playingControllers.delete(controllerId);

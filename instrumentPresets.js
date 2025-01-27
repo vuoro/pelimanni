@@ -367,7 +367,7 @@ export const oboe = {
   highPassFrequency: 233.08,
   lowPassFrequency: 1760.0,
 
-  vibratoEffectOnStage: 0.618,
+  vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1400, gain: 2.0, Q: 2.0 },
     { frequency: 2950, gain: 2.0, Q: 2.0 },
@@ -490,7 +490,7 @@ export const clarinet = {
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2093.005,
-  vibratoEffectOnStage: 0.618,
+  vibratoEffectOnPitch: 30,
   peakingFilters: [
     { frequency: 1180, gain: 2.0, Q: 2.0 },
     { frequency: 2700, gain: 2.0, Q: 2.0 },
@@ -1089,10 +1089,7 @@ export const piano = {
   release: 0.09,
   overtoneRelease: 0.056,
 
-  // Fake vibrato
-  vibratoEffectOnPitch: 30.0,
-  vibratoEffectOnVolume: 0.0,
-  vibratoEffectOnStage: 0.236,
+  vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
 /** @type {Instrument} */
@@ -1147,10 +1144,7 @@ export const hammeredDulcimer = {
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 3.0,
 
-  // Fake vibrato
-  vibratoEffectOnPitch: 30.0,
-  vibratoEffectOnVolume: 0.0,
-  vibratoEffectOnStage: 0.236,
+  vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
 const taikoImag = new Float32Array(20 * 9.3);
@@ -1207,6 +1201,7 @@ export const taikoDrum = {
   overtoneRelease: 0.034,
 
   lowPassFrequency: 3080, // FIXME: no idea what this should be on any percussion
+  vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
 const timpaniImag = new Float32Array(20 * 3.15);
@@ -1358,6 +1353,8 @@ export const marimba = {
 
   highPassFrequency: 65.41,
   lowPassFrequency: 2093.005,
+
+  vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
 // https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
@@ -1530,7 +1527,7 @@ const plucked = {
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
-  vibratoEffectOnStage: 0.236,
+  vibratoEffectOnStage: 0.0,
 };
 
 const stretchedViolinImag = stretchOvertones(violinImag);
