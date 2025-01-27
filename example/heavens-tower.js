@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { bell, contrabass, flute, oboe, pluckedViola, violin } from "../instrumentPresets";
+import { bell, contrabass, flute, oboe, pluckedViola, ocarina } from "../instrumentPresets";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -98,7 +98,7 @@ export const heavensTower = () => {
 
     [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.146, velocity: 0.5 }]],
     [bell, [...plinkingMelody, { transpose: 12 * 4, volume: 0.09 }]],
-    [violin, [...melody, { transpose: 12 * 6, volume: 0.2 }]],
+    [ocarina, [...melody, { transpose: 12 * 6, volume: 0.2 }]],
     [flute, [...highHarmony, { transpose: 12 * 5, volume: 0.09 }]],
     [oboe, [...midHarmony, { transpose: 12 * 4, volume: 0.056 }]],
     [contrabass, [...lowHarmony, { transpose: 12 * 4, volume: 0.056 }]],
