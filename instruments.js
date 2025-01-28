@@ -1,3 +1,5 @@
+import { getConstantSource, getNoiseOscillator } from "./sources.js";
+
 const constantSources = new WeakMap();
 
 /**
@@ -44,7 +46,7 @@ export const createInstrument = (preset, audioContext) => {
   const output = highPassFilter;
 
   if (formants.length > 0) {
-    const formantGain = new GainNode(audioContext, { gain: 0.707 });
+    const formantGain = new GainNode(audioContext, { gain: Math.SQRT1_2 });
     lowPassFilter.connect(formantGain).connect(highPassFilter);
 
     for (const { frequency, Q = Math.SQRT1_2 } of formants) {
@@ -61,12 +63,7 @@ export const createInstrument = (preset, audioContext) => {
   // Crossfader for oscillator stages, adapted from
   // https://tonejs.github.io/docs/15.0.4/classes/CrossFade.html
   /** @type {ConstantSourceNode} */
-  let constantSource = constantSources.get(audioContext);
-  if (!constantSource) {
-    constantSource = new ConstantSourceNode(audioContext);
-    constantSource.start();
-    constantSources.set(audioContext, constantSource);
-  }
+  const constantSource = getConstantSource(audioContext);
   const crossfader = new StereoPannerNode(audioContext, { pan: -1 });
   const crossSplitter = new ChannelSplitterNode(audioContext, { numberOfOutputs: 2 });
   const lowStage = new GainNode(audioContext, { gain: 0 });
@@ -93,6 +90,8 @@ export const createInstrument = (preset, audioContext) => {
     sustain,
     release,
     glide,
+    noiseType = "bandpass",
+    noiseQ = Math.SQRT1_2,
     getPitch = passPitchThrough,
   } of oscillatorsInPreset) {
     const oscillatorNode =
@@ -109,17 +108,20 @@ export const createInstrument = (preset, audioContext) => {
                 periodicWave.imag.map((v) => v * randomisedPhase * (1.0 - Math.random() * 0.013)),
             }),
           })
-        : new OscillatorNode(audioContext, { type, frequency: 440 });
+        : type === "noise"
+          ? new BiquadFilterNode(audioContext, { type: noiseType, Q: noiseQ })
+          : new OscillatorNode(audioContext, { type, frequency: 440 });
 
     const gainNode = new GainNode(audioContext, { gain: 0 });
     const gainTarget = gain * (formants.length > 0 ? Math.SQRT1_2 : 1.0);
 
+    if (type === "noise") getNoiseOscillator(audioContext).connect(oscillatorNode);
+    if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);
     oscillatorNode.connect(gainNode);
 
     if (stage === "low" || stage === "both") gainNode.connect(lowStage);
     if (stage === "high" || stage === "both") gainNode.connect(highStage);
 
-    oscillatorNode.start(audioContext.currentTime);
     oscillators.push({
       oscillatorNode,
       gainNode,
@@ -503,7 +505,7 @@ export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
   output.disconnect();
 
   for (const { oscillatorNode } of oscillators) {
-    oscillatorNode.stop();
+    if (oscillatorNode instanceof OscillatorNode) oscillatorNode.stop();
     oscillatorNode.disconnect();
   }
 

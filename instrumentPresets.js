@@ -1,7 +1,5 @@
 /** @typedef {typeof genericInstrument} Instrument */
 
-import { getNoise } from "./noise";
-
 /**
  * @typedef {number} Attack - a `timeConstant`: how long the note takes to "fade in"
  * @typedef {number} Decay - a `timeConstant`: how long before the note reaches the `sustain` level after finishing its `attack`
@@ -15,7 +13,7 @@ export const genericInstrument = Object.seal({
 
   /**
    * @typedef {object} Oscillator - creates the sound of the note
-   * @property {OscillatorType} type
+   * @property {OscillatorType | "noise"} type
    * @property {PeriodicWaveOptions=} periodicWave - used for custom oscillators
    * @property {number=} gain - base volume of the oscillator (make sure all oscillators don't add to >1.0)
    * @property {"both" | "low" | "high"=} stage - should this oscillator play during "low" stage (start of attack, end of release, low sustain, low velocity), "high" stage (end of attack, high sustain, high velocity), or both
@@ -24,6 +22,8 @@ export const genericInstrument = Object.seal({
    * @property {Sustain=} sustain
    * @property {Release=} release
    * @property {Glide=} glide
+   * @property {BiquadFilterType=} noiseType
+   * @property {number=} noiseQ
    * @property {(pitch: number, velocity?: number) => number=} getPitch - lets you modify the pitch before it gets played
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
@@ -45,7 +45,7 @@ export const genericInstrument = Object.seal({
   /** @type {Release} */
   release: 0.0,
   /** @type {Glide} */
-  glide: 0.00001,
+  glide: 0.0001,
 
   /** @type {Attack=} */
   overtoneAttack: undefined,
@@ -208,6 +208,17 @@ const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
   return pitch / inharmonicityPrecision;
 };
 
+const windNoiseOscillator = {
+  type: "noise",
+  noiseQ: 16,
+  noiseType: "highpass",
+  gain: 0.236 / 16,
+  attack: 0.021,
+  // decay: 0.034,
+  // release: 0.0,
+  sustain: 0.382,
+};
+
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://www.youtube.com/watch?v=hfS7mDvrZ7g
@@ -247,6 +258,7 @@ export const flute = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
 
   attack: 0.056,
@@ -287,6 +299,7 @@ export const ocarina = {
       getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
     },
+    windNoiseOscillator,
   ],
   overtoneDecay: flute.decay * 0.618,
   highPassFrequency: 261.6,
@@ -335,6 +348,7 @@ export const oboe = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
 
   attack: 0.056,
@@ -395,6 +409,7 @@ export const bassoon = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
@@ -449,6 +464,7 @@ export const clarinet = {
       stage: "low",
       getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
+    windNoiseOscillator,
   ],
 
   attack: 0.056,
@@ -518,6 +534,7 @@ export const saxophone = {
       getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
     },
+    windNoiseOscillator,
   ],
 
   initialInstability: 1.0,
@@ -579,6 +596,7 @@ export const trumpet = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
 
   initialInstability: 0.764,
@@ -637,6 +655,7 @@ export const trombone = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464,
@@ -682,6 +701,7 @@ export const frenchHorn = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
@@ -729,6 +749,7 @@ export const tuba = {
       },
       stage: "low",
     },
+    windNoiseOscillator,
   ],
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
@@ -1007,11 +1028,6 @@ const stretchedPianoImag = stretchOvertones(pianoImag);
 // initial key noise, finger tap: 290 and 445 Hz, lasts 20–30ms, weak, more audible at low velocity
 // later key/hammer noise: 914 hz, 10–20ms attack, strong
 // also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
-// const hammerAndLowKeyNoiseImag = new Float32Array(25);
-// hammerAndLowKeyNoiseImag[1] = 1.0; // 38 hz
-// hammerAndLowKeyNoiseImag[3] = 0.618; // ~100 hz
-// hammerAndLowKeyNoiseImag[7] = 0.382; // ~250 hz
-// hammerAndLowKeyNoiseImag[24] = 1.0; // ~914 hz
 
 /** @type {Instrument} */
 export const piano = {
@@ -1034,15 +1050,6 @@ export const piano = {
       stage: "low",
       getPitch: getStretchedOvertonesPitch,
     }),
-    // TODO: is it worth having this in a digital instrument?
-    // {
-    //   type: "custom",
-    //   periodicWave: { imag: hammerAndLowKeyNoiseImag },
-    //   getPitch: () => 38.0,
-    //   gain: 0.056,
-    //   attack: 0.005,
-    //   decay: 0.056,
-    // },
   ],
 
   attack: 0.008,
@@ -1077,24 +1084,6 @@ export const hammeredDulcimer = {
       stage: "low",
       getPitch: getStretchedOvertonesPitch,
     }),
-    // {
-    //   type: "custom",
-    //   periodicWave: {
-    //     // FIXME: this sounds more like an anvil than anything…
-    //     imag: Float32Array.of(
-    //       0.0,
-    //       ...Float32Array.of(0.0, 0.146, 0.0, 0.0, 0.0, 0.09, 0.0, 0.056, 0.0, 0.0), // body noise around 80 hz?
-    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.146), // bounce noise around 900 hz
-    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.382),
-    //       ...Float32Array.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.236), // hammer overtones
-    //     ),
-    //   },
-    //   getPitch: () => 44.0,
-    //   gain: 0.236,
-    //   attack: 0.008,
-    //   decay: 0.056,
-
-    // },
   ],
 
   attack: 0.008,
@@ -1127,6 +1116,16 @@ const membraneDetune = 0.1224625; // 200 cents
 const getDrumDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
   (pitch / 20.0) * (1.0 + membraneDetune * velocity);
 
+const drumNoiseOscillator = {
+  type: "noise",
+  noiseQ: 8,
+  noiseType: "lowpass",
+  gain: 1 / 8,
+  attack: 0.005,
+  decay: 0.034,
+  release: 0.0,
+};
+
 /** @param {Instrument} instrument */
 export const taikoDrum = {
   ...genericInstrument,
@@ -1148,7 +1147,7 @@ export const taikoDrum = {
       stage: "low",
       getPitch: getDrumDetunedPitch,
     },
-    { type: "noise", gain: 0.236, decay: 0.034, getPitch: (pitch = 440.0) => pitch },
+    drumNoiseOscillator,
   ],
 
   attack: 0.008,
@@ -1159,7 +1158,7 @@ export const taikoDrum = {
   release: 0.09,
   overtoneRelease: 0.034,
 
-  lowPassFrequency: 3080, // FIXME: no idea what this should be on any percussion
+  lowPassFrequency: 2200, // FIXME: no idea what this should be on any percussion
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
@@ -1174,13 +1173,6 @@ timpaniImag[20 * 3.15] = 0.236; // 3.16
 export const timpani = {
   ...taikoDrum,
   oscillators: [
-    {
-      ...taikoDrum.oscillators[0],
-      periodicWave: getNoise(
-        (value, index) =>
-          (value * Math.min(1.0, Math.max(0.0, index - 27.0))) / Math.max(1.0, index - 27.0),
-      ),
-    },
     {
       type: "custom",
       periodicWave: {
@@ -1197,6 +1189,7 @@ export const timpani = {
       stage: "low",
       getPitch: getDrumDetunedPitch,
     },
+    drumNoiseOscillator,
   ],
 };
 
@@ -1228,9 +1221,7 @@ export const bassDrum = {
       stage: "low",
       getPitch: getDrumDetunedPitch,
     },
-    {
-      ...taikoDrum.oscillators[0],
-    },
+    drumNoiseOscillator,
   ],
 };
 
@@ -1263,9 +1254,7 @@ export const snareDrum = {
       stage: "low",
       getPitch: getDrumDetunedPitch,
     },
-    {
-      ...taikoDrum.oscillators[0],
-    },
+    drumNoiseOscillator,
   ],
 };
 
@@ -1278,6 +1267,17 @@ marimbaImag[20 * 16] = 0.034; // 16.27
 marimbaImag[20 * 24] = 0.021; // 24.22
 marimbaImag[20 * 33.55] = 0.013; // 33.56
 marimbaImag[20 * 43] = 0.008; // 42.97
+
+const idiophoneNoiseOscillator = {
+  type: "noise",
+  noiseQ: 32,
+  noiseType: "lowpass",
+  gain: 1 / 32,
+  attack: 0.005,
+  decay: 0.034,
+  release: 0.0,
+  // getPitch: (_pitch = 440.0) => 840 + 80 * Math.random(),
+};
 
 /** @param {Instrument} instrument */
 export const marimba = {
@@ -1300,6 +1300,7 @@ export const marimba = {
       stage: "low",
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
+    idiophoneNoiseOscillator,
   ],
 
   attack: 0.008,
@@ -1348,6 +1349,7 @@ export const xylophone = {
       stage: "low",
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
+    idiophoneNoiseOscillator,
   ],
 
   attack: 0.008,
@@ -1401,6 +1403,7 @@ export const glockenspiel = {
       stage: "low",
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
+    idiophoneNoiseOscillator,
   ],
 
   attack: 0.008,
@@ -1447,6 +1450,7 @@ export const bell = {
       stage: "low",
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
+    idiophoneNoiseOscillator,
   ],
 
   overtoneDecay: 1.0,
@@ -1494,7 +1498,7 @@ const stretchedViolaImag = stretchOvertones(violaImag);
 const stretchedCelloImag = stretchOvertones(celloImag);
 const stretchedContrabassImag = stretchOvertones(contrabassImag);
 
-const pluckedStringDetune = 0.059463;
+const pluckedStringDetune = 0.059463 * 0.0; // TODO: this is too bad to activate atm.
 const getPluckedStringDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
   getStretchedOvertonesPitch(pitch) * (1.0 + velocity * pluckedStringDetune);
 
