@@ -81,13 +81,12 @@ export const genericInstrument = Object.seal({
   vibratoEffectOnVolume: 0.0,
 
   /**
-   * @typedef {object} PeakingFilter - a `peaking` type `BiquadFilterNode` that shapes the instrument's timbre
+   * @typedef {object} FormantFilter - a `bandpass` type `BiquadFilterNode` that shapes the instrument's timbre
    * @property {BiquadFilterNode["frequency"]["value"]} frequency
-   * @property {BiquadFilterNode["gain"]["value"]} gain
    * @property {BiquadFilterNode["Q"]["value"]} Q
    */
-  /** @type {PeakingFilter[]} A set of `peaking` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate for the highest `gain` filter. */
-  peakingFilters: [],
+  /** @type {FormantFilter[]} A set of `bandpass` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate. */
+  formants: [],
 });
 
 /** @param {number} v */
@@ -96,7 +95,7 @@ const defaultLowStageMapper = (v) => Math.min(1.0, v) ** (5.0 + Math.random());
 const requiredSympatheticStringElements = 3 * 2;
 
 /** @param {Float32Array} imag */
-const addSympatheticStringsToImag = (imag, loudness = 0.146) => {
+const addSympatheticStringsToImag = (imag, loudness = 0.09) => {
   const newImag = new Float32Array(imag.length * requiredSympatheticStringElements * 3);
 
   for (let index = 1; index < imag.length; index++) {
@@ -113,7 +112,7 @@ const addSympatheticStringsToImag = (imag, loudness = 0.146) => {
 const getSympatheticStringPitch = (pitch = 440.0) => pitch / requiredSympatheticStringElements;
 
 /** @param {Oscillator} oscillator */
-const copySympatheticStrings = (oscillator, loudness = 0.146) => {
+const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   const { gain = 1.0, getPitch } = oscillator;
   const strings = [oscillator];
 
@@ -263,7 +262,7 @@ export const flute = {
   lowPassFrequency: 4185.984,
 
   vibratoEffectOnStage: 1.0,
-  peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
+  formants: [{ frequency: 810, Q: 2.0 }],
 };
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
@@ -294,7 +293,7 @@ export const ocarina = {
   lowPassFrequency: 2793.826,
   vibratoEffectOnStage: 0.0,
   vibratoEffectOnPitch: 30,
-  peakingFilters: [],
+  formants: [],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -351,9 +350,9 @@ export const oboe = {
   lowPassFrequency: 1760.0,
 
   vibratoEffectOnPitch: 30,
-  peakingFilters: [
-    { frequency: 1400, gain: 2.0, Q: 2.0 },
-    { frequency: 2950, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 1400, Q: 2.0 },
+    { frequency: 2950, Q: 2.0 },
   ],
 };
 
@@ -399,9 +398,9 @@ export const bassoon = {
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
-  peakingFilters: [
-    { frequency: 440, gain: 2.0, Q: 2.0 },
-    { frequency: 1180, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 440, Q: 2.0 },
+    { frequency: 1180, Q: 2.0 },
   ],
 };
 
@@ -464,9 +463,9 @@ export const clarinet = {
   highPassFrequency: 164.812,
   lowPassFrequency: 2093.005,
   vibratoEffectOnPitch: 30,
-  peakingFilters: [
-    { frequency: 1180, gain: 2.0, Q: 2.0 },
-    { frequency: 2700, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 1180, Q: 2.0 },
+    { frequency: 2700, Q: 2.0 },
   ],
 };
 
@@ -536,10 +535,10 @@ export const saxophone = {
   lowPassFrequency: 1318.51,
 
   vibratoEffectOnPitch: 30,
-  peakingFilters: [
-    { frequency: 670, gain: 2.0, Q: 2.0 },
-    { frequency: 2050, gain: 2.0, Q: 2.0 },
-    { frequency: 3100, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 670, Q: 2.0 },
+    { frequency: 2050, Q: 2.0 },
+    { frequency: 3100, Q: 2.0 },
   ],
 };
 
@@ -597,9 +596,9 @@ export const trumpet = {
   lowPassFrequency: 1318.51,
 
   vibratoEffectOnPitch: 30,
-  peakingFilters: [
-    { frequency: 1200, gain: 2.0, Q: 2.0 },
-    { frequency: 2200, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 1200, Q: 2.0 },
+    { frequency: 2200, Q: 2.0 },
   ],
 };
 
@@ -641,9 +640,9 @@ export const trombone = {
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464,
-  peakingFilters: [
-    { frequency: 520, gain: 2.0, Q: 2.0 },
-    { frequency: 1500, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 520, Q: 2.0 },
+    { frequency: 1500, Q: 2.0 },
   ],
 };
 
@@ -686,9 +685,9 @@ export const frenchHorn = {
   ],
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
-  peakingFilters: [
-    { frequency: 340, gain: 2.0, Q: 2.0 },
-    { frequency: 750, gain: 2.0, Q: 2.0 },
+  formants: [
+    { frequency: 340, Q: 2.0 },
+    { frequency: 750, Q: 2.0 },
   ],
 };
 
@@ -733,7 +732,7 @@ export const tuba = {
   ],
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
-  peakingFilters: [{ frequency: 230, gain: 2.0, Q: 2.0 }],
+  formants: [{ frequency: 230, Q: 2.0 }],
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -799,11 +798,11 @@ export const violin = {
   lowPassFrequency: 3520.0,
 
   vibratoEffectOnPitch: 30,
-  peakingFilters: [
-    { frequency: 300, gain: 3, Q: 3.5 },
-    { frequency: 700, gain: 4, Q: 3.5 },
-    { frequency: 1000, gain: 4, Q: 3.5 },
-    { frequency: 2900, gain: 5, Q: 2.0 },
+  formants: [
+    { frequency: 300, Q: 3.5 },
+    { frequency: 700, Q: 3.5 },
+    { frequency: 1000, Q: 3.5 },
+    { frequency: 2900, Q: 2.0 },
   ],
 };
 
@@ -854,11 +853,11 @@ export const viola = {
   highPassFrequency: 130.8,
   lowPassFrequency: 2093.005,
 
-  peakingFilters: [
-    { frequency: 220, gain: 3, Q: 3.5 },
-    { frequency: 350, gain: 4, Q: 3.5 },
-    { frequency: 600, gain: 4, Q: 3.5 },
-    { frequency: 1600, gain: 5, Q: 2.0 },
+  formants: [
+    { frequency: 220, Q: 3.5 },
+    { frequency: 350, Q: 3.5 },
+    { frequency: 600, Q: 3.5 },
+    { frequency: 1600, Q: 2.0 },
   ],
 };
 
@@ -909,11 +908,11 @@ export const cello = {
   highPassFrequency: 65.4,
   lowPassFrequency: 1760.0,
 
-  peakingFilters: [
-    { frequency: 250, gain: 3, Q: 3.5 },
-    { frequency: 400, gain: 4, Q: 3.5 },
-    { frequency: 600, gain: 4, Q: 3.5 },
-    { frequency: 900, gain: 5, Q: 2.0 },
+  formants: [
+    { frequency: 250, Q: 3.5 },
+    { frequency: 400, Q: 3.5 },
+    { frequency: 600, Q: 3.5 },
+    { frequency: 900, Q: 2.0 },
   ],
 };
 
@@ -961,11 +960,11 @@ export const contrabass = {
   highPassFrequency: 41.2,
   lowPassFrequency: 523.25,
 
-  peakingFilters: [
-    { frequency: 70, gain: 3, Q: 3.5 },
-    { frequency: 250, gain: 4, Q: 3.5 },
-    { frequency: 750, gain: 4, Q: 3.0 },
-    { frequency: 1100, gain: 5, Q: 2.0 },
+  formants: [
+    { frequency: 70, Q: 3.5 },
+    { frequency: 250, Q: 3.5 },
+    { frequency: 750, Q: 3.0 },
+    { frequency: 1100, Q: 2.0 },
   ],
 };
 

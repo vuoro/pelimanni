@@ -12,7 +12,7 @@ export const createInstrument = (preset, audioContext) => {
     vibratoEffectOnStage,
     vibratoEffectOnVolume,
     initialInstability,
-    peakingFilters,
+    formants,
     lowPassQ = Math.SQRT1_2,
     highPassQ = Math.SQRT1_2,
     lowPassFrequency,
@@ -41,22 +41,20 @@ export const createInstrument = (preset, audioContext) => {
   });
 
   lowPassFilter.connect(highPassFilter);
+  const output = highPassFilter;
 
-  let output = highPassFilter;
-  let maxPeak = 1.0;
+  if (formants.length > 0) {
+    const formantGain = new GainNode(audioContext, { gain: 0.707 });
+    lowPassFilter.connect(formantGain).connect(highPassFilter);
 
-  if (peakingFilters.length > 0) {
-    for (const { frequency, gain, Q = Math.SQRT1_2 } of peakingFilters) {
-      maxPeak = Math.max(maxPeak, gain);
-      const peakFilter = new BiquadFilterNode(audioContext, {
-        type: "peaking",
+    for (const { frequency, Q = Math.SQRT1_2 } of formants) {
+      const formantFilter = new BiquadFilterNode(audioContext, {
+        type: "bandpass",
         frequency: frequency,
         Q,
-        gain,
       });
 
-      output.connect(peakFilter);
-      output = peakFilter;
+      formantFilter.connect(formantGain);
     }
   }
 
@@ -83,7 +81,6 @@ export const createInstrument = (preset, audioContext) => {
 
   // Oscillators
   const oscillators = [];
-  const baseVolume = 1.0 / maxPeak ** 0.41421356;
   const randomisedPhase = Math.random() * 2.0 - 1.0;
 
   for (const {
@@ -113,9 +110,9 @@ export const createInstrument = (preset, audioContext) => {
             }),
           })
         : new OscillatorNode(audioContext, { type, frequency: 440 });
-    const gainNode = new GainNode(audioContext, { gain: 0 });
 
-    const gainTarget = baseVolume * gain;
+    const gainNode = new GainNode(audioContext, { gain: 0 });
+    const gainTarget = gain * (formants.length > 0 ? Math.SQRT1_2 : 1.0);
 
     oscillatorNode.connect(gainNode);
 
@@ -232,7 +229,7 @@ export const playInstrument = (
     vibratoAmount,
     vibratoFrequency,
   );
-  releaseInstrument(instrument, at + duration, releaseMultiplier);
+  releaseInstrument(instrument, at + duration, releaseMultiplier, true);
 };
 
 export const attackInstrument = (
@@ -288,7 +285,7 @@ export const attackInstrument = (
   const volumeTarget = volume * (1.0 - weakness * 0.146);
   const overtoneTarget = 0.09 + 0.91 * strongness;
 
-  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * weakness) * attackMultiplier;
+  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * weakness) * attackMultiplier;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const overtoneDynamicAttack =
@@ -431,7 +428,7 @@ export const releaseInstrument = (
   const strongness = velocity;
 
   const releaseDynamics =
-    (1.0 + 0.382 * lowPitchness) * (1.0 + 0.382 * strongness) * releaseMultiplier;
+    (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * strongness) * releaseMultiplier;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
 
   const overtoneDynamicRelease =
@@ -444,7 +441,7 @@ export const releaseInstrument = (
     ? Math.max(
         crossfader.context.currentTime,
         instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
-        endAt - (1.0 - strongness * 0.5) * defaultDynamicRelease,
+        endAt - defaultDynamicRelease,
       )
     : endAt;
 
@@ -466,7 +463,7 @@ export const releaseInstrument = (
   vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
   instabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
 
-  instrument.previousEndAt = dynamicEndAt;
+  instrument.previousEndAt = releaseEarly ? dynamicEndAt : dynamicEndAt + defaultDynamicRelease;
 };
 
 const cancelPendingEvents = (
