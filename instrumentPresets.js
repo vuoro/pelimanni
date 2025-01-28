@@ -1111,6 +1111,7 @@ export const hammeredDulcimer = {
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
+// https://www.youtube.com/watch?v=0_WJbOpG0Fg
 const taikoImag = new Float32Array(20 * 9.3);
 taikoImag[20 * 1] = 0.618;
 taikoImag[20 * 2.1] = 1.0; // 2.11
@@ -1121,6 +1122,8 @@ taikoImag[20 * 5.6] = 0.146; // 5.57
 taikoImag[20 * 7.6] = 0.09;
 taikoImag[20 * 8.5] = 0.056;
 taikoImag[20 * 9.3] = 0.034;
+
+const membraneDetune = 1.1224625; // 200 cents
 
 /** @param {Instrument} instrument */
 export const taikoDrum = {
@@ -1152,7 +1155,7 @@ export const taikoDrum = {
         imag: taikoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
     },
   ],
 
@@ -1200,7 +1203,7 @@ export const timpani = {
         imag: timpaniImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
     },
   ],
 };
@@ -1231,7 +1234,7 @@ export const bassDrum = {
         imag: bassDrumImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
     },
     {
       ...taikoDrum.oscillators[0],
@@ -1266,7 +1269,7 @@ export const snareDrum = {
         imag: snareImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => pitch / 20.0,
+      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
     },
     {
       ...taikoDrum.oscillators[0],
