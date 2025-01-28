@@ -488,7 +488,7 @@ const attackWithController = (
     audioContext.currentTime,
     velocity,
     attackMultiplier,
-    0.382,
+    0.333333,
     altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );

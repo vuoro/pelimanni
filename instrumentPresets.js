@@ -272,20 +272,8 @@ export const piccolo = {
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
 // https://www.physicsforums.com/threads/origin-of-harmonics-in-helmholts-type-resonators.799974/
-const ocarinaImag = Float32Array.of(
-  0.0,
-  1.0,
-  0.0,
-  0.09,
-  0.0,
-  0.382,
-  0.0,
-  0.0,
-  0.236,
-  0.0,
-  0.0,
-  0.0,
-  0.146,
+const ocarinaImag = stretchOvertones(
+  Float32Array.of(0.0, 1.0, 0.0, 0.021, 0.0, 0.034, 0.0, 0.021, 0.0, 0.013),
 );
 
 /** @type {Instrument} */
@@ -294,15 +282,15 @@ export const ocarina = {
   oscillators: [
     {
       type: "custom",
-      periodicWave: { imag: stretchOvertones(ocarinaImag) },
+      periodicWave: { imag: ocarinaImag },
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "high",
-      getPitch: getStretchedOvertonesPitch,
     },
     {
       type: "custom",
-      periodicWave: { imag: stretchOvertones(ocarinaImag).map(defaultLowStageMapper) },
+      periodicWave: { imag: ocarinaImag.map(defaultLowStageMapper) },
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
-      getPitch: getStretchedOvertonesPitch,
     },
   ],
   overtoneDecay: flute.decay * 0.618,
