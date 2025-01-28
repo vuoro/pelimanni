@@ -211,16 +211,20 @@ const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://www.youtube.com/watch?v=hfS7mDvrZ7g
 const fluteImag = Float32Array.of(
   0.0,
   1.0,
   0.854,
-  0.382,
+  0.764,
   0.618,
-  0.236,
+  0.146,
   0.09,
+  0.056,
   0.034,
+  0.021,
   0.013,
+  0.008,
   0.005,
   0.002,
 );
@@ -293,20 +297,19 @@ export const ocarina = {
   peakingFilters: [],
 };
 
-// Sources are very conflicting, must be wide variance between notes
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+// https://www.youtube.com/watch?v=a0-ysmiQTss
 const oboeImag = Float32Array.of(
   0.0,
   0.618,
   0.764,
-  0.382,
-  0.854,
   1.0,
+  0.618,
+  0.764,
   0.618,
   0.382,
   0.236,
   0.146,
-  0.09,
   0.056,
   0.034,
   0.021,
@@ -404,24 +407,25 @@ export const bassoon = {
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
+// https://www.youtube.com/watch?v=lhvJUU9Js-U
 const clarinetImag = stretchOvertones(
   Float32Array.of(
     0.0,
     1.0,
-    0.236,
-    0.854,
-    0.382,
+    0.0,
     0.618,
-    0.146,
+    0.0,
+    0.382,
+    0.0,
     0.236,
-    0.056,
+    0.0,
+    0.146,
+    0.0,
     0.09,
-    0.021,
+    0.0,
+    0.056,
+    0.0,
     0.034,
-    0.008,
-    0.013,
-    0.003,
-    0.005,
   ),
 );
 
@@ -540,23 +544,21 @@ export const saxophone = {
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
+// https://www.youtube.com/watch?v=2f5TxqlLUEs
 const trumpetImag = Float32Array.of(
   0.0,
-  0.618,
-  1.0,
-  0.764,
   0.854,
-  0.764,
+  1.0,
+  0.944,
+  0.854,
   0.618,
-  0.382,
   0.236,
-  0.146,
   0.09,
-  0.056,
   0.034,
-  0.021,
   0.013,
-  0.008,
+  0.005,
+  0.005,
+  0.002,
 );
 
 /** @type {Instrument} */
@@ -603,23 +605,19 @@ export const trumpet = {
 
 // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
 // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
+// https://www.youtube.com/watch?v=2f5TxqlLUEs
 const tromboneImag = Float32Array.of(
   0.0,
-  0.618,
   1.0,
-  0.854,
+  0.944,
   0.764,
   0.618,
-  0.382,
   0.236,
-  0.146,
   0.09,
-  0.056,
   0.034,
-  0.021,
   0.013,
-  0.008,
   0.005,
+  0.002,
 );
 
 /** @type {Instrument} */
@@ -650,12 +648,10 @@ export const trombone = {
 };
 
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
+// https://www.youtube.com/watch?v=2f5TxqlLUEs
 const frenchHornImag = Float32Array.of(
   0.0,
-  0.854,
   1.0,
-  0.91,
-  0.764,
   0.618,
   0.382,
   0.236,
