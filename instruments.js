@@ -309,7 +309,7 @@ export const attackInstrument = (
     glide = defaultGlide,
     getPitch,
   } of oscillators) {
-    const pitchTarget = getPitch(pitch);
+    const pitchTarget = getPitch(pitch, velocity);
     const dynamicAttack = attack === defaultAttack ? defaultDynamicAttack : attack * attackDynamics;
 
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);

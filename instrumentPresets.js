@@ -24,7 +24,7 @@ export const genericInstrument = Object.seal({
    * @property {Sustain=} sustain
    * @property {Release=} release
    * @property {Glide=} glide
-   * @property {(pitch: Number) => Number=} getPitch - lets you modify the pitch before it gets played
+   * @property {(pitch: number, velocity?: number) => number=} getPitch - lets you modify the pitch before it gets played
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
   oscillators: [{ type: "triangle" }],
@@ -1123,24 +1123,15 @@ taikoImag[20 * 7.6] = 0.09;
 taikoImag[20 * 8.5] = 0.056;
 taikoImag[20 * 9.3] = 0.034;
 
-const membraneDetune = 1.1224625; // 200 cents
+const membraneDetune = 0.1224625; // 200 cents
+const getDrumDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
+  (pitch / 20.0) * (1.0 + membraneDetune * velocity);
 
 /** @param {Instrument} instrument */
 export const taikoDrum = {
   ...genericInstrument,
   group: "Percussion (drums)",
   oscillators: [
-    {
-      type: "custom",
-      periodicWave: getNoise(
-        (value, index) =>
-          (value * Math.min(1.0, Math.max(0.0, index - 18.0))) / Math.max(1.0, index - 18.0),
-      ),
-      getPitch: () => 5.0,
-      gain: 0.382,
-      attack: 0.008,
-      decay: 0.034,
-    },
     {
       type: "custom",
       periodicWave: {
@@ -1155,8 +1146,9 @@ export const taikoDrum = {
         imag: taikoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
+      getPitch: getDrumDetunedPitch,
     },
+    { type: "noise", gain: 0.236, decay: 0.034, getPitch: (pitch = 440.0) => pitch },
   ],
 
   attack: 0.008,
@@ -1203,7 +1195,7 @@ export const timpani = {
         imag: timpaniImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
+      getPitch: getDrumDetunedPitch,
     },
   ],
 };
@@ -1234,7 +1226,7 @@ export const bassDrum = {
         imag: bassDrumImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
+      getPitch: getDrumDetunedPitch,
     },
     {
       ...taikoDrum.oscillators[0],
@@ -1269,7 +1261,7 @@ export const snareDrum = {
         imag: snareImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: (pitch = 440.0) => (pitch / 20.0) * membraneDetune,
+      getPitch: getDrumDetunedPitch,
     },
     {
       ...taikoDrum.oscillators[0],
@@ -1502,6 +1494,10 @@ const stretchedViolaImag = stretchOvertones(violaImag);
 const stretchedCelloImag = stretchOvertones(celloImag);
 const stretchedContrabassImag = stretchOvertones(contrabassImag);
 
+const pluckedStringDetune = 0.059463;
+const getPluckedStringDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
+  getStretchedOvertonesPitch(pitch) * (1.0 + velocity * pluckedStringDetune);
+
 /** @type {Instrument} */
 export const pluckedViolin = {
   ...violin,
@@ -1513,7 +1509,7 @@ export const pluckedViolin = {
         imag: stretchedViolinImag,
       },
       stage: "high",
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getPluckedStringDetunedPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1537,7 +1533,7 @@ export const pluckedViola = {
         imag: stretchedViolaImag,
       },
       stage: "high",
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getPluckedStringDetunedPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1561,7 +1557,7 @@ export const pluckedCello = {
         imag: stretchedCelloImag,
       },
       stage: "high",
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getPluckedStringDetunedPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1586,7 +1582,7 @@ export const pluckedContrabass = {
         imag: stretchedContrabassImag,
       },
       stage: "high",
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getPluckedStringDetunedPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
