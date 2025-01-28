@@ -139,7 +139,7 @@ export const createInstrument = (preset, audioContext) => {
   // TODO: no need for this if there's no vibrato or instability at all?
   const vibratoMain = new OscillatorNode(audioContext, {
     type: vibratoType,
-    frequency: 5,
+    frequency: 0,
   });
 
   // Brass-style pitch instability
@@ -360,6 +360,9 @@ export const attackInstrument = (
   const decayAt = dynamicStartAt + defaultDynamicAttack * 4.0;
   const decayDynamics = 1.0 + 0.382 * lowPitchness;
 
+  const oscillatorDecayDynamics = decayDynamics * (1.0 + 0.618 * strongness);
+  const defaultDynamicDecay = defaultDecay * oscillatorDecayDynamics;
+
   const overtonesDecayAt = dynamicStartAt + overtoneDynamicAttack * 4.0;
   const overtoneDecayDynamics = decayDynamics * (1.0 + 0.618 * weakness);
   const overtonesShouldDecay = overtoneDecay > 0.0 && overtoneSustain !== 1.0;
@@ -373,9 +376,6 @@ export const attackInstrument = (
       overtoneDynamicDecay,
     );
   }
-
-  const oscillatorDecayDynamics = decayDynamics * (1.0 + 0.618 * strongness);
-  const defaultDynamicDecay = defaultDecay * oscillatorDecayDynamics;
 
   for (const {
     gainNode,

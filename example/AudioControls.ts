@@ -32,7 +32,7 @@ export const AudioControls = new Magic(() => {
           <legend>Volume</legend>
           ${volumeSlider("Main", mainGain, 1.0)}
           <!-- ${volumeSlider("Effects", effectsGain, 0.5)} -->
-          ${volumeSlider("Music", musicGain, 0.5)}
+          <!-- ${volumeSlider("Music", musicGain, 0.5)} -->
         </fieldset>
 
         <datalist id="gain-steps">
