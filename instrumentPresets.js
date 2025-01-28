@@ -256,18 +256,10 @@ export const flute = {
   overtoneRelease: 0.021,
 
   highPassFrequency: 261.624,
-  lowPassFrequency: 2349.312,
+  lowPassFrequency: 4185.984,
 
   vibratoEffectOnStage: 1.0,
   peakingFilters: [{ frequency: 810, gain: 2.0, Q: 2.0 }],
-};
-
-/** @type {Instrument} */
-export const piccolo = {
-  ...flute,
-  highPassFrequency: 587.328,
-  lowPassFrequency: 4185.984,
-  peakingFilters: [{ frequency: 900, gain: 2.0, Q: 2.0 }],
 };
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
@@ -407,17 +399,6 @@ export const bassoon = {
   peakingFilters: [
     { frequency: 440, gain: 2.0, Q: 2.0 },
     { frequency: 1180, gain: 2.0, Q: 2.0 },
-  ],
-};
-
-/** @type {Instrument} */
-export const contrabassoon = {
-  ...bassoon,
-  highPassFrequency: 58.27,
-  lowPassFrequency: 466.16,
-  peakingFilters: [
-    { frequency: 250, gain: 2.0, Q: 2.0 },
-    { frequency: 450, gain: 2.0, Q: 2.0 },
   ],
 };
 
