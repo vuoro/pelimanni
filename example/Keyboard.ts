@@ -138,7 +138,7 @@ const attackMultiplierInput = (attackMultiplier: number) => {
   return html`
     <label>
       <span>Attack time &times; ${attackMultiplier}</span>
-      <input name="attackMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${attackMultiplier}/>
+      <input name="attackMultiplier" type="range" min="0.25" max="8" step="0.25" .value=${attackMultiplier}/>
     </label>
   `;
 };
@@ -484,9 +484,9 @@ const attackWithController = (
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
-    velocity,
+    (shiftKey ? 1.0 : velocity) * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.236)),
     attackMultiplier,
-    0.382,
+    0.414,
     altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );

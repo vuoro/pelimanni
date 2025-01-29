@@ -92,6 +92,8 @@ export const createInstrument = (preset, audioContext) => {
     glide,
     noiseType = "bandpass",
     noiseQ = Math.SQRT1_2,
+    attackDetune,
+    attackDetuneDurationMultiplier,
     getPitch = passPitchThrough,
   } of oscillatorsInPreset) {
     const oscillatorNode =
@@ -132,6 +134,8 @@ export const createInstrument = (preset, audioContext) => {
       release,
       glide,
       getPitch,
+      attackDetune,
+      attackDetuneDurationMultiplier,
     });
   }
 
@@ -269,6 +273,8 @@ export const attackInstrument = (
     vibratoEffectOnStage,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
+    attackDetune: defaultAttackDetune,
+    attackDetuneDurationMultiplier: defaultAttackDetuneDurationMultiplier,
   } = preset;
 
   // FIXME: these are repeated in attack and release, but don't need to be in play
@@ -284,8 +290,7 @@ export const attackInstrument = (
   const canVibrato = vibratoStageGain || vibratoPitchGain || vibratoVolumeGain;
   const hasVibrato = vibratoAmount > 0.0 && canVibrato;
 
-  const volumeTarget = volume * (1.0 - weakness * 0.146);
-  const overtoneTarget = 0.09 + 0.91 * strongness;
+  const volumeTarget = volume * (1.0 - weakness * 0.382);
 
   const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * weakness) * attackMultiplier;
 
@@ -301,7 +306,7 @@ export const attackInstrument = (
   cancelPendingEvents(instrument, dynamicStartAt);
 
   // Glide and attack
-  crossfader.pan.setTargetAtTime(overtoneTarget, dynamicStartAt, overtoneDynamicAttack);
+  crossfader.pan.setTargetAtTime(velocity, dynamicStartAt, overtoneDynamicAttack);
 
   for (const {
     oscillatorNode,
@@ -309,6 +314,8 @@ export const attackInstrument = (
     gainTarget,
     attack = defaultAttack,
     glide = defaultGlide,
+    attackDetune = defaultAttackDetune,
+    attackDetuneDurationMultiplier = defaultAttackDetuneDurationMultiplier,
     getPitch,
   } of oscillators) {
     const pitchTarget = getPitch(pitch, velocity);
@@ -316,6 +323,19 @@ export const attackInstrument = (
 
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, dynamicStartAt, dynamicAttack);
+
+    if (attackDetune !== 0.0) {
+      oscillatorNode.detune.setTargetAtTime(
+        attackDetune * velocity ** 0.414,
+        dynamicStartAt,
+        glide,
+      );
+      oscillatorNode.detune.setTargetAtTime(
+        0.0,
+        dynamicStartAt + glide * 4.0,
+        attackDetuneDurationMultiplier * dynamicAttack,
+      );
+    }
   }
 
   // Brass-style instability at start of notes
@@ -491,6 +511,7 @@ const cancelPendingEvents = (
 
   for (const { oscillatorNode, gainNode } of oscillators) {
     oscillatorNode.frequency.cancelScheduledValues(at);
+    oscillatorNode.detune.cancelScheduledValues(at);
     gainNode.gain.cancelScheduledValues(at);
   }
 };

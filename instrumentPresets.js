@@ -24,6 +24,8 @@ export const genericInstrument = Object.seal({
    * @property {Glide=} glide
    * @property {BiquadFilterType=} noiseType
    * @property {number=} noiseQ
+   * @property {number=} attackDetune - detunes oscillator by this many cents * velocity
+   * @property {number=} attackDetuneDurationMultiplier - multiplies `attack` to get the duration of `attackDetune`
    * @property {(pitch: number, velocity?: number) => number=} getPitch - lets you modify the pitch before it gets played
    */
   /** @type {Oscillator[]} the main oscillators that create the sound of the instrument. */
@@ -79,6 +81,11 @@ export const genericInstrument = Object.seal({
   vibratoEffectOnPitch: 0.0,
   /** @type {number} how much vibrato should affect volume (in gain) */
   vibratoEffectOnVolume: 0.0,
+
+  /** @type {number} detunes oscillator by this many cents * velocity */
+  attackDetune: 0.0,
+  /** @type {number} multiplies `attack` to get the duration of `attackDetune` */
+  attackDetuneDurationMultiplier: 1.0,
 
   /**
    * @typedef {object} FormantFilter - a `bandpass` type `BiquadFilterNode` that shapes the instrument's timbre
@@ -219,16 +226,40 @@ const windNoiseOscillator = {
   release: 0.001,
 };
 
-const drumNoiseOscillator = {
+const getDrumNoiseOscillator = (
+  detuneOctaves = 2,
+  decay = 0.146,
+  pitchMultiplier = 2.0,
+  noiseQ = 2,
+  attack = 0.008,
+) => ({
   type: "noise",
-  noiseType: "highpass",
-  noiseQ: 32,
-  gain: 2.0 / 32,
-  attack: 0.008,
-  decay: 0.056,
+  noiseType: "lowpass",
+  noiseQ,
+  // gain: 1,
+  attack,
+  decay,
   sustain: 0.0,
-  release: 0.001,
-};
+  release: 0.0,
+  attackDetune: 1200 * detuneOctaves,
+  attackDetuneDurationMultiplier: (attack + decay) / attack,
+  getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
+  // getPitch: (pitch = 440.0) => {
+  //   let closestPitch = pitch;
+
+  //   if (pitch < 160.0) {
+  //     while (closestPitch < 160.0) {
+  //       closestPitch *= 2.0;
+  //     }
+  //   } else {
+  //     while (closestPitch >= 160.0) {
+  //       closestPitch *= 0.5;
+  //     }
+  //   }
+
+  //   return closestPitch;
+  // },
+});
 
 const idiophoneNoiseOscillator = {
   type: "noise",
@@ -854,6 +885,9 @@ export const violin = {
   highPassFrequency: 196.0,
   lowPassFrequency: 3520.0 * 2.0,
 
+  attackDetune: 100,
+  attackDetuneDurationMultiplier: 0.146,
+
   vibratoEffectOnPitch: 30,
   formants: [
     { frequency: 300, Q: 3.5 }, // 440*0.5 instead?
@@ -1102,6 +1136,9 @@ export const piano = {
   release: 0.09,
   overtoneRelease: 0.056,
 
+  attackDetune: 100,
+  attackDetuneDurationMultiplier: 1.0,
+
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
@@ -1145,6 +1182,9 @@ export const hammeredDulcimer = {
   highPassFrequency: 73.42,
   lowPassFrequency: 1244.51 * 3.0,
 
+  attackDetune: 100,
+  attackDetuneDurationMultiplier: 1.0,
+
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
@@ -1159,10 +1199,6 @@ taikoImag[20 * 5.6] = 0.146; // 5.57
 taikoImag[20 * 7.6] = 0.09;
 taikoImag[20 * 8.5] = 0.056;
 taikoImag[20 * 9.3] = 0.034;
-
-const membraneDetune = 0.1224625; // 200 cents
-const getDrumDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
-  (pitch / 20.0) * (1.0 + membraneDetune * velocity);
 
 /** @param {Instrument} instrument */
 export const taikoDrum = {
@@ -1183,20 +1219,24 @@ export const taikoDrum = {
         imag: taikoImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getDrumDetunedPitch,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    drumNoiseOscillator,
+    getDrumNoiseOscillator(),
   ],
 
   attack: 0.008,
   overtoneAttack: 0.021,
-  decay: 0.333333,
-  overtoneDecay: 0.333333 * 0.382,
+  decay: 0.5,
+  overtoneDecay: 0.5 * 0.382,
   sustain: 0.0,
   release: 0.09,
   overtoneRelease: 0.034,
 
-  lowPassFrequency: 2200, // FIXME: no idea what this should be on any percussion
+  attackDetune: 200,
+  attackDetuneDurationMultiplier: 0.013 / 0.008,
+
+  highPassFrequency: 41.2,
+  lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
@@ -1225,9 +1265,9 @@ export const timpani = {
         imag: timpaniImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getDrumDetunedPitch,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    drumNoiseOscillator,
+    getDrumNoiseOscillator(),
   ],
 };
 
@@ -1257,9 +1297,9 @@ export const bassDrum = {
         imag: bassDrumImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getDrumDetunedPitch,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    drumNoiseOscillator,
+    getDrumNoiseOscillator(),
   ],
 };
 
@@ -1290,9 +1330,9 @@ export const snareDrum = {
         imag: snareImag.map(defaultLowStageMapper),
       },
       stage: "low",
-      getPitch: getDrumDetunedPitch,
+      getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    drumNoiseOscillator,
+    getDrumNoiseOscillator(),
   ],
 };
 
@@ -1500,6 +1540,9 @@ const plucked = {
   release: 0.09,
   overtoneRelease: 0.034,
 
+  attackDetune: 100,
+  attackDetuneDurationMultiplier: 1.0,
+
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnStage: 0.0,
@@ -1509,10 +1552,6 @@ const stretchedViolinImag = stretchOvertones(violinImag);
 const stretchedViolaImag = stretchOvertones(violaImag);
 const stretchedCelloImag = stretchOvertones(celloImag);
 const stretchedContrabassImag = stretchOvertones(contrabassImag);
-
-const pluckedStringDetune = 0.059463 * 0.0; // TODO: this is too bad to activate atm.
-const getPluckedStringDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
-  getStretchedOvertonesPitch(pitch) * (1.0 + velocity * pluckedStringDetune);
 
 /** @type {Instrument} */
 export const pluckedViolin = {
@@ -1525,7 +1564,7 @@ export const pluckedViolin = {
         imag: stretchedViolinImag,
       },
       stage: "high",
-      getPitch: getPluckedStringDetunedPitch,
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1549,7 +1588,7 @@ export const pluckedViola = {
         imag: stretchedViolaImag,
       },
       stage: "high",
-      getPitch: getPluckedStringDetunedPitch,
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1573,7 +1612,7 @@ export const pluckedCello = {
         imag: stretchedCelloImag,
       },
       stage: "high",
-      getPitch: getPluckedStringDetunedPitch,
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
@@ -1597,7 +1636,7 @@ export const pluckedContrabass = {
         imag: stretchedContrabassImag,
       },
       stage: "high",
-      getPitch: getPluckedStringDetunedPitch,
+      getPitch: getStretchedOvertonesPitch,
     }),
     ...copySympatheticStrings({
       type: "custom",
