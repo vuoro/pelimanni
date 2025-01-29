@@ -1070,22 +1070,28 @@ export const piano = {
   ...genericInstrument,
   group: "Strings (hammered)",
   oscillators: [
-    ...copySympatheticStrings({
-      type: "custom",
-      periodicWave: {
-        imag: stretchedPianoImag,
+    ...copySympatheticStrings(
+      {
+        type: "custom",
+        periodicWave: {
+          imag: stretchedPianoImag,
+        },
+        stage: "high",
+        getPitch: getStretchedOvertonesPitch,
       },
-      stage: "high",
-      getPitch: getStretchedOvertonesPitch,
-    }),
-    ...copySympatheticStrings({
-      type: "custom",
-      periodicWave: {
-        imag: stretchedPianoImag.map(defaultLowStageMapper),
+      0.236,
+    ),
+    ...copySympatheticStrings(
+      {
+        type: "custom",
+        periodicWave: {
+          imag: stretchedPianoImag.map(defaultLowStageMapper),
+        },
+        stage: "low",
+        getPitch: getStretchedOvertonesPitch,
       },
-      stage: "low",
-      getPitch: getStretchedOvertonesPitch,
-    }),
+      0.236,
+    ),
   ],
 
   attack: 0.008,
@@ -1104,22 +1110,28 @@ export const hammeredDulcimer = {
   ...genericInstrument,
   group: "Strings (hammered)",
   oscillators: [
-    ...copySympatheticStrings({
-      type: "custom",
-      periodicWave: {
-        imag: stretchedPianoImag,
+    ...copySympatheticStrings(
+      {
+        type: "custom",
+        periodicWave: {
+          imag: stretchedPianoImag,
+        },
+        stage: "high",
+        getPitch: getStretchedOvertonesPitch,
       },
-      stage: "high",
-      getPitch: getStretchedOvertonesPitch,
-    }),
-    ...copySympatheticStrings({
-      type: "custom",
-      periodicWave: {
-        imag: stretchedPianoImag.map(defaultLowStageMapper),
+      0.146,
+    ),
+    ...copySympatheticStrings(
+      {
+        type: "custom",
+        periodicWave: {
+          imag: stretchedPianoImag.map(defaultLowStageMapper),
+        },
+        stage: "low",
+        getPitch: getStretchedOvertonesPitch,
       },
-      stage: "low",
-      getPitch: getStretchedOvertonesPitch,
-    }),
+      0.146,
+    ),
   ],
 
   attack: 0.008,
