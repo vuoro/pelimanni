@@ -210,13 +210,35 @@ const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
 
 const windNoiseOscillator = {
   type: "noise",
-  noiseQ: 16,
+  noiseQ: 32,
   noiseType: "highpass",
-  gain: 0.236 / 16,
-  attack: 0.021,
-  // decay: 0.034,
-  // release: 0.0,
-  sustain: 0.382,
+  gain: 1 / 32,
+  attack: 0.008,
+  decay: 0.0013,
+  sustain: 0.0,
+  release: 0.001,
+};
+
+const drumNoiseOscillator = {
+  type: "noise",
+  noiseType: "highpass",
+  noiseQ: 32,
+  gain: 2.0 / 32,
+  attack: 0.008,
+  decay: 0.056,
+  sustain: 0.0,
+  release: 0.001,
+};
+
+const idiophoneNoiseOscillator = {
+  type: "noise",
+  noiseType: "highpass",
+  noiseQ: 32,
+  gain: 1.0 / 32,
+  attack: 0.008,
+  decay: 0.013,
+  sustain: 0.0,
+  release: 0.001,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -225,10 +247,9 @@ const windNoiseOscillator = {
 const fluteImag = Float32Array.of(
   0.0,
   1.0,
-  0.854,
-  0.764,
   0.618,
-  0.146,
+  0.5,
+  0.382,
   0.09,
   0.056,
   0.034,
@@ -263,8 +284,8 @@ export const flute = {
 
   attack: 0.056,
   overtoneAttack: 0.056,
-  decay: 0.146,
-  overtoneDecay: 0.236,
+  decay: 0.236,
+  overtoneDecay: 0.146,
   sustain: 0.854,
   overtoneSustain: 0.618,
   release: 0.034,
@@ -354,7 +375,7 @@ export const oboe = {
   attack: 0.056,
   overtoneAttack: 0.056,
   decay: 0.236,
-  overtoneDecay: 0.236,
+  overtoneDecay: 0.146,
   sustain: 0.91,
   overtoneSustain: 0.764,
   release: 0.034,
@@ -426,19 +447,19 @@ const clarinetImag = stretchOvertones(
   Float32Array.of(
     0.0,
     1.0,
-    0.0,
-    0.618,
-    0.0,
+    0.056, // evens are very weak
+    0.618, // odds are strong
+    0.034,
     0.382,
-    0.0,
-    0.236,
-    0.0,
+    0.021,
+    0.09, // weaker
+    0.013,
     0.146,
-    0.0,
+    0.008,
     0.09,
-    0.0,
+    0.005,
     0.056,
-    0.0,
+    0.003,
     0.034,
   ),
 );
@@ -468,9 +489,9 @@ export const clarinet = {
   ],
 
   attack: 0.056,
-  overtoneAttack: 0.056,
+  overtoneAttack: 0.09,
   decay: 0.236,
-  overtoneDecay: 0.236,
+  overtoneDecay: 0.146,
   sustain: 0.91,
   overtoneSustain: 0.764,
   release: 0.034,
@@ -492,24 +513,39 @@ export const clarinet = {
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 // TODO: revise these since there are now separate high and low oscillators
+const saxophoneLowImag = stretchOvertones(
+  Float32Array.of(
+    0.0,
+    0.236, // weak at start
+    1.0, // strong
+    0.382, // strong
+    0.146, // weak
+    0.236, // strong
+    0.09, // weak?
+    0.056, // weak
+    0.146, // like 4th
+    0.056, // like 4th
+    0.021, // weak from here on
+    0.008,
+    0.003,
+  ),
+);
+
 const saxophoneImag = stretchOvertones(
   Float32Array.of(
     0.0,
-    0.854,
-    1.0,
-    0.236,
-    0.618,
-    0.382,
-    0.236,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
+    0.854, // stronger now
+    1.0, // strong
+    0.764, // strong
+    0.382, // weak
+    0.618, // strong
+    0.236, // weak?
+    0.146, // weak
+    0.236, // like 4th
+    0.146, // like 4th
+    0.056, // weak from here on
     0.021,
-    0.013,
     0.008,
-    0.005,
-    0.003,
   ),
 );
 
@@ -529,7 +565,7 @@ export const saxophone = {
     {
       type: "custom",
       periodicWave: {
-        imag: saxophoneImag.map(defaultLowStageMapper),
+        imag: saxophoneLowImag,
       },
       getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
@@ -540,17 +576,16 @@ export const saxophone = {
   initialInstability: 1.0,
 
   attack: 0.056,
-  overtoneAttack: 0.09,
+  overtoneAttack: 0.146,
   decay: 0.236,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.146,
   sustain: 0.854,
-  overtoneSustain: 0.618,
-  release: 0.034,
-  overtoneRelease: 0.056,
+  overtoneSustain: 0.764,
+  release: 0.056,
+  overtoneRelease: 0.034,
 
   highPassFrequency: 116.0,
   lowPassFrequency: 1318.51,
-
   vibratoEffectOnPitch: 30,
   formants: [
     { frequency: 670, Q: 2.0 },
@@ -561,20 +596,21 @@ export const saxophone = {
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
+const trumpetLowImag = Float32Array.of(0.0, 1.0, 0.146, 0.056, 0.021, 0.008, 0.003);
 const trumpetImag = Float32Array.of(
   0.0,
-  0.854,
-  1.0,
-  0.944,
-  0.854,
-  0.618,
-  0.236,
+  0.764, // only strong at start
+  1.0, // strongest at all but low volumes
+  0.618, // stronger
+  0.382,
+  0.382, // stronger
+  0.146,
   0.09,
-  0.034,
+  0.056,
+  0.056, // stronger
+  0.021,
   0.013,
-  0.005,
-  0.005,
-  0.002,
+  0.008,
 );
 
 /** @type {Instrument} */
@@ -592,7 +628,7 @@ export const trumpet = {
     {
       type: "custom",
       periodicWave: {
-        imag: trumpetImag.map(defaultLowStageMapper),
+        imag: trumpetLowImag,
       },
       stage: "low",
     },
@@ -604,11 +640,11 @@ export const trumpet = {
   attack: 0.056,
   overtoneAttack: 0.146,
   decay: 0.236,
-  overtoneDecay: 0.382,
+  overtoneDecay: 0.146,
   sustain: 0.854,
-  overtoneSustain: 0.618,
-  release: 0.056,
-  overtoneRelease: 0.09,
+  overtoneSustain: 0.764,
+  release: 0.09,
+  overtoneRelease: 0.056,
 
   highPassFrequency: 184.996,
   lowPassFrequency: 1318.51,
@@ -808,22 +844,22 @@ export const violin = {
   // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
   attack: 0.09,
   overtoneAttack: 0.09,
-  decay: 0.236,
-  overtoneDecay: 0.236,
-  sustain: 1.056,
+  decay: 0.146,
+  overtoneDecay: 0.09,
+  sustain: 1.0,
   overtoneSustain: 0.854,
-  release: 0.146,
-  overtoneRelease: 0.09,
+  release: 0.333333,
+  overtoneRelease: 0.333333 * 0.618,
 
   highPassFrequency: 196.0,
-  lowPassFrequency: 3520.0,
+  lowPassFrequency: 3520.0 * 2.0,
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 300, Q: 3.5 },
-    { frequency: 700, Q: 3.5 },
-    { frequency: 1000, Q: 3.5 },
-    { frequency: 2900, Q: 2.0 },
+    { frequency: 300, Q: 3.5 }, // 440*0.5 instead?
+    { frequency: 700, Q: 3.5 }, // 440 instead?
+    { frequency: 1000, Q: 3.5 }, // 440 * (perfect fifth) instead?
+    { frequency: 2900, Q: 2.0 }, // ?
   ],
 };
 
@@ -872,7 +908,7 @@ export const viola = {
     },
   ],
   highPassFrequency: 130.8,
-  lowPassFrequency: 2093.005,
+  lowPassFrequency: 2093.005 * 2.0,
 
   formants: [
     { frequency: 220, Q: 3.5 },
@@ -927,10 +963,10 @@ export const cello = {
     },
   ],
   highPassFrequency: 65.4,
-  lowPassFrequency: 1760.0,
+  lowPassFrequency: 1760.0 * 2.0,
 
   formants: [
-    { frequency: 250, Q: 3.5 },
+    { frequency: 250, Q: 3.5 }, // important formants generally higher than in violin?
     { frequency: 400, Q: 3.5 },
     { frequency: 600, Q: 3.5 },
     { frequency: 900, Q: 2.0 },
@@ -1116,16 +1152,6 @@ const membraneDetune = 0.1224625; // 200 cents
 const getDrumDetunedPitch = (pitch = 440.0, velocity = 1.0) =>
   (pitch / 20.0) * (1.0 + membraneDetune * velocity);
 
-const drumNoiseOscillator = {
-  type: "noise",
-  noiseQ: 8,
-  noiseType: "lowpass",
-  gain: 1 / 8,
-  attack: 0.005,
-  decay: 0.034,
-  release: 0.0,
-};
-
 /** @param {Instrument} instrument */
 export const taikoDrum = {
   ...genericInstrument,
@@ -1152,8 +1178,8 @@ export const taikoDrum = {
 
   attack: 0.008,
   overtoneAttack: 0.021,
-  decay: 0.618,
-  overtoneDecay: 0.236,
+  decay: 0.333333,
+  overtoneDecay: 0.333333 * 0.382,
   sustain: 0.0,
   release: 0.09,
   overtoneRelease: 0.034,
@@ -1268,17 +1294,6 @@ marimbaImag[20 * 24] = 0.021; // 24.22
 marimbaImag[20 * 33.55] = 0.013; // 33.56
 marimbaImag[20 * 43] = 0.008; // 42.97
 
-const idiophoneNoiseOscillator = {
-  type: "noise",
-  noiseQ: 32,
-  noiseType: "lowpass",
-  gain: 1 / 32,
-  attack: 0.005,
-  decay: 0.034,
-  release: 0.0,
-  // getPitch: (_pitch = 440.0) => 840 + 80 * Math.random(),
-};
-
 /** @param {Instrument} instrument */
 export const marimba = {
   ...genericInstrument,
@@ -1305,8 +1320,8 @@ export const marimba = {
 
   attack: 0.008,
   overtoneAttack: 0.018,
-  decay: 0.382,
-  overtoneDecay: 0.236,
+  decay: 0.236,
+  overtoneDecay: 0.146,
   sustain: 0.0,
   release: 0.09,
   overtoneRelease: 0.056,
@@ -1354,8 +1369,8 @@ export const xylophone = {
 
   attack: 0.008,
   overtoneAttack: 0.013,
-  decay: 0.236,
-  overtoneDecay: 0.146,
+  decay: 0.146,
+  overtoneDecay: 0.09,
 };
 
 const glockenspielImag = new Float32Array(20 * 32);
@@ -1408,8 +1423,8 @@ export const glockenspiel = {
 
   attack: 0.008,
   overtoneAttack: 0.013,
-  decay: 0.382,
-  overtoneDecay: 0.09,
+  decay: 0.618,
+  overtoneDecay: 0.146,
   overtoneRelease: 0.021,
 
   lowPassFrequency: 4186.009,
@@ -1459,21 +1474,6 @@ export const bell = {
 // Plucked string transients
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
-// const pluckedStringBodyTapImag = new Float32Array(8 * 10);
-// pluckedStringBodyTapImag[1 * 10] = 1.0;
-// pluckedStringBodyTapImag[5.4 * 10] = 1.0;
-// pluckedStringBodyTapImag[7.5 * 10] = 1.0;
-
-// TODO: is it worth having this in a digital instrument?
-// /** @type {Oscillator} */
-// const pluckedTransientOscillator = {
-//   type: "custom",
-//   periodicWave: { imag: pluckedStringBodyTapImag },
-//   getPitch: () => 104.0 / 10,
-//   gain: 0.09,
-//   attack: 0.005,
-//   decay: 0.034,
-// };
 
 const plucked = {
   group: "Strings (plucked)",
@@ -1571,7 +1571,6 @@ export const pluckedCello = {
       stage: "low",
       getPitch: getStretchedOvertonesPitch,
     }),
-    // pluckedTransientOscillator,
   ],
 };
 
