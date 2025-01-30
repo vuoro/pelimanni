@@ -42,13 +42,41 @@ export const AudioSystem = new Magic(
       ratio: 1,
       attack: 0.0001,
     });
+
+    // Values from https://github.com/musios-app/equal-loudness
+    // Formula for computing Q: Math.sqrt(octaves ** 2) / (octaves ** 2 - 1);
+    const lowPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 25,
+      Q: 0.1,
+      gain: 3.162278,
+    });
+    const midPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 2500,
+      Q: 0.4,
+      gain: 0.74817,
+    });
+    const highPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 16000,
+      Q: 0.2,
+      gain: 1.035142,
+    });
+
     const highPass = new BiquadFilterNode(audioContext, { type: "highpass", frequency: 20 });
     const lowPass = new BiquadFilterNode(audioContext, { type: "lowpass", frequency: 20000 });
 
     musicCompressor.connect(musicGain).connect(mainGain);
     effectsCompressor.connect(effectsGain).connect(mainGain);
 
-    lowPass.connect(highPass).connect(limiter).connect(audioContext.destination);
+    lowPeak
+      .connect(midPeak)
+      .connect(highPeak)
+      .connect(lowPass)
+      .connect(highPass)
+      .connect(limiter)
+      .connect(audioContext.destination);
 
     audioContext.addEventListener("statechange", onStateChange);
 
@@ -76,12 +104,12 @@ export const AudioSystem = new Magic(
         });
 
         configureReverb(audioContext, reverbNode, defaultReverbOptions);
-        mainGain.connect(reverbNode).connect(lowPass);
+        mainGain.connect(reverbNode).connect(lowPeak);
 
         resolveReverb(reverbNode);
       })
       .catch((error) => {
-        mainGain.connect(lowPass);
+        mainGain.connect(lowPeak);
         (reportError || console.error)(error);
       });
 
