@@ -418,8 +418,8 @@ export const oboe = {
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 1400, Q: 2.0 },
-    { frequency: 2950, Q: 2.0 },
+    { frequency: 1396.91, Q: 2.0 },
+    { frequency: 2959.96, Q: 2.0 },
   ],
 };
 
@@ -468,7 +468,7 @@ export const bassoon = {
   lowPassFrequency: 622.368,
   formants: [
     { frequency: 440, Q: 2.0 },
-    { frequency: 1180, Q: 2.0 },
+    { frequency: 1864.66, Q: 2.0 },
   ],
 };
 
@@ -533,8 +533,8 @@ export const clarinet = {
   lowPassFrequency: 2093.005,
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 1180, Q: 2.0 },
-    { frequency: 2700, Q: 2.0 },
+    { frequency: 1174.66, Q: 2.0 },
+    { frequency: 2637.02, Q: 2.0 },
   ],
 };
 
@@ -620,9 +620,9 @@ export const saxophone = {
   lowPassFrequency: 1318.51,
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 670, Q: 2.0 },
-    { frequency: 2050, Q: 2.0 },
-    { frequency: 3100, Q: 2.0 },
+    { frequency: 659.25, Q: 2.0 },
+    { frequency: 2489.02, Q: 2.0 },
+    { frequency: 3135.96, Q: 2.0 },
   ],
 };
 
@@ -683,8 +683,8 @@ export const trumpet = {
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 1200, Q: 2.0 },
-    { frequency: 2200, Q: 2.0 },
+    { frequency: 1174.66, Q: 2.0 },
+    { frequency: 2217.46, Q: 2.0 },
   ],
 };
 
@@ -728,8 +728,8 @@ export const trombone = {
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464,
   formants: [
-    { frequency: 520, Q: 2.0 },
-    { frequency: 1500, Q: 2.0 },
+    { frequency: 523.25, Q: 2.0 },
+    { frequency: 1479.98, Q: 2.0 },
   ],
 };
 
@@ -774,8 +774,8 @@ export const frenchHorn = {
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
   formants: [
-    { frequency: 340, Q: 2.0 },
-    { frequency: 750, Q: 2.0 },
+    { frequency: 349.23, Q: 2.0 },
+    { frequency: 739.99, Q: 2.0 },
   ],
 };
 
@@ -821,7 +821,7 @@ export const tuba = {
   ],
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
-  formants: [{ frequency: 230, Q: 2.0 }],
+  formants: [{ frequency: 233.08, Q: 2.0 }],
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -891,10 +891,10 @@ export const violin = {
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 300, Q: 3.5, gain: 1 + 3 / 6 }, // 440*0.5 instead?
-    { frequency: 700, Q: 3.5, gain: 1 + 4 / 6 }, // 440 instead?
-    { frequency: 1000, Q: 3.5, gain: 1 + 4 / 6 }, // 440 * (perfect fifth) instead?
-    { frequency: 2900, Q: 2.0, gain: 1 + 5 / 6 }, // ?
+    { frequency: 293.66, Q: 3.5, gain: 1 + 3 / 6 }, // 440*0.5 instead?
+    { frequency: 698.46, Q: 3.5, gain: 1 + 4 / 6 }, // 440 instead?
+    { frequency: 987.77, Q: 3.5, gain: 1 + 4 / 6 }, // 440 * (perfect fifth) instead?
+    { frequency: 2959.96, Q: 2.0, gain: 1 + 5 / 6 }, // ?
   ],
 };
 
@@ -947,9 +947,9 @@ export const viola = {
 
   formants: [
     { frequency: 220, Q: 3.5, gain: 1 + 3 / 6 },
-    { frequency: 350, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 600, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 1600, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 349.23, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 622.25, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 1567.98, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 
@@ -1001,10 +1001,10 @@ export const cello = {
   lowPassFrequency: 1760.0 * 2.0,
 
   formants: [
-    { frequency: 250, Q: 3.5, gain: 1 + 3 / 6 }, // important formants generally higher than in violin?
+    { frequency: 246.94, Q: 3.5, gain: 1 + 3 / 6 }, // important formants generally higher than in violin?
     { frequency: 440, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 600, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 900, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 587.33, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 880, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 
@@ -1053,10 +1053,10 @@ export const contrabass = {
   lowPassFrequency: 523.25,
 
   formants: [
-    { frequency: 70, Q: 3.5, gain: 1 + 3 / 6 },
-    { frequency: 250, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 750, Q: 3.0, gain: 1 + 4 / 6 },
-    { frequency: 1100, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 69.3, Q: 3.5, gain: 1 + 3 / 6 },
+    { frequency: 246.94, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 739.99, Q: 3.0, gain: 1 + 4 / 6 },
+    { frequency: 1108.73, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 
