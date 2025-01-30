@@ -414,10 +414,10 @@ export const oboe = {
   overtoneRelease: 0.021,
 
   highPassFrequency: 233.08,
-  lowPassFrequency: 1760.0,
+  lowPassFrequency: 2793.83,
 
   vibratoEffectOnPitch: 30,
-  formants: [{ frequency: 1396.91 }, { frequency: 2959.96 }],
+  formants: [{ frequency: 1396.91 }, { frequency: 2793.83 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -462,8 +462,8 @@ export const bassoon = {
     windNoiseOscillator,
   ],
   highPassFrequency: 58.27,
-  lowPassFrequency: 622.368,
-  formants: [{ frequency: 440 }, { frequency: 1864.66 }],
+  lowPassFrequency: 1108.73,
+  formants: [{ frequency: 440 }, { frequency: 1108.73 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -524,9 +524,9 @@ export const clarinet = {
   overtoneRelease: 0.021,
 
   highPassFrequency: 164.812,
-  lowPassFrequency: 2093.005,
+  lowPassFrequency: 2349.32,
   vibratoEffectOnPitch: 30,
-  formants: [{ frequency: 1174.66 }, { frequency: 2637.02 }],
+  formants: [{ frequency: 1174.66 }, { frequency: 2349.32 }],
 };
 
 // https://www.phys.unsw.edu.au/music/saxophone/soprano/Asharp3.html
@@ -607,10 +607,10 @@ export const saxophone = {
   release: 0.056,
   overtoneRelease: 0.034,
 
-  highPassFrequency: 116.0,
-  lowPassFrequency: 1318.51,
+  highPassFrequency: 69.3,
+  lowPassFrequency: 1975.53,
   vibratoEffectOnPitch: 30,
-  formants: [{ frequency: 659.25 }, { frequency: 2489.02 }, { frequency: 3135.96 }],
+  formants: [{ frequency: 659.25 }, { frequency: 1975.53 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -666,10 +666,10 @@ export const trumpet = {
   overtoneRelease: 0.056,
 
   highPassFrequency: 184.996,
-  lowPassFrequency: 1318.51,
+  lowPassFrequency: 2349.32,
 
   vibratoEffectOnPitch: 30,
-  formants: [{ frequency: 1174.66 }, { frequency: 2217.46 }],
+  formants: [{ frequency: 1174.66 }, { frequency: 2349.32 }],
 };
 
 // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
@@ -710,8 +710,8 @@ export const trombone = {
     windNoiseOscillator,
   ],
   highPassFrequency: 58.27,
-  lowPassFrequency: 698.464,
-  formants: [{ frequency: 523.25 }, { frequency: 1479.98 }],
+  lowPassFrequency: 1046.5,
+  formants: [{ frequency: 523.25 }, { frequency: 1046.5 }],
 };
 
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
@@ -753,8 +753,8 @@ export const frenchHorn = {
     windNoiseOscillator,
   ],
   highPassFrequency: 55.0,
-  lowPassFrequency: 698.46,
-  formants: [{ frequency: 349.23 }, { frequency: 739.99 }],
+  lowPassFrequency: 987.77,
+  formants: [{ frequency: 349.23 }, { frequency: 698.46 }],
 };
 
 // https://www.rickdenney.com/the_tuba_sound.htm
@@ -798,8 +798,8 @@ export const tuba = {
     windNoiseOscillator,
   ],
   highPassFrequency: 36.71,
-  lowPassFrequency: 349.23,
-  formants: [{ frequency: 233.08 }],
+  lowPassFrequency: 466.16,
+  formants: [{ frequency: 233.08 }, { frequency: 349.23 }],
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -1159,9 +1159,6 @@ export const hammeredDulcimer = {
   release: 0.146,
   overtoneRelease: 0.056,
 
-  highPassFrequency: 73.42,
-  lowPassFrequency: 1244.51 * 3.0,
-
   attackDetune: 100,
   attackDetuneDurationMultiplier: 0.618,
 
@@ -1358,9 +1355,6 @@ export const marimba = {
   release: 0.09,
   overtoneRelease: 0.056,
 
-  highPassFrequency: 65.41,
-  lowPassFrequency: 2093.005,
-
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
 
@@ -1458,8 +1452,6 @@ export const glockenspiel = {
   decay: 0.618,
   overtoneDecay: 0.146,
   overtoneRelease: 0.021,
-
-  lowPassFrequency: 4186.009,
 };
 
 // https://www.hibberts.co.uk/the-upper-partials-of-bells/
