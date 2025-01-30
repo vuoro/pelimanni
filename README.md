@@ -228,7 +228,7 @@ Internally each instrument uses the following:
 1. Up to 3 main `OscillatorNode`s to make the sound. Most of them are custom, using a `PeriodicWave`.
 2. Another `OscillatorNode`: shared for vibrato, LFO effects, and brass-style initial note instability.
 3. A low-pass and a high-pass `BiquadfilterNode`.
-4. Up to 4 bandpass `BiquadfilterNode`s for shaping the timbre.
+4. Up to 4 peaking `BiquadfilterNode`s for shaping the timbre.
 6. A `StereoPanner`, a `ChannelSplitter`, and at least 3 `GainNode`s.
 7. Lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
 

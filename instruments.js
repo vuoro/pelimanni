@@ -43,20 +43,22 @@ export const createInstrument = (preset, audioContext) => {
   });
 
   lowPassFilter.connect(highPassFilter);
-  const output = highPassFilter;
+  let output = highPassFilter;
+  let maxPeak = 1.0;
 
   if (formants.length > 0) {
-    const formantGain = new GainNode(audioContext, { gain: Math.SQRT1_2 });
-    lowPassFilter.connect(formantGain).connect(highPassFilter);
-
-    for (const { frequency, Q = Math.SQRT1_2 } of formants) {
+    for (const { frequency, Q = Math.SQRT1_2, gain = 1.618 } of formants) {
       const formantFilter = new BiquadFilterNode(audioContext, {
-        type: "bandpass",
+        type: "peaking",
         frequency: frequency,
         Q,
+        gain,
       });
 
-      formantFilter.connect(formantGain);
+      output.connect(formantFilter);
+      output = formantFilter;
+
+      maxPeak = Math.max(maxPeak, gain);
     }
   }
 
@@ -115,7 +117,7 @@ export const createInstrument = (preset, audioContext) => {
           : new OscillatorNode(audioContext, { type, frequency: 440 });
 
     const gainNode = new GainNode(audioContext, { gain: 0 });
-    const gainTarget = gain * (formants.length > 0 ? Math.SQRT1_2 : 1.0);
+    const gainTarget = gain / maxPeak;
 
     if (type === "noise") getNoiseOscillator(audioContext).connect(oscillatorNode);
     if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);

@@ -88,11 +88,12 @@ export const genericInstrument = Object.seal({
   attackDetuneDurationMultiplier: 1.0,
 
   /**
-   * @typedef {object} FormantFilter - a `bandpass` type `BiquadFilterNode` that shapes the instrument's timbre
+   * @typedef {object} FormantFilter - a `peaking` type `BiquadFilterNode` that shapes the instrument's timbre
    * @property {BiquadFilterNode["frequency"]["value"]} frequency
    * @property {BiquadFilterNode["Q"]["value"]} Q
+   * @property {BiquadFilterNode["gain"]["value"]=} gain
    */
-  /** @type {FormantFilter[]} A set of `bandpass` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate. */
+  /** @type {FormantFilter[]} A set of `peaking` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate. */
   formants: [],
 });
 
@@ -326,7 +327,7 @@ export const flute = {
   lowPassFrequency: 4185.984,
 
   vibratoEffectOnStage: 1.0,
-  formants: [{ frequency: 810, Q: 2.0 }],
+  formants: [{ frequency: 880, Q: 2.0 }],
 };
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
@@ -890,10 +891,10 @@ export const violin = {
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 300, Q: 3.5 }, // 440*0.5 instead?
-    { frequency: 700, Q: 3.5 }, // 440 instead?
-    { frequency: 1000, Q: 3.5 }, // 440 * (perfect fifth) instead?
-    { frequency: 2900, Q: 2.0 }, // ?
+    { frequency: 300, Q: 3.5, gain: 1 + 3 / 6 }, // 440*0.5 instead?
+    { frequency: 700, Q: 3.5, gain: 1 + 4 / 6 }, // 440 instead?
+    { frequency: 1000, Q: 3.5, gain: 1 + 4 / 6 }, // 440 * (perfect fifth) instead?
+    { frequency: 2900, Q: 2.0, gain: 1 + 5 / 6 }, // ?
   ],
 };
 
@@ -945,10 +946,10 @@ export const viola = {
   lowPassFrequency: 2093.005 * 2.0,
 
   formants: [
-    { frequency: 220, Q: 3.5 },
-    { frequency: 350, Q: 3.5 },
-    { frequency: 600, Q: 3.5 },
-    { frequency: 1600, Q: 2.0 },
+    { frequency: 220, Q: 3.5, gain: 1 + 3 / 6 },
+    { frequency: 350, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 600, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 1600, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 
@@ -1000,10 +1001,10 @@ export const cello = {
   lowPassFrequency: 1760.0 * 2.0,
 
   formants: [
-    { frequency: 250, Q: 3.5 }, // important formants generally higher than in violin?
-    { frequency: 400, Q: 3.5 },
-    { frequency: 600, Q: 3.5 },
-    { frequency: 900, Q: 2.0 },
+    { frequency: 250, Q: 3.5, gain: 1 + 3 / 6 }, // important formants generally higher than in violin?
+    { frequency: 440, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 600, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 900, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 
@@ -1052,10 +1053,10 @@ export const contrabass = {
   lowPassFrequency: 523.25,
 
   formants: [
-    { frequency: 70, Q: 3.5 },
-    { frequency: 250, Q: 3.5 },
-    { frequency: 750, Q: 3.0 },
-    { frequency: 1100, Q: 2.0 },
+    { frequency: 70, Q: 3.5, gain: 1 + 3 / 6 },
+    { frequency: 250, Q: 3.5, gain: 1 + 4 / 6 },
+    { frequency: 750, Q: 3.0, gain: 1 + 4 / 6 },
+    { frequency: 1100, Q: 2.0, gain: 1 + 5 / 6 },
   ],
 };
 

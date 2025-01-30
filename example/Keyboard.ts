@@ -486,7 +486,7 @@ const attackWithController = (
     audioContext.currentTime,
     (shiftKey ? 1.0 : velocity) * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.236)),
     attackMultiplier,
-    0.414,
+    1.0,
     altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );
