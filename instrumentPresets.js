@@ -220,9 +220,9 @@ const windNoiseOscillator = {
   type: "noise",
   noiseQ: 32,
   noiseType: "highpass",
-  gain: 1 / 32,
-  attack: 0.008,
-  decay: 0.0013,
+  gain: 0.382 / 32,
+  attack: 0.021,
+  decay: 0.0034,
   sustain: 0.0,
   release: 0.001,
 };
@@ -593,7 +593,6 @@ export const saxophone = {
       getPitch: getStretchedOvertonesPitchWithoutTuning,
       stage: "low",
     },
-    windNoiseOscillator,
   ],
 
   initialInstability: 1.0,
