@@ -28,8 +28,6 @@ export const createInstrument = (preset, audioContext) => {
   // 2nd-order Thomson-Bessel: Qp=0.5773
   // 4th-order Butterworth: Strage 1: Qp=0.5412; stage 2: Qp=1.3065
 
-  const rangeInCents = 1200.0 * Math.log2(lowPassFrequency / highPassFrequency);
-
   const lowPassFilter = new BiquadFilterNode(audioContext, {
     type: "lowpass",
     frequency: lowPassFrequency,
@@ -198,7 +196,6 @@ export const createInstrument = (preset, audioContext) => {
     vibratoVolumeGain,
     lowPassFilter,
     highPassFilter,
-    rangeInCents,
     output,
     preset,
     previousStartAt: audioContext.currentTime - epsilon,
@@ -251,7 +248,6 @@ export const attackInstrument = (
   vibratoFrequency = 5.0,
 ) => {
   const {
-    rangeInCents,
     oscillators,
     crossfader,
     vibratoMain,
@@ -271,7 +267,6 @@ export const attackInstrument = (
     overtoneAttack = defaultAttack,
     overtoneDecay = defaultDecay,
     overtoneSustain = defaultSustain,
-    highPassFrequency,
     vibratoEffectOnStage,
     vibratoEffectOnPitch,
     vibratoEffectOnVolume,
@@ -280,10 +275,7 @@ export const attackInstrument = (
   } = preset;
 
   // FIXME: these are repeated in attack and release, but don't need to be in play
-  // const fromLowPass = 1200.0 * Math.log2(lowPassFrequency / pitch);
-  const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitch);
-
-  const highPitchness = -fromHighPass / rangeInCents;
+  const highPitchness = -(1200.0 * Math.log2(27.5 / pitch)) / highPitchnessReference;
   const lowPitchness = 1.0 - highPitchness;
 
   const strongness = velocity;
@@ -294,7 +286,8 @@ export const attackInstrument = (
 
   const volumeTarget = volume * (1.0 - weakness * 0.618);
 
-  const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * weakness) * attackMultiplier;
+  const attackDynamics =
+    (0.91 + 2.0 * 0.09 * lowPitchness) * (0.91 + 2.0 * 0.09 * weakness) * attackMultiplier;
 
   const defaultDynamicAttack = defaultAttack * attackDynamics;
   const overtoneDynamicAttack =
@@ -346,7 +339,7 @@ export const attackInstrument = (
   if (initialInstability > 0.0) {
     instabilityStopsAt += defaultDynamicAttack * 4.0;
 
-    const instabilityTarget = 78 + 4 * highPitchness;
+    const instabilityTarget = 75 + 5 * highPitchness;
     const instabilityEffect = initialInstability;
     const instabilityAttack = defaultDynamicAttack * 0.008;
     const instabilityDecaysAt = Math.min(
@@ -379,7 +372,7 @@ export const attackInstrument = (
 
   // Decay and sustain
   const decayAt = dynamicStartAt + defaultDynamicAttack * 4.0;
-  const decayDynamics = 1.0 + 0.382 * lowPitchness;
+  const decayDynamics = 0.382 + 2.0 * lowPitchness;
 
   const oscillatorDecayDynamics = decayDynamics * (1.0 + 0.618 * strongness);
   const defaultDynamicDecay = defaultDecay * oscillatorDecayDynamics;
@@ -407,7 +400,8 @@ export const attackInstrument = (
     const shouldDecay = decay > 0.0 && sustain !== 1.0;
     if (!shouldDecay) continue;
 
-    const dynamicDecay = decay === defaultDecay ? defaultDecay : decay * oscillatorDecayDynamics;
+    const dynamicDecay =
+      decay === defaultDecay ? defaultDynamicDecay : decay * oscillatorDecayDynamics;
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
@@ -420,6 +414,8 @@ export const attackInstrument = (
   instrument.previousDecay = defaultDynamicDecay;
 };
 
+const highPitchnessReference = 1200.0 * Math.log2(4186.009 / 27.5);
+
 export const releaseInstrument = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ endAt,
@@ -427,7 +423,6 @@ export const releaseInstrument = (
   releaseEarly = true,
 ) => {
   const {
-    rangeInCents,
     oscillators,
     crossfader,
     vibratoMain,
@@ -438,21 +433,17 @@ export const releaseInstrument = (
     preset,
   } = instrument;
 
-  const { release: defaultRelease, overtoneRelease = defaultRelease, highPassFrequency } = preset;
+  const { release: defaultRelease, overtoneRelease = defaultRelease } = preset;
 
   const pitch = instrument.previousPitch;
   const velocity = instrument.previousVelocity;
 
-  // const fromLowPass = 1200.0 * Math.log2(lowPassFrequency / pitch);
-  const fromHighPass = 1200.0 * Math.log2(highPassFrequency / pitch);
-
-  const highPitchness = -fromHighPass / rangeInCents;
+  const highPitchness = -(1200.0 * Math.log2(27.5 / pitch)) / highPitchnessReference;
   const lowPitchness = 1.0 - highPitchness;
 
   const strongness = velocity;
 
-  const releaseDynamics =
-    (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * strongness) * releaseMultiplier;
+  const releaseDynamics = (0.618 + lowPitchness) * (1.0 + 0.382 * strongness) * releaseMultiplier;
   const defaultDynamicRelease = defaultRelease * releaseDynamics;
 
   const overtoneDynamicRelease =

@@ -505,7 +505,7 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, alt
     0.0,
     audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 4.0,
   );
-  const remainingDecay = Math.max(0.0, instrument.previousDecay * 4.0 - sustainedDuration);
+  const remainingDecay = Math.max(0.0, instrument.previousDecay * 5.0 - sustainedDuration);
   const releaseAt = audioContext.currentTime + remainingDecay * (shiftKey ? 1.0 : sustain);
   releaseInstrument(instrument, releaseAt, releaseMultiplier, false);
 
