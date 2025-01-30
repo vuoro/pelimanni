@@ -1138,7 +1138,7 @@ export const piano = {
   overtoneRelease: 0.056,
 
   attackDetune: 100,
-  attackDetuneDurationMultiplier: 1.0,
+  attackDetuneDurationMultiplier: 0.618,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
@@ -1184,7 +1184,7 @@ export const hammeredDulcimer = {
   lowPassFrequency: 1244.51 * 3.0,
 
   attackDetune: 100,
-  attackDetuneDurationMultiplier: 1.0,
+  attackDetuneDurationMultiplier: 0.618,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 };
@@ -1542,7 +1542,7 @@ const plucked = {
   overtoneRelease: 0.034,
 
   attackDetune: 100,
-  attackDetuneDurationMultiplier: 1.0,
+  attackDetuneDurationMultiplier: 0.618,
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,

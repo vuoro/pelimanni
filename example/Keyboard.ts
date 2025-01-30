@@ -23,7 +23,6 @@ export const Keyboard = new Magic(
       sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
-      blackKeysSet: Set<number>;
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
@@ -35,9 +34,8 @@ export const Keyboard = new Magic(
       vibratoAmount: +(localStorage.getItem("vibratoAmount") ?? 0.0),
       vibratoFrequency: +(localStorage.getItem("vibratoFrequency") ?? 5.0),
       sustain: +(localStorage.getItem("sustain") ?? 0.0),
-      keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 60),
+      keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 48),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
-      blackKeysSet: new Set(),
     },
     message?: {
       instrumentName: keyof typeof allInstrumentPresets;
@@ -91,7 +89,6 @@ export const Keyboard = new Magic(
     };
 
     const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
-    state.blackKeysSet = blackKeysSet;
     const instrumentPreset =
       allInstrumentPresets[state.instrumentName as keyof typeof allInstrumentPresets];
 
@@ -132,7 +129,7 @@ export const Keyboard = new Magic(
 const velocityInput = (velocity: number) => {
   return html`
     <label>
-      <span>Brightness: ${velocity * 100}%</span>
+      <span>Velocity: ${velocity * 100}%</span>
       <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
     </label>
   `;
@@ -339,7 +336,7 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   const { code, repeat, metaKey, ctrlKey } = event;
   if (repeat || metaKey || ctrlKey) return;
 
-  const { keyboardOffset, blackKeysSet } = Keyboard.get();
+  const { keyboardOffset } = Keyboard.get();
 
   const keyOffsets = {
     Digit1: 0,
@@ -395,13 +392,6 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 
   const keyOffset = keyOffsets[code as keyof typeof keyOffsets];
   if (keyOffset === undefined) return;
-
-  // let note = 0;
-  // let offset = 0;
-  // while (note < keyOffset) {
-  //   if (blackKeysSet.has(note % 12)) offset++;
-  //   note++;
-  // }
 
   attackWithController(code, keyOffset + keyboardOffset, event.shiftKey, event.altKey);
 });
