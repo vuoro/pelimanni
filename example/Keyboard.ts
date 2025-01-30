@@ -94,8 +94,8 @@ export const Keyboard = new Magic(
 
     const keyboard = keys(
       blackKeysSet,
-      frequencyToMidi(instrumentPreset?.highPassFrequency ?? 20.0) - 5,
-      frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 20000.0) + 5,
+      frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5),
+      frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009),
     );
 
     render(

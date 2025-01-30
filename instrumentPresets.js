@@ -90,7 +90,7 @@ export const genericInstrument = Object.seal({
   /**
    * @typedef {object} FormantFilter - a `peaking` type `BiquadFilterNode` that shapes the instrument's timbre
    * @property {BiquadFilterNode["frequency"]["value"]} frequency
-   * @property {BiquadFilterNode["Q"]["value"]} Q
+   * @property {BiquadFilterNode["Q"]["value"]=} Q
    * @property {BiquadFilterNode["gain"]["value"]=} gain
    */
   /** @type {FormantFilter[]} A set of `peaking` filters applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate. */
@@ -327,7 +327,7 @@ export const flute = {
   lowPassFrequency: 4185.984,
 
   vibratoEffectOnStage: 1.0,
-  formants: [{ frequency: 880, Q: 2.0 }],
+  formants: [{ frequency: 880 }],
 };
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
@@ -417,10 +417,7 @@ export const oboe = {
   lowPassFrequency: 1760.0,
 
   vibratoEffectOnPitch: 30,
-  formants: [
-    { frequency: 1396.91, Q: 2.0 },
-    { frequency: 2959.96, Q: 2.0 },
-  ],
+  formants: [{ frequency: 1396.91 }, { frequency: 2959.96 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -466,10 +463,7 @@ export const bassoon = {
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 622.368,
-  formants: [
-    { frequency: 440, Q: 2.0 },
-    { frequency: 1864.66, Q: 2.0 },
-  ],
+  formants: [{ frequency: 440 }, { frequency: 1864.66 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -532,10 +526,7 @@ export const clarinet = {
   highPassFrequency: 164.812,
   lowPassFrequency: 2093.005,
   vibratoEffectOnPitch: 30,
-  formants: [
-    { frequency: 1174.66, Q: 2.0 },
-    { frequency: 2637.02, Q: 2.0 },
-  ],
+  formants: [{ frequency: 1174.66 }, { frequency: 2637.02 }],
 };
 
 // https://www.phys.unsw.edu.au/music/saxophone/soprano/Asharp3.html
@@ -619,11 +610,7 @@ export const saxophone = {
   highPassFrequency: 116.0,
   lowPassFrequency: 1318.51,
   vibratoEffectOnPitch: 30,
-  formants: [
-    { frequency: 659.25, Q: 2.0 },
-    { frequency: 2489.02, Q: 2.0 },
-    { frequency: 3135.96, Q: 2.0 },
-  ],
+  formants: [{ frequency: 659.25 }, { frequency: 2489.02 }, { frequency: 3135.96 }],
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -682,10 +669,7 @@ export const trumpet = {
   lowPassFrequency: 1318.51,
 
   vibratoEffectOnPitch: 30,
-  formants: [
-    { frequency: 1174.66, Q: 2.0 },
-    { frequency: 2217.46, Q: 2.0 },
-  ],
+  formants: [{ frequency: 1174.66 }, { frequency: 2217.46 }],
 };
 
 // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
@@ -727,10 +711,7 @@ export const trombone = {
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 698.464,
-  formants: [
-    { frequency: 523.25, Q: 2.0 },
-    { frequency: 1479.98, Q: 2.0 },
-  ],
+  formants: [{ frequency: 523.25 }, { frequency: 1479.98 }],
 };
 
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
@@ -773,10 +754,7 @@ export const frenchHorn = {
   ],
   highPassFrequency: 55.0,
   lowPassFrequency: 698.46,
-  formants: [
-    { frequency: 349.23, Q: 2.0 },
-    { frequency: 739.99, Q: 2.0 },
-  ],
+  formants: [{ frequency: 349.23 }, { frequency: 739.99 }],
 };
 
 // https://www.rickdenney.com/the_tuba_sound.htm
@@ -821,7 +799,7 @@ export const tuba = {
   ],
   highPassFrequency: 36.71,
   lowPassFrequency: 349.23,
-  formants: [{ frequency: 233.08, Q: 2.0 }],
+  formants: [{ frequency: 233.08 }],
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -873,6 +851,7 @@ export const violin = {
     },
   ],
 
+  // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
   // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
   attack: 0.09,
   overtoneAttack: 0.09,
@@ -883,18 +862,18 @@ export const violin = {
   release: 0.333333,
   overtoneRelease: 0.333333 * 0.618,
 
-  highPassFrequency: 196.0,
-  lowPassFrequency: 3520.0 * 2.0,
+  highPassFrequency: 174.61,
+  lowPassFrequency: 4186.01,
 
   attackDetune: 100,
   attackDetuneDurationMultiplier: 0.146,
 
   vibratoEffectOnPitch: 30,
   formants: [
-    { frequency: 293.66, Q: 3.5, gain: 1 + 3 / 6 }, // 440*0.5 instead?
-    { frequency: 698.46, Q: 3.5, gain: 1 + 4 / 6 }, // 440 instead?
-    { frequency: 987.77, Q: 3.5, gain: 1 + 4 / 6 }, // 440 * (perfect fifth) instead?
-    { frequency: 2959.96, Q: 2.0, gain: 1 + 5 / 6 }, // ?
+    { frequency: 349.23, Q: 3.450463, gain: 1 + 3 / 6 }, // half wood resonance
+    { frequency: 698.46, Q: 3.450463, gain: 1 + 4 / 6 }, // wood resonance
+    { frequency: 1046.5, Q: 3.450463, gain: 1 + 4 / 6 }, // air resonance, perfect fifth from the above
+    { frequency: 3139.505, Q: Math.SQRT2, gain: 1 + 1 }, // in the middle of double and quadruple air resonance
   ],
 };
 
@@ -943,13 +922,13 @@ export const viola = {
     },
   ],
   highPassFrequency: 130.8,
-  lowPassFrequency: 2093.005 * 2.0,
+  lowPassFrequency: 2637.02,
 
   formants: [
-    { frequency: 220, Q: 3.5, gain: 1 + 3 / 6 },
-    { frequency: 349.23, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 622.25, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 1567.98, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 220, Q: 3.5, gain: 1 + 3 / 6 }, // half wood resonance
+    { frequency: 440, Q: 3.5, gain: 1 + 4 / 6 }, // wood resonance
+    { frequency: 659.25, Q: 3.5, gain: 1 + 4 / 6 }, // air resonance, perfect fifth from the above
+    { frequency: 1975.53, Q: Math.SQRT2, gain: 2 }, // in the middle of double and quadruple air resonance
   ],
 };
 
@@ -998,13 +977,13 @@ export const cello = {
     },
   ],
   highPassFrequency: 65.4,
-  lowPassFrequency: 1760.0 * 2.0,
+  lowPassFrequency: 2959.96,
 
   formants: [
-    { frequency: 246.94, Q: 3.5, gain: 1 + 3 / 6 }, // important formants generally higher than in violin?
-    { frequency: 440, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 587.33, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 880, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 246.94, Q: 3.5, gain: 1 + 3 / 6 }, // half wood resonance
+    { frequency: 493.88, Q: 3.5, gain: 1 + 4 / 6 }, // wood resonance
+    { frequency: 739.99, Q: 3.5, gain: 1 + 4 / 6 }, // air resonance, perfect fifth from the above
+    { frequency: 2217.46, Q: Math.SQRT2, gain: 1 * 2 }, // in the middle of double and quadruple air resonance
   ],
 };
 
@@ -1050,13 +1029,13 @@ export const contrabass = {
     },
   ],
   highPassFrequency: 41.2,
-  lowPassFrequency: 523.25,
+  lowPassFrequency: 783.99,
 
   formants: [
-    { frequency: 69.3, Q: 3.5, gain: 1 + 3 / 6 },
-    { frequency: 246.94, Q: 3.5, gain: 1 + 4 / 6 },
-    { frequency: 739.99, Q: 3.0, gain: 1 + 4 / 6 },
-    { frequency: 1108.73, Q: 2.0, gain: 1 + 5 / 6 },
+    { frequency: 65.41, Q: 3.5, gain: 1 + 3 / 6 }, // half wood resonance
+    { frequency: 130.81, Q: 3.5, gain: 1 + 4 / 6 }, // wood resonance
+    { frequency: 196, Q: 3.5, gain: 1 + 4 / 6 }, // air resonance, perfect fifth from the above
+    { frequency: 587.33, Q: Math.SQRT2, gain: 2 }, // in the middle of double and quadruple air resonance
   ],
 };
 

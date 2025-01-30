@@ -44,7 +44,6 @@ export const AudioSystem = new Magic(
     });
 
     // Values from https://github.com/musios-app/equal-loudness
-    // Formula for computing Q: Math.sqrt(octaves ** 2) / (octaves ** 2 - 1);
     const lowPeak = new BiquadFilterNode(audioContext, {
       type: "peaking",
       frequency: 25,

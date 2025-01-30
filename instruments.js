@@ -40,12 +40,11 @@ export const createInstrument = (preset, audioContext) => {
     Q: highPassQ,
   });
 
-  lowPassFilter.connect(highPassFilter);
-  let output = highPassFilter;
+  let output = lowPassFilter;
   let maxPeak = 1.0;
 
   if (formants.length > 0) {
-    for (const { frequency, Q = Math.SQRT1_2, gain = 1.618 } of formants) {
+    for (const { frequency, Q = 2.456424, gain = 1.618 } of formants) {
       const formantFilter = new BiquadFilterNode(audioContext, {
         type: "peaking",
         frequency: frequency,
@@ -59,6 +58,9 @@ export const createInstrument = (preset, audioContext) => {
       maxPeak = Math.max(maxPeak, gain);
     }
   }
+
+  output.connect(highPassFilter);
+  output = highPassFilter;
 
   // Crossfader for oscillator stages, adapted from
   // https://tonejs.github.io/docs/15.0.4/classes/CrossFade.html
@@ -115,7 +117,7 @@ export const createInstrument = (preset, audioContext) => {
           : new OscillatorNode(audioContext, { type, frequency: 440 });
 
     const gainNode = new GainNode(audioContext, { gain: 0 });
-    const gainTarget = gain / maxPeak;
+    const gainTarget = (gain / maxPeak) ** 0.707;
 
     if (type === "noise") getNoiseOscillator(audioContext).connect(oscillatorNode);
     if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);
