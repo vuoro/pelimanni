@@ -23,6 +23,7 @@ export const Keyboard = new Magic(
       sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
+      blackKeysSet: Set<number>;
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
@@ -36,6 +37,7 @@ export const Keyboard = new Magic(
       sustain: +(localStorage.getItem("sustain") ?? 0.0),
       keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 60),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
+      blackKeysSet: new Set(),
     },
     message?: {
       instrumentName: keyof typeof allInstrumentPresets;
@@ -88,9 +90,11 @@ export const Keyboard = new Magic(
       });
     };
 
-    const blackKeysSet = new Set(state.blackKeys);
+    const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
+    state.blackKeysSet = blackKeysSet;
     const instrumentPreset =
       allInstrumentPresets[state.instrumentName as keyof typeof allInstrumentPresets];
+
     const keyboard = keys(
       blackKeysSet,
       frequencyToMidi(instrumentPreset?.highPassFrequency ?? 20.0) - 5,
@@ -183,12 +187,12 @@ const keyboardOffsetInput = (keyboardOffset: number) => {
   return html`
     <label>
       <span>Keyboard offset: ${keyboardOffset}</span>
-      <input name="keyboardOffset" type="range" min="28" max="102" step="1" .value=${keyboardOffset}/>
+      <input name="keyboardOffset" type="range" min="12" max="102" step="1" .value=${keyboardOffset}/>
     </label>
   `;
 };
 
-const blackKeysInput = (blackKeysSet: Set<string>) => {
+const blackKeysInput = (blackKeysSet: Set<number>) => {
   const checkboxes = [];
 
   for (let index = 0; index < 12; index++) {
@@ -200,7 +204,7 @@ const blackKeysInput = (blackKeysSet: Set<string>) => {
           type="checkbox"
           name="blackKeys"
           value=${index}
-          ?checked=${blackKeysSet.has(`${index}`)}
+          ?checked=${blackKeysSet.has(index)}
         />
       </label>
     `);
@@ -239,11 +243,11 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
   `;
 };
 
-const keys = (blackKeysSet: Set<string>, fromNote = 0, toNote = 120) => {
+const keys = (blackKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
   const keys = [];
 
   for (let note = fromNote; note < toNote; note++) {
-    const isBlack = blackKeysSet.has(`${note % 12}`);
+    const isBlack = blackKeysSet.has(note % 12);
     keys.push(key(note, isBlack));
   }
 
@@ -335,70 +339,71 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   const { code, repeat, metaKey, ctrlKey } = event;
   if (repeat || metaKey || ctrlKey) return;
 
-  const { keyboardOffset } = Keyboard.get();
+  const { keyboardOffset, blackKeysSet } = Keyboard.get();
 
-  const lowOctave = keyboardOffset - 1 * 12;
-  const midOctave = keyboardOffset + 0 * 12;
-  const highOctave = keyboardOffset + 1 * 12;
-  const higherOctave = keyboardOffset + 2 * 12;
+  const keyOffsets = {
+    Digit1: 0,
+    Digit2: 1,
+    Digit3: 2,
+    Digit4: 3,
+    Digit5: 4,
+    Digit6: 5,
+    Digit7: 6,
+    Digit8: 7,
+    Digit9: 8,
+    Digit0: 9,
+    Minus: 10,
+    Equal: 11,
 
-  const notes = {
-    Digit1: 0 + lowOctave,
-    Digit2: 1 + lowOctave,
-    Digit3: 2 + lowOctave,
-    Digit4: 3 + lowOctave,
-    Digit5: 4 + lowOctave,
-    Digit6: 5 + lowOctave,
-    Digit7: 6 + lowOctave,
-    Digit8: 7 + lowOctave,
-    Digit9: 8 + lowOctave,
-    Digit0: 9 + lowOctave,
-    Minus: 10 + lowOctave,
-    Equal: 11 + lowOctave,
+    KeyQ: 12,
+    KeyW: 13,
+    KeyE: 14,
+    KeyR: 15,
+    KeyT: 16,
+    KeyY: 17,
+    KeyU: 18,
+    KeyI: 19,
+    KeyO: 20,
+    KeyP: 21,
+    BracketLeft: 22,
+    BracketRight: 23,
 
-    KeyQ: 0 + midOctave,
-    KeyW: 1 + midOctave,
-    KeyE: 2 + midOctave,
-    KeyR: 3 + midOctave,
-    KeyT: 4 + midOctave,
-    KeyY: 5 + midOctave,
-    KeyU: 6 + midOctave,
-    KeyI: 7 + midOctave,
-    KeyO: 8 + midOctave,
-    KeyP: 9 + midOctave,
-    BracketLeft: 10 + midOctave,
-    BracketRight: 11 + midOctave,
+    KeyA: 24,
+    KeyS: 25,
+    KeyD: 26,
+    KeyF: 27,
+    KeyG: 28,
+    KeyH: 29,
+    KeyJ: 30,
+    KeyK: 31,
+    KeyL: 32,
+    Semicolon: 33,
+    Quote: 34,
+    Backslash: 35,
 
-    KeyA: 0 + highOctave,
-    KeyS: 1 + highOctave,
-    KeyD: 2 + highOctave,
-    KeyF: 3 + highOctave,
-    KeyG: 4 + highOctave,
-    KeyH: 5 + highOctave,
-    KeyJ: 6 + highOctave,
-    KeyK: 7 + highOctave,
-    KeyL: 8 + highOctave,
-    Semicolon: 9 + highOctave,
-    Quote: 10 + highOctave,
-    Backslash: 11 + highOctave,
-
-    Backquote: 0 + higherOctave,
-    KeyZ: 1 + higherOctave,
-    KeyX: 2 + higherOctave,
-    KeyC: 3 + higherOctave,
-    KeyV: 4 + higherOctave,
-    KeyB: 5 + higherOctave,
-    KeyN: 6 + higherOctave,
-    KeyM: 7 + higherOctave,
-    Comma: 8 + higherOctave,
-    Period: 9 + higherOctave,
-    Slash: 10 + higherOctave,
+    KeyZ: 36,
+    KeyX: 37,
+    KeyC: 38,
+    KeyV: 39,
+    KeyB: 40,
+    KeyN: 41,
+    KeyM: 42,
+    Comma: 43,
+    Period: 44,
+    Slash: 45,
   };
 
-  const note = notes[code as keyof typeof notes];
-  if (note === undefined) return;
+  const keyOffset = keyOffsets[code as keyof typeof keyOffsets];
+  if (keyOffset === undefined) return;
 
-  attackWithController(code, note, event.shiftKey, event.altKey);
+  // let note = 0;
+  // let offset = 0;
+  // while (note < keyOffset) {
+  //   if (blackKeysSet.has(note % 12)) offset++;
+  //   note++;
+  // }
+
+  attackWithController(code, keyOffset + keyboardOffset, event.shiftKey, event.altKey);
 });
 
 document.addEventListener("keyup", (event: KeyboardEvent) => {
@@ -484,7 +489,7 @@ const attackWithController = (
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
-    (shiftKey ? 1.0 : velocity) * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.236)),
+    velocity * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.236)),
     attackMultiplier,
     1.0,
     altKey ? 1.0 : vibratoAmount,

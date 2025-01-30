@@ -292,7 +292,7 @@ export const attackInstrument = (
   const canVibrato = vibratoStageGain || vibratoPitchGain || vibratoVolumeGain;
   const hasVibrato = vibratoAmount > 0.0 && canVibrato;
 
-  const volumeTarget = volume * (1.0 - weakness * 0.382);
+  const volumeTarget = volume * (1.0 - weakness * 0.618);
 
   const attackDynamics = (1.0 + 0.382 * lowPitchness) * (1.0 + 0.236 * weakness) * attackMultiplier;
 

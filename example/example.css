@@ -114,7 +114,7 @@ cite {
 } */
 
 .key {
-  --key-width: calc(1.75rlh + 1vmin);
+  --key-width: calc(2rlh + 1vmin);
   --key-height: calc(var(--key-width) * 2.5);
   width: var(--key-width);
   pointer-events: none;
