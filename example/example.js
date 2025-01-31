@@ -1,10 +1,8 @@
-import { scheduleMusic } from "../schedule.js";
 import { AudioControls } from "./AudioControls.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { AudioVisualizer } from "./AudioVisualizer.ts";
 import { Keyboard } from "./Keyboard.ts";
 import { Magic } from "./magic.ts";
-import { Music } from "./Music.ts";
 
 export const Tools = new Magic(() => {
   const audioSystem = AudioSystem.get();
@@ -31,20 +29,19 @@ requestAnimationFrame(loop);
 const playAhead = 0.2;
 
 const tryToScheduleMusic = () => {
-  const music = Music.get();
-  const { audioSystem } = Tools.get();
-
-  if (music?.shouldPlay) {
-    scheduleMusic(
-      music.tracks,
-      music.cycle,
-      audioSystem.audioContext,
-      audioSystem.connectInstrument,
-      {
-        playAhead,
-      },
-    );
-  }
+  // const music = Music.get();
+  // const { audioSystem } = Tools.get();
+  // if (music?.shouldPlay) {
+  //   scheduleMusic(
+  //     music.tracks,
+  //     music.cycle,
+  //     audioSystem.audioContext,
+  //     audioSystem.connectInstrument,
+  //     {
+  //       playAhead,
+  //     },
+  //   );
+  // }
 };
 
 setInterval(tryToScheduleMusic, (playAhead / 4.0) * 1000.0);

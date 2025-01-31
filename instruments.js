@@ -1,19 +1,152 @@
-import { getConstantSource, getNoiseOscillator } from "./sources.js";
+import { getNoiseOscillator } from "./sources.js";
 
-const constantSources = new WeakMap();
+export class InstrumentPreset {
+  group = "Miscellaneous";
 
-/**
-  @param {import ("./instrumentPresets.js").Instrument} preset
-  @param {AudioContext} audioContext
-*/
-export const createInstrument = (preset, audioContext) => {
+  /** @type {OscillatorPreset[]} the oscillators that create the sound of the instrument. */
+  oscillators = [];
+
+  /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
+  attack = 0.008;
+  /** a `timeConstant` for how long before the note reaches the `sustain` level after finishing its `attack` */
+  decay = 0.0;
+  /** a `timeConstant` for how loud the note after it has fully decayed */
+  sustain = 0.0;
+  /** a `timeConstant` for how long the note takes to "fade out" */
+  release = 0.0;
+  /** a `timeConstant` for how slowly the oscillator moves to new frequencies */
+  glide = 0.0001;
+
+  /** @type {number} determines how strongly the oscillator's dynamics respond to different velocities */
+  velocitySensitivity = 1.0;
+
+  /** @type {OscillatorType} the type of the oscillator used for vibrato and attackInstability */
+  vibratoType = "triangle";
+
+  /** @type {number} how much vibrato should affect the note frequency (in cents) */
+  vibratoEffectOnPitch = 0.0;
+  /** @type {number} how much vibrato should affect volume (in gain) */
+  vibratoEffectOnVolume = 0.0;
+  /** @type {number} amount of brass instrument style initial note vibration: causes the "braaap" */
+  attackInstability = 0.0;
+
+  /** @type {number} detunes oscillator by this many cents * velocity */
+  attackDetune = 0.0;
+  /** @type {number} multiplies `attack` to get the duration of `attackDetune` */
+  attackDetuneDurationMultiplier = 1.0;
+
+  // Values mostly from these sources:
+  // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/orchins.html
+  // https://alexiy.nl/eq_chart/
+  // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
+  // https://euphonics.org/5-3-signature-modes-and-formants/
+  // https://sengpielaudio.com/VowelDiagram.htm
+  /** @type {number} applies to a lowpass filter at this frequency */
+  lowPassFrequency = 4186.009 * 1.059463;
+  /** @type {number} applies a highpass filter at this frequency */
+  highPassFrequency = 27.5 * 0.943874;
+
+  /** @type {number} the resonance or "Q factor" of the lowpass filter */
+  lowPassQ = Math.SQRT1_2;
+  /** @type {number} the resonance or "Q factor" of the highpass filter */
+  highPassQ = Math.SQRT1_2;
+
+  /** @type {FormantFilterPreset[]} */
+  formants = [];
+
+  /**
+   * @param {Partial<Omit<InstrumentPreset, "oscillators" | "formants">> & {oscillators?: Partial<OscillatorPreset>[], formants?: Partial<FormantFilterPreset>[]}} instrumentProps
+   */
+  constructor({ oscillators, formants, ...props }) {
+    Object.assign(this, props);
+
+    if (oscillators) {
+      for (const oscillator of oscillators) {
+        this.oscillators.push(new OscillatorPreset(oscillator));
+      }
+    }
+
+    if (formants) {
+      for (const formant of formants) {
+        this.formants.push(new FormantFilterPreset(formant));
+      }
+    }
+  }
+}
+
+/** A `peaking` filter applied to the instrument to shape its timbre. The instrument's overall volume will be automatically lowered to compensate. */
+export class FormantFilterPreset {
+  frequency = 440;
+  Q = 2.456424;
+  gain = 1.618;
+
+  constructor(/** @type {Partial<FormantFilterPreset>} */ props) {
+    Object.assign(this, props);
+  }
+}
+
+export class OscillatorPreset {
+  /** @type {OscillatorType | "noise"} */
+  type = "custom";
+  /** @type {PeriodicWaveOptions["imag"]=} used for custom oscillators */
+  imag = undefined;
+  /** @type {PeriodicWaveOptions["real"]=} used for custom oscillators */
+  real = undefined;
+  /** @type {number} base volume of the oscillator */
+  gain = 1.0;
+
+  /** @type {InstrumentPreset["attack"]=} */
+  attack = undefined;
+  /** @type {InstrumentPreset["decay"]=} */
+  decay = undefined;
+  /** @type {InstrumentPreset["sustain"]=} */
+  sustain = undefined;
+  /** @type {InstrumentPreset["release"]=} */
+  release = undefined;
+  /** @type {InstrumentPreset["glide"]=} */
+  glide = undefined;
+
+  /** @type {InstrumentPreset["velocitySensitivity"]=} */
+  velocitySensitivity = undefined;
+
+  /** @type {InstrumentPreset["vibratoEffectOnPitch"]=} */
+  vibratoEffectOnPitch = undefined;
+  /** @type {InstrumentPreset["vibratoEffectOnVolume"]=} */
+  vibratoEffectOnVolume = undefined;
+  /** @type {InstrumentPreset["attackInstability"]=} */
+  attackInstability = undefined;
+
+  /** @type {InstrumentPreset["attackDetune"]=} */
+  attackDetune = undefined;
+  /** @type {InstrumentPreset["attackDetuneDurationMultiplier"]=} */
+  attackDetuneDurationMultiplier = undefined;
+
+  /** @type {BiquadFilterType} used when `type` is "noise": determines the type of filter used to filter the noise */
+  noiseType = "lowpass";
+  /** @type {number} used when `type` is "noise": sets the Q factor of the noise filter */
+  noiseQ = Math.SQRT1_2;
+
+  /** lets you modify the pitch before it gets played */
+  getPitch(pitch = 440.0, _velocity = 1.0) {
+    return pitch;
+  }
+
+  /** @param {Partial<OscillatorPreset>} props */
+  constructor(props) {
+    Object.assign(this, props);
+  }
+}
+
+export const createInstrument = (
+  /** @type {InstrumentPreset} */ preset,
+  /** @type {AudioContext}*/ audioContext,
+) => {
   const {
     oscillators: oscillatorsInPreset,
     vibratoType,
-    vibratoEffectOnPitch,
-    vibratoEffectOnStage,
-    vibratoEffectOnVolume,
-    initialInstability,
+    vibratoEffectOnPitch: defaultVibratoEffectOnPitch,
+    vibratoEffectOnVolume: defaultVibratoEffectOnVolume,
+    attackInstability: defaultattackInstability,
     formants,
     lowPassQ = Math.SQRT1_2,
     highPassQ = Math.SQRT1_2,
@@ -40,7 +173,8 @@ export const createInstrument = (preset, audioContext) => {
     Q: highPassQ,
   });
 
-  let output = lowPassFilter;
+  const input = lowPassFilter;
+  let output = input;
   let maxPeak = 1.0;
 
   if (formants.length > 0) {
@@ -62,21 +196,15 @@ export const createInstrument = (preset, audioContext) => {
   output.connect(highPassFilter);
   output = highPassFilter;
 
-  // Crossfader for oscillator stages, adapted from
-  // https://tonejs.github.io/docs/15.0.4/classes/CrossFade.html
-  /** @type {ConstantSourceNode} */
-  const constantSource = getConstantSource(audioContext);
-  const crossfader = new StereoPannerNode(audioContext, { pan: -1 });
-  const crossSplitter = new ChannelSplitterNode(audioContext, { numberOfOutputs: 2 });
-  const lowStage = new GainNode(audioContext, { gain: 0 });
-  const highStage = new GainNode(audioContext, { gain: 0 });
+  // Vibrato effects
+  let canVibrato = false;
 
-  constantSource.connect(crossfader).connect(crossSplitter);
-  crossSplitter.connect(lowStage.gain, 0);
-  crossSplitter.connect(highStage.gain, 1);
+  const vibratoMain = new OscillatorNode(audioContext, {
+    type: vibratoType,
+    frequency: 0,
+  });
 
-  lowStage.connect(lowPassFilter);
-  highStage.connect(lowPassFilter);
+  vibratoMain.start(audioContext.currentTime);
 
   // Oscillators
   const oscillators = [];
@@ -84,120 +212,100 @@ export const createInstrument = (preset, audioContext) => {
 
   for (const {
     type,
-    periodicWave,
-    gain = 1.0,
-    stage = "both",
-    attack,
-    decay,
-    sustain,
-    release,
-    glide,
-    noiseType = "bandpass",
-    noiseQ = Math.SQRT1_2,
-    attackDetune,
-    attackDetuneDurationMultiplier,
+    imag,
+    real,
+    gain,
+    glide = preset.glide,
+    attack = preset.attack,
+    decay = preset.decay,
+    sustain = preset.sustain,
+    release = preset.release,
+    velocitySensitivity = preset.velocitySensitivity,
+    attackDetune = preset.attackDetune,
+    attackDetuneDurationMultiplier = preset.attackDetuneDurationMultiplier,
+    noiseType,
+    noiseQ,
     getPitch = passPitchThrough,
+    attackInstability = defaultattackInstability,
+    vibratoEffectOnPitch = defaultVibratoEffectOnPitch,
+    vibratoEffectOnVolume = defaultVibratoEffectOnVolume,
   } of oscillatorsInPreset) {
     const oscillatorNode =
       type === "custom"
         ? new OscillatorNode(audioContext, {
             type,
-            frequency: 440,
             periodicWave: new PeriodicWave(audioContext, {
-              ...periodicWave,
-              // If no cosine terms are given, fill them in, with a random phase offset
-              // and some slight randomisation for flavour
-              real:
-                periodicWave.real ??
-                periodicWave.imag.map((v) => v * randomisedPhase * (1.0 - Math.random() * 0.013)),
+              imag: imag || undefined,
+              real: real || imag?.map((v) => v * randomisedPhase),
             }),
           })
         : type === "noise"
           ? new BiquadFilterNode(audioContext, { type: noiseType, Q: noiseQ })
-          : new OscillatorNode(audioContext, { type, frequency: 440 });
+          : new OscillatorNode(audioContext, { type });
 
     const gainNode = new GainNode(audioContext, { gain: 0 });
-    const gainTarget = (gain / maxPeak) ** 0.707;
+    const gainTarget = (gain / maxPeak) ** Math.SQRT1_2;
 
     if (type === "noise") getNoiseOscillator(audioContext).connect(oscillatorNode);
     if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);
-    oscillatorNode.connect(gainNode);
 
-    if (stage === "low" || stage === "both") gainNode.connect(lowStage);
-    if (stage === "high" || stage === "both") gainNode.connect(highStage);
+    oscillatorNode.connect(gainNode).connect(input);
+
+    // Brass-style attack instability
+    let attackInstabilityGain = null;
+    if (attackInstability > 0.0) {
+      canVibrato = true;
+      attackInstabilityGain = new GainNode(audioContext, { gain: 0.0 });
+      vibratoMain.connect(attackInstabilityGain).connect(gainNode.gain);
+    }
+
+    // Tremolo and/or brightness vibrato
+    let vibratoVolumeGain = null;
+    if (vibratoEffectOnVolume > 0.0) {
+      canVibrato = true;
+      vibratoVolumeGain = new GainNode(audioContext, { gain: 0.0 });
+      vibratoMain.connect(vibratoVolumeGain).connect(gainNode.gain);
+    }
+
+    // Regular pitch vibrato
+    let vibratoPitchGain = null;
+    if (vibratoEffectOnPitch > 0.0) {
+      canVibrato = true;
+      vibratoPitchGain = new GainNode(audioContext, { gain: 0.0 });
+      vibratoMain.connect(vibratoPitchGain).connect(oscillatorNode.detune);
+    }
 
     oscillators.push({
       oscillatorNode,
       gainNode,
       gainTarget,
+      getPitch,
+      glide,
       attack,
       decay,
       sustain,
       release,
-      glide,
-      getPitch,
+      velocitySensitivity,
       attackDetune,
       attackDetuneDurationMultiplier,
+      attackInstabilityGain,
+      vibratoVolumeGain,
+      vibratoPitchGain,
+      attackInstability,
+      vibratoEffectOnPitch,
+      vibratoEffectOnVolume,
     });
   }
-
-  // TODO: no need for this if there's no vibrato or instability at all?
-  const vibratoMain = new OscillatorNode(audioContext, {
-    type: vibratoType,
-    frequency: 0,
-  });
-
-  // Brass-style pitch instability
-  let instabilityGain = null;
-  if (initialInstability > 0.0) {
-    instabilityGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(instabilityGain).connect(crossfader.pan);
-  }
-
-  // Brightness vibrato for everyone
-  let vibratoStageGain = null;
-  if (vibratoEffectOnStage > 0.0) {
-    vibratoStageGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(vibratoStageGain).connect(crossfader.pan);
-  }
-
-  // Pitch vibrato
-  let vibratoPitchGain = null;
-  if (vibratoEffectOnPitch > 0.0) {
-    vibratoPitchGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(vibratoPitchGain);
-
-    for (const { oscillatorNode } of oscillators) {
-      vibratoPitchGain.connect(oscillatorNode.detune);
-    }
-  }
-
-  // Volume vibrato ("tremolo")
-  let vibratoVolumeGain = null;
-  if (vibratoEffectOnVolume > 0.0) {
-    vibratoVolumeGain = new GainNode(audioContext, { gain: 0.0 });
-    vibratoMain.connect(vibratoVolumeGain);
-
-    for (const { gainNode } of oscillators) {
-      vibratoVolumeGain.connect(gainNode.gain);
-    }
-  }
-
-  vibratoMain.start(audioContext.currentTime);
 
   const epsilon = 1.0 / audioContext.sampleRate;
 
   return {
     epsilon,
     oscillators,
-    crossfader,
     vibratoMain,
-    instabilityGain,
-    vibratoStageGain,
-    vibratoPitchGain,
-    vibratoVolumeGain,
     lowPassFilter,
     highPassFilter,
+    canVibrato,
     output,
     preset,
     previousStartAt: audioContext.currentTime - epsilon,
@@ -249,81 +357,62 @@ export const attackInstrument = (
   vibratoAmount = 0.0,
   vibratoFrequency = 5.0,
 ) => {
-  const {
-    oscillators,
-    crossfader,
-    vibratoMain,
-    instabilityGain,
-    vibratoStageGain,
-    vibratoPitchGain,
-    vibratoVolumeGain,
-    preset,
-  } = instrument;
-
-  const {
-    initialInstability,
-    attack: defaultAttack,
-    decay: defaultDecay,
-    sustain: defaultSustain,
-    glide: defaultGlide,
-    overtoneAttack = defaultAttack,
-    overtoneDecay = defaultDecay,
-    overtoneSustain = defaultSustain,
-    vibratoEffectOnStage,
-    vibratoEffectOnPitch,
-    vibratoEffectOnVolume,
-    attackDetune: defaultAttackDetune,
-    attackDetuneDurationMultiplier: defaultAttackDetuneDurationMultiplier,
-  } = preset;
+  const { oscillators, vibratoMain, canVibrato, epsilon } = instrument;
 
   // FIXME: these are repeated in attack and release, but don't need to be in play
   const highPitchness = -(1200.0 * Math.log2(27.5 / pitch)) / highPitchnessReference;
-  const lowPitchness = 1.0 - highPitchness;
+  // const lowPitchness = 1.0 - highPitchness;
+  const relativePitchness = highPitchness * 2.0 - 1.0;
+  const relativeVelocity = velocity * 2.0 - 1.0;
 
-  const strongness = velocity;
-  const weakness = 1.0 - strongness;
+  const volumeTarget = volume * (0.5 + velocity * 0.5);
 
-  const canVibrato = vibratoStageGain || vibratoPitchGain || vibratoVolumeGain;
-  const hasVibrato = vibratoAmount > 0.0 && canVibrato;
+  const dynamicStartAt = Math.max(instrument.output.context.currentTime, at);
 
-  const volumeTarget = volume * (1.0 - weakness * 0.618);
+  cancelPendingInstrumentEvents(instrument, dynamicStartAt);
 
-  const attackDynamics =
-    (0.91 + 2.0 * 0.09 * lowPitchness) * (0.91 + 2.0 * 0.09 * weakness) * attackMultiplier;
+  // Tell the oscillators what to do
+  const attackInstabilityAttack = 0.001;
+  let attackInstabilityStopsAt = dynamicStartAt;
+  let longestAttack = 0.0;
+  let longestDecay = 0.0;
 
-  const defaultDynamicAttack = defaultAttack * attackDynamics;
-  const overtoneDynamicAttack =
-    overtoneAttack === defaultAttack ? defaultDynamicAttack : overtoneAttack * attackDynamics;
+  for (const oscillator of oscillators) {
+    const {
+      oscillatorNode,
+      gainNode,
+      gainTarget,
+      attack,
+      glide,
+      velocitySensitivity,
+      attackDetune,
+      attackDetuneDurationMultiplier,
+      getPitch,
+      decay,
+      sustain,
+      attackInstabilityGain,
+      attackInstability,
+    } = oscillator;
 
-  const vibratoAttack = defaultDynamicAttack * 0.013;
-  const vibratoGainAttack = defaultDynamicAttack * 0.056;
+    cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
 
-  const dynamicStartAt = Math.max(crossfader.context.currentTime, at);
-
-  cancelPendingEvents(instrument, dynamicStartAt);
-
-  // Glide and attack
-  crossfader.pan.setTargetAtTime(velocity, dynamicStartAt, overtoneDynamicAttack);
-
-  for (const {
-    oscillatorNode,
-    gainNode,
-    gainTarget,
-    attack = defaultAttack,
-    glide = defaultGlide,
-    attackDetune = defaultAttackDetune,
-    attackDetuneDurationMultiplier = defaultAttackDetuneDurationMultiplier,
-    getPitch,
-  } of oscillators) {
+    // Glide and attack
     const pitchTarget = getPitch(pitch, velocity);
-    const dynamicAttack = attack === defaultAttack ? defaultDynamicAttack : attack * attackDynamics;
+    const attackDynamics =
+      (1.0 - 0.236 * relativePitchness) *
+      (1.0 - 0.236 * relativeVelocity * velocitySensitivity) *
+      attackMultiplier;
+
+    const dynamicAttack = attack * attackDynamics;
+    longestAttack = Math.max(longestAttack, dynamicAttack);
 
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, dynamicStartAt, dynamicAttack);
 
+    // Detune attack, if needed
     if (attackDetune !== 0.0) {
       oscillatorNode.detune.setTargetAtTime(
-        attackDetune * velocity ** 0.414,
+        attackDetune * velocity * Math.abs(velocitySensitivity) ** 0.414,
         dynamicStartAt,
         glide,
       );
@@ -333,87 +422,88 @@ export const attackInstrument = (
         attackDetuneDurationMultiplier * dynamicAttack,
       );
     }
+
+    // Brass-style attack instability
+    if (attackInstability > 0.0) {
+      attackInstabilityStopsAt = Math.max(
+        attackInstabilityStopsAt,
+        attackInstabilityStopsAt + dynamicAttack * 3.0,
+      );
+
+      const attackInstabilityDecaysAt = Math.min(
+        dynamicStartAt + attackInstabilityAttack * 4.0,
+        attackInstabilityStopsAt,
+      );
+
+      const attackInstabilityGainDecay =
+        (attackInstabilityStopsAt - attackInstabilityDecaysAt) / 2.0;
+
+      attackInstabilityGain?.gain.setTargetAtTime(
+        attackInstability,
+        dynamicStartAt,
+        attackInstabilityAttack,
+      );
+      attackInstabilityGain?.gain.setTargetAtTime(
+        0.0,
+        attackInstabilityDecaysAt,
+        attackInstabilityGainDecay,
+      );
+    }
+
+    // Decay and sustain
+    if (sustain === 1.0 && decay === 0) continue;
+
+    const decayAt = dynamicStartAt + dynamicAttack * 4.0;
+    const decayDynamics =
+      1.382 *
+      (1.0 - relativePitchness * 0.618) *
+      (1.0 + 0.236 * relativeVelocity * velocitySensitivity);
+    const dynamicDecay = decay * decayDynamics;
+    longestDecay = Math.max(longestDecay, dynamicDecay);
+
+    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
 
-  // Brass-style instability at start of notes
-  let instabilityStopsAt = dynamicStartAt;
-
-  if (initialInstability > 0.0) {
-    instabilityStopsAt += defaultDynamicAttack * 4.0;
-
-    const instabilityTarget = 75 + 5 * highPitchness;
-    const instabilityEffect = initialInstability;
-    const instabilityAttack = defaultDynamicAttack * 0.008;
-    const instabilityDecaysAt = Math.min(
-      dynamicStartAt + instabilityAttack * 4.0,
-      instabilityStopsAt,
-    );
-
-    const instabilityGainDecay = (instabilityStopsAt - instabilityDecaysAt) / 3.0;
-
-    vibratoMain.frequency.setTargetAtTime(instabilityTarget, dynamicStartAt, instabilityAttack);
-    vibratoMain.frequency.setTargetAtTime(0.0, instabilityStopsAt, instabilityAttack);
-
-    instabilityGain?.gain.setTargetAtTime(instabilityEffect, dynamicStartAt, instabilityAttack);
-    instabilityGain?.gain.setTargetAtTime(0.0, instabilityDecaysAt, instabilityGainDecay);
+  // Fire up vibrato oscillator for attack instability
+  if (attackInstabilityStopsAt !== dynamicStartAt) {
+    const frequency = 75 + 5 * highPitchness;
+    vibratoMain.frequency.setTargetAtTime(frequency, dynamicStartAt, attackInstabilityAttack);
+    vibratoMain.frequency.setTargetAtTime(0.0, attackInstabilityStopsAt, attackInstabilityAttack);
   }
 
   // Fire up vibrato
-  if (hasVibrato) {
-    const vibratoAt = instabilityStopsAt + defaultDynamicAttack;
-    const vibratoTarget = vibratoFrequency;
-    const vibratoStageTarget = vibratoAmount ** 0.5 * vibratoEffectOnStage;
-    const vibratoPitchTarget = vibratoAmount * vibratoEffectOnPitch;
-    const vibratoVolumeTarget = vibratoAmount * -vibratoEffectOnVolume * volume;
+  if (canVibrato && vibratoAmount > 0.0) {
+    const vibratoAt = attackInstabilityStopsAt + longestAttack * 3.0;
+    const attack = longestAttack * 0.013;
+    const gainAttack = longestAttack * 0.056;
 
-    vibratoMain.frequency.setTargetAtTime(vibratoTarget, vibratoAt, vibratoAttack);
-    vibratoStageGain?.gain.setTargetAtTime(vibratoStageTarget, vibratoAt, vibratoGainAttack);
-    vibratoPitchGain?.gain.setTargetAtTime(vibratoPitchTarget, vibratoAt, vibratoGainAttack);
-    vibratoVolumeGain?.gain.setTargetAtTime(vibratoVolumeTarget, vibratoAt, vibratoGainAttack);
-  }
+    vibratoMain.frequency.setTargetAtTime(vibratoFrequency, vibratoAt, attack);
 
-  // Decay and sustain
-  const decayAt = dynamicStartAt + defaultDynamicAttack * 4.0;
-  const decayDynamics = 0.382 + 2.0 * lowPitchness;
-
-  const oscillatorDecayDynamics = decayDynamics * (1.0 + 0.618 * strongness);
-  const defaultDynamicDecay = defaultDecay * oscillatorDecayDynamics;
-
-  const overtonesDecayAt = dynamicStartAt + overtoneDynamicAttack * 4.0;
-  const overtoneDecayDynamics = decayDynamics * (1.0 + 0.618 * weakness);
-  const overtonesShouldDecay = overtoneDecay > 0.0 && overtoneSustain !== 1.0;
-
-  if (overtonesShouldDecay) {
-    const overtoneDynamicDecay = overtoneDecay * overtoneDecayDynamics;
-
-    crossfader.pan.setTargetAtTime(
-      overtoneSustain * 2.0 - 1.0,
-      overtonesDecayAt,
-      overtoneDynamicDecay,
-    );
-  }
-
-  for (const {
-    gainNode,
-    gainTarget,
-    decay = defaultDecay,
-    sustain = defaultSustain,
-  } of oscillators) {
-    const shouldDecay = decay > 0.0 && sustain !== 1.0;
-    if (!shouldDecay) continue;
-
-    const dynamicDecay =
-      decay === defaultDecay ? defaultDynamicDecay : decay * oscillatorDecayDynamics;
-
-    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
+    for (const {
+      vibratoPitchGain,
+      vibratoVolumeGain,
+      vibratoEffectOnVolume,
+      vibratoEffectOnPitch,
+    } of oscillators) {
+      vibratoPitchGain?.gain.setTargetAtTime(
+        vibratoAmount * vibratoEffectOnPitch,
+        vibratoAt,
+        gainAttack,
+      );
+      vibratoVolumeGain?.gain.setTargetAtTime(
+        vibratoAmount * -vibratoEffectOnVolume * volume,
+        vibratoAt,
+        gainAttack,
+      );
+    }
   }
 
   instrument.previousStartAt = dynamicStartAt;
   instrument.previousEndAt = Number.POSITIVE_INFINITY;
   instrument.previousPitch = pitch;
   instrument.previousVelocity = velocity;
-  instrument.previousAttack = defaultDynamicAttack;
-  instrument.previousDecay = defaultDynamicDecay;
+  instrument.previousAttack = longestAttack;
+  instrument.previousDecay = longestDecay;
 };
 
 const highPitchnessReference = 1200.0 * Math.log2(4186.009 / 27.5);
@@ -424,18 +514,7 @@ export const releaseInstrument = (
   releaseMultiplier = 1.0,
   releaseEarly = true,
 ) => {
-  const {
-    oscillators,
-    crossfader,
-    vibratoMain,
-    instabilityGain,
-    vibratoStageGain,
-    vibratoPitchGain,
-    vibratoVolumeGain,
-    preset,
-  } = instrument;
-
-  const { release: defaultRelease, overtoneRelease = defaultRelease } = preset;
+  const { oscillators, vibratoMain } = instrument;
 
   const pitch = instrument.previousPitch;
   const velocity = instrument.previousVelocity;
@@ -443,72 +522,72 @@ export const releaseInstrument = (
   const highPitchness = -(1200.0 * Math.log2(27.5 / pitch)) / highPitchnessReference;
   const lowPitchness = 1.0 - highPitchness;
 
-  const strongness = velocity;
+  let furthestEndAt = endAt;
+  let longestRelease = 0.0;
 
-  const releaseDynamics = (0.618 + lowPitchness) * (1.0 + 0.382 * strongness) * releaseMultiplier;
-  const defaultDynamicRelease = defaultRelease * releaseDynamics;
+  for (const oscillator of oscillators) {
+    const {
+      gainNode,
+      release,
+      attackInstabilityGain,
+      vibratoPitchGain,
+      vibratoVolumeGain,
+      velocitySensitivity,
+    } = oscillator;
 
-  const overtoneDynamicRelease =
-    overtoneRelease === defaultRelease ? defaultDynamicRelease : overtoneRelease * releaseDynamics;
+    const releaseDynamics =
+      (0.618 + lowPitchness) * (1.0 + 0.618 * velocity * velocitySensitivity) * releaseMultiplier;
+    const dynamicRelease = release * releaseDynamics;
+    const vibratoGainRelease = dynamicRelease * 0.09;
 
-  const vibratoRelease = defaultDynamicRelease * 0.021;
-  const vibratoGainRelease = defaultDynamicRelease * 0.09;
+    const dynamicEndAt = releaseEarly
+      ? Math.max(
+          instrument.output.context.currentTime,
+          instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
+          endAt - dynamicRelease,
+        )
+      : endAt;
 
-  const dynamicEndAt = releaseEarly
-    ? Math.max(
-        crossfader.context.currentTime,
-        instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
-        endAt - defaultDynamicRelease,
-      )
-    : endAt;
+    cancelPendingOscillatorEvents(oscillator, dynamicEndAt);
 
-  cancelPendingEvents(instrument, dynamicEndAt);
+    gainNode.gain.setTargetAtTime(0.0, dynamicEndAt, dynamicRelease);
 
-  crossfader.pan.setTargetAtTime(-1.0, dynamicEndAt, overtoneDynamicRelease);
+    attackInstabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
+    vibratoPitchGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
+    vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
 
-  for (const { gainNode, release } of oscillators) {
-    gainNode.gain.setTargetAtTime(
-      0.0,
-      dynamicEndAt,
-      release !== undefined ? release * releaseDynamics : defaultDynamicRelease,
-    );
+    furthestEndAt = Math.max(furthestEndAt, dynamicEndAt);
+    longestRelease = Math.max(longestRelease, dynamicRelease);
   }
 
-  vibratoMain.frequency.setTargetAtTime(0.0, dynamicEndAt, vibratoRelease);
-  vibratoStageGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-  vibratoPitchGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-  vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-  instabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
+  cancelPendingInstrumentEvents(instrument, furthestEndAt);
+  vibratoMain.frequency.setTargetAtTime(0.0, furthestEndAt, 0.008);
 
-  instrument.previousEndAt = releaseEarly ? dynamicEndAt : dynamicEndAt + defaultDynamicRelease;
+  instrument.previousEndAt = releaseEarly ? furthestEndAt : furthestEndAt + longestRelease;
 };
 
-const cancelPendingEvents = (
+const cancelPendingInstrumentEvents = (
   /** @type {ReturnType<typeof createInstrument>} */ instrument,
   /** @type {number} */ at,
 ) => {
-  const {
-    oscillators,
-    crossfader,
-    vibratoMain,
-    instabilityGain,
-    vibratoStageGain,
-    vibratoPitchGain,
-    vibratoVolumeGain,
-  } = instrument;
-
-  crossfader.pan.cancelScheduledValues(at);
+  const { vibratoMain } = instrument;
   vibratoMain.frequency.cancelScheduledValues(at);
-  instabilityGain?.gain.cancelScheduledValues(at);
-  vibratoStageGain?.gain.cancelScheduledValues(at);
+};
+
+const cancelPendingOscillatorEvents = (
+  /** @type {ReturnType<typeof createInstrument>["oscillators"][0]} */ oscillator,
+  /** @type {number} */ at,
+) => {
+  const { oscillatorNode, gainNode, attackInstabilityGain, vibratoPitchGain, vibratoVolumeGain } =
+    oscillator;
+
+  oscillatorNode.frequency.cancelScheduledValues(at);
+  oscillatorNode.detune.cancelScheduledValues(at);
+  gainNode.gain.cancelScheduledValues(at);
+
+  attackInstabilityGain?.gain.cancelScheduledValues(at);
   vibratoPitchGain?.gain.cancelScheduledValues(at);
   vibratoVolumeGain?.gain.cancelScheduledValues(at);
-
-  for (const { oscillatorNode, gainNode } of oscillators) {
-    oscillatorNode.frequency.cancelScheduledValues(at);
-    oscillatorNode.detune.cancelScheduledValues(at);
-    gainNode.gain.cancelScheduledValues(at);
-  }
 };
 
 /**

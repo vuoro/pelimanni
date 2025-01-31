@@ -96,7 +96,7 @@ export const AudioVisualizer = new Magic(() => {
 
     for (let i = 0; i < binCount; i++) {
       const v = timeData[i];
-      const y = v * height + height / 2 - height / 3;
+      const y = v * (height / 4) + height / 8;
 
       if (i === 0) {
         drawer.moveTo(timeX, y);

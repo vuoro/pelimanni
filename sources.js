@@ -1,4 +1,5 @@
 const constantSources = new WeakMap();
+const constantMinusSources = new WeakMap();
 const noiseOscillators = new WeakMap();
 
 export const getConstantSource = (/** @type {AudioContext} */ audioContext) => {
@@ -11,6 +12,18 @@ export const getConstantSource = (/** @type {AudioContext} */ audioContext) => {
   }
 
   return constantSource;
+};
+
+export const getConstantMinusSource = (/** @type {AudioContext} */ audioContext) => {
+  /** @type {ConstantSourceNode} */
+  let constantMinusSource = constantMinusSources.get(audioContext);
+  if (!constantMinusSource) {
+    constantMinusSource = new ConstantSourceNode(audioContext, { offset: -1 });
+    constantMinusSource.start();
+    constantMinusSources.set(audioContext, constantMinusSource);
+  }
+
+  return constantMinusSource;
 };
 
 export const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => {

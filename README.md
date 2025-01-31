@@ -223,14 +223,15 @@ document.addEventListener("visibilitychange", tryToScheduleMusic);
 
 Performance has not been tested extensively, but seems tolerable: on a M2 Mac Studio I can play at least 32 instruments concurrently without any glitching. The Web Audio API seems to handle all of them on a single CPU core, so that's probably something to adjust expectations around.
 
-Internally each instrument uses the following:
+Internally each instrument instance uses the following:
 
 1. Up to 3 main `OscillatorNode`s to make the sound. Most of them are custom, using a `PeriodicWave`.
-2. Another `OscillatorNode`: shared for vibrato, LFO effects, and brass-style initial note instability.
-3. A low-pass and a high-pass `BiquadfilterNode`.
+2. Another `OscillatorNode`: shared for vibrato and brass-style attack instability effects.
+3. A lowpass and a highpass `BiquadfilterNode`.
 4. Up to 4 peaking `BiquadfilterNode`s for shaping the timbre.
-6. A `StereoPanner`, a `ChannelSplitter`, and at least 3 `GainNode`s.
-7. Lots of `setTargetAtTime` to manage the envelopes of each oscillator and filter.
+5. Lots of `setTargetAtTime` to manage the envelopes of each oscillator.
+
+Additionally there's a global noise-generating `OscillatorNode`, shared by all instruments.
 
 I try to avoid object allocation in the scheduler and instrument playback, to minimise garbage collection pauses.
 
