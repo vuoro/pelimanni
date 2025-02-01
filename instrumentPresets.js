@@ -50,7 +50,7 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
 };
 
 const inharmonicityPrecision = 512;
-const inharmonicityReferenceFrequency = 349.228; // this should vary by note, but oh well
+const inharmonicityReferenceFrequency = 440.0; // this should vary by note, but oh well
 const a = 5.22964 * 10 ** -6;
 const b = 1.21012 * 10 ** -6;
 const c = 8.3666 * 10 ** -10;
@@ -120,7 +120,7 @@ const windNoiseOscillator = new OscillatorPreset({
   type: "noise",
   noiseQ: 32,
   noiseType: "highpass",
-  gain: 0.382 / 32,
+  gain: 0.236 / 32,
   attack: 0.021,
   decay: 0.0034,
   sustain: 0.0,
