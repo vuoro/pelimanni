@@ -1,6 +1,7 @@
 import { InstrumentPreset, OscillatorPreset } from "./instruments";
 
 const requiredSympatheticStringElements = 3 * 2;
+const dampen = (v = 1.0) => v ** 3.0;
 
 /** @param {Float32Array} imag */
 const addSympatheticStringsToImag = (imag, loudness = 0.09) => {
@@ -850,39 +851,34 @@ export const contrabass = new InstrumentPreset({
 // later key/hammer noise: 914 hz, 10–20ms attack, strong
 // also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
 
-const pianoLowImag = stretchOvertones(
-  Float32Array.of(
-    0.0,
-    // First 4 are quite high and often in a U shape
-    1.0,
-    0.146,
-    0.09,
-    0.146,
-  ),
+const pianoLowImag = Float32Array.of(
+  0.0,
+  // First 4 are quite high and often in a U shape
+  1.0,
+  0.146,
+  0.146,
+  0.236,
 );
 
-const pianoHighImag = stretchOvertones(
-  Float32Array.of(
-    0.0,
-    // First 4 are quite high and often in a U shape
-    0.0,
-    0.618,
-    0.414,
-    0.236,
-    // Then there's a pair arcing up
-    0.236,
-    0.382,
-    // And down
-    0.236,
-    0.146,
-    0.09,
-    0.056,
-    0.034,
-    0.021,
-    0.013,
-    0.008,
-    0.005,
-  ),
+const pianoHighImag = Float32Array.of(
+  0.0,
+  // First 4 are quite high and often in a U shape
+  0.0,
+  0.618,
+  0.382,
+  0.382,
+  // Then there's a pair arcing up
+  0.146,
+  0.236,
+  // And down
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
 );
 
 export const piano = new InstrumentPreset({
@@ -890,14 +886,14 @@ export const piano = new InstrumentPreset({
   oscillators: [
     ...copySympatheticStrings(
       {
-        imag: pianoLowImag,
+        imag: stretchOvertones(pianoLowImag),
         getPitch: getStretchedOvertonesPitch,
       },
       0.236,
     ),
     ...copySympatheticStrings(
       {
-        imag: pianoHighImag,
+        imag: stretchOvertones(pianoHighImag),
         getPitch: getStretchedOvertonesPitch,
         attack: 0.018,
         decay: 0.236,
@@ -919,21 +915,51 @@ export const piano = new InstrumentPreset({
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
 
+// Very much like piano, but less bassy? Dunno really. Sounds a bit like a harp right now.
+const hammeredDulcimerLowImag = Float32Array.of(
+  0.0,
+  // These 4 are quite high and often in a U shape
+  0.382,
+  0.146,
+  0.146,
+  0.236,
+);
+
+const hammeredDulcimerHighImag = Float32Array.of(
+  0.0,
+  // These 4 are quite high and often in a U shape
+  0.618,
+  0.382,
+  0.236,
+  0.382,
+  // Then there's a pair arcing up
+  0.146,
+  0.236,
+  // And down
+  0.146,
+  0.09,
+  0.056,
+  0.034,
+  0.021,
+  0.013,
+  0.008,
+  0.005,
+);
+
 export const hammeredDulcimer = new InstrumentPreset({
   ...piano,
   group: "Strings (hammered)",
-  // TODO: this needs its own overtones
   oscillators: [
     ...copySympatheticStrings(
       {
-        imag: pianoLowImag,
+        imag: stretchOvertones(hammeredDulcimerLowImag),
         getPitch: getStretchedOvertonesPitch,
       },
       0.146,
     ),
     ...copySympatheticStrings(
       {
-        imag: pianoHighImag,
+        imag: stretchOvertones(hammeredDulcimerHighImag),
         getPitch: getStretchedOvertonesPitch,
         attack: 0.021,
         decay: 0.236,
@@ -948,6 +974,9 @@ export const hammeredDulcimer = new InstrumentPreset({
   decay: 0.618,
   sustain: 0.0,
   release: 0.146,
+
+  attackDetune: 100,
+  attackDetuneDurationMultiplier: 0.333333,
 });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -1218,8 +1247,6 @@ const pluckedHighEnvelope = {
   sustain: 0.0,
   release: 0.034,
 };
-
-const dampen = (v = 1.0) => v ** 3.0;
 
 export const pluckedViolin = new InstrumentPreset({
   ...violin,
