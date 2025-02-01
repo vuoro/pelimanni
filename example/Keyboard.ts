@@ -479,7 +479,7 @@ const attackWithController = (
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
-    velocity * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.236)),
+    velocity * (1.0 + 0.056 * Math.sin(audioContext.currentTime * 0.236) + 0.034 * Math.random()),
     attackMultiplier,
     1.0,
     altKey ? 1.0 : vibratoAmount,

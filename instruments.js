@@ -411,11 +411,7 @@ export const attackInstrument = (
 
     // Detune attack, if needed
     if (attackDetune !== 0.0) {
-      oscillatorNode.detune.setTargetAtTime(
-        attackDetune * velocity * Math.abs(velocitySensitivity) ** 0.414,
-        dynamicStartAt,
-        glide,
-      );
+      oscillatorNode.detune.setTargetAtTime(attackDetune * velocity, dynamicStartAt, glide);
       oscillatorNode.detune.setTargetAtTime(
         0.0,
         dynamicStartAt + glide * 4.0,
