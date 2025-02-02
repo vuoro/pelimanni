@@ -322,16 +322,17 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
   }
 
   // Play the note
-  const longness = 1.0 - 0.5 ** duration;
+  const attackMultiplier = 3.0 - 2.0 * ((1.0 - instrument.preset.attack) ** 2.0) ** duration;
+  const releaseMultiplier = 1.0; // TODO: would be nice to determine this by the next note
 
   playInstrument(
     instrument,
     midiToFrequency(note, undefined),
     at,
     duration,
-    velocity ?? 0.764 + 0.236 * Math.sin(at * 0.236),
-    1.0 + 2.0 * longness,
-    1.0 + 2.0 * longness,
+    velocity ?? 0.854 + 0.146 * Math.sin(at * 0.236) * (1.0 + 0.236 * Math.random() * 2.0 - 1.0),
+    attackMultiplier,
+    releaseMultiplier,
     volume,
     vibrato,
     vibratoFrequency,

@@ -400,7 +400,7 @@ export const attackInstrument = (
     const pitchTarget = getPitch(pitch, velocity);
     const attackDynamics =
       (1.0 - 0.236 * relativePitchness) *
-      (1.0 - 0.236 * relativeVelocity * velocitySensitivity) *
+      (1.0 - 0.146 * relativeVelocity * velocitySensitivity) *
       attackMultiplier;
 
     const dynamicAttack = attack * attackDynamics;
@@ -450,9 +450,7 @@ export const attackInstrument = (
 
     const decayAt = dynamicStartAt + dynamicAttack * 4.0;
     const decayDynamics =
-      1.0 *
-      (1.0 - relativePitchness * 0.618) *
-      (1.0 + 0.236 * relativeVelocity * velocitySensitivity);
+      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     longestDecay = Math.max(longestDecay, dynamicDecay);
 
@@ -515,10 +513,35 @@ export const releaseInstrument = (
   const velocity = instrument.previousVelocity;
 
   const highPitchness = -(1200.0 * Math.log2(27.5 / pitch)) / highPitchnessReference;
-  const lowPitchness = 1.0 - highPitchness;
+  // const lowPitchness = 1.0 - highPitchness;
 
-  let furthestEndAt = endAt;
+  const relativePitchness = highPitchness * 2.0 - 1.0;
+  const relativeVelocity = velocity * 2.0 - 1.0;
+
+  let earliestEndAt = endAt;
   let longestRelease = 0.0;
+
+  // FIXME: duplicate work here, ugh
+  for (const oscillator of oscillators) {
+    const { release, velocitySensitivity } = oscillator;
+
+    const releaseDynamics =
+      (1.0 - 0.236 * relativePitchness) *
+      (1.0 + 0.146 * relativeVelocity * velocitySensitivity) *
+      releaseMultiplier;
+    const dynamicRelease = release * releaseDynamics;
+
+    const dynamicEndAt = releaseEarly
+      ? Math.max(
+          instrument.output.context.currentTime,
+          instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
+          endAt - dynamicRelease * 0.618,
+        )
+      : endAt;
+
+    earliestEndAt = Math.min(earliestEndAt, dynamicEndAt);
+    longestRelease = Math.max(longestRelease, dynamicRelease);
+  }
 
   for (const oscillator of oscillators) {
     const {
@@ -531,34 +554,25 @@ export const releaseInstrument = (
     } = oscillator;
 
     const releaseDynamics =
-      (0.618 + lowPitchness) * (1.0 + 0.618 * velocity * velocitySensitivity) * releaseMultiplier;
+      (1.0 - 0.236 * relativePitchness) *
+      (1.0 + 0.146 * relativeVelocity * velocitySensitivity) *
+      releaseMultiplier;
     const dynamicRelease = release * releaseDynamics;
     const vibratoGainRelease = dynamicRelease * 0.09;
 
-    const dynamicEndAt = releaseEarly
-      ? Math.max(
-          instrument.output.context.currentTime,
-          instrument.previousStartAt + 0.764 * (endAt - instrument.previousStartAt),
-          endAt - dynamicRelease,
-        )
-      : endAt;
+    cancelPendingOscillatorEvents(oscillator, earliestEndAt);
 
-    cancelPendingOscillatorEvents(oscillator, dynamicEndAt);
+    gainNode.gain.setTargetAtTime(0.0, earliestEndAt, dynamicRelease);
 
-    gainNode.gain.setTargetAtTime(0.0, dynamicEndAt, dynamicRelease);
-
-    attackInstabilityGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-    vibratoPitchGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-    vibratoVolumeGain?.gain.setTargetAtTime(0.0, dynamicEndAt, vibratoGainRelease);
-
-    furthestEndAt = Math.max(furthestEndAt, dynamicEndAt);
-    longestRelease = Math.max(longestRelease, dynamicRelease);
+    attackInstabilityGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
+    vibratoPitchGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
+    vibratoVolumeGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
   }
 
-  cancelPendingInstrumentEvents(instrument, furthestEndAt);
-  vibratoMain.frequency.setTargetAtTime(0.0, furthestEndAt, 0.008);
+  cancelPendingInstrumentEvents(instrument, earliestEndAt);
+  vibratoMain.frequency.setTargetAtTime(0.0, earliestEndAt, 0.008);
 
-  instrument.previousEndAt = releaseEarly ? furthestEndAt : furthestEndAt + longestRelease;
+  instrument.previousEndAt = releaseEarly ? earliestEndAt : endAt + longestRelease * 0.618;
 };
 
 const cancelPendingInstrumentEvents = (

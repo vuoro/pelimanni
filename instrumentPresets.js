@@ -638,7 +638,6 @@ export const violin = new InstrumentPreset({
       getPitch: getSympatheticStringPitch,
       attack: 0.146,
       sustain: 0.854,
-      release: 0.382,
       velocitySensitivity: -1,
     },
   ],
