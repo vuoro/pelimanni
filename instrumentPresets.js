@@ -435,10 +435,10 @@ export const saxophone = new InstrumentPreset({
       decay: 0.146,
       release: 0.09,
       velocitySensitivity: -1,
+      attackInstability: 0.09,
     },
   ],
 
-  attackInstability: 0.056,
   attackDetune: 30, // FIXME: is this a thing?
   attackDetuneDurationMultiplier: 5.0,
 
@@ -490,10 +490,9 @@ export const trumpet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.056,
       velocitySensitivity: -1,
+      attackInstability: 0.09,
     },
   ],
-
-  attackInstability: 0.09,
 
   attack: 0.056,
   decay: 0.236,
