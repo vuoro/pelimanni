@@ -1221,7 +1221,7 @@ const plucked = {
   release: 0.056,
 
   attackDetune: 100,
-  attackDetuneDurationMultiplier: 0.236,
+  attackDetuneDurationMultiplier: 0.382,
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
