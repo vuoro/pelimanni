@@ -34,12 +34,14 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
     imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 2.0,
     gain: gain * loudness,
+    attackDetune: 0,
   });
   strings.push({
     ...oscillator,
     imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
     gain: gain * loudness,
+    attackDetune: 0,
   });
 
   strings.push({
@@ -47,12 +49,14 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
     imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 2.0),
     gain: gain * loudness,
+    attackDetune: 0,
   });
   strings.push({
     ...oscillator,
     imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
     gain: gain * loudness,
+    attackDetune: 0,
   });
 
   return strings;
