@@ -1,18 +1,21 @@
 import { InstrumentPreset, OscillatorPreset } from "./instruments";
 
 const requiredSympatheticStringElements = 3 * 2;
-const dampen = (v = 1.0) => v ** 3.0;
+const makeDuller = (v = 1.0) => v ** 2.0;
 
 /** @param {Float32Array} imag */
 const addSympatheticStringsToImag = (imag, loudness = 0.09) => {
   const newImag = new Float32Array(imag.length * requiredSympatheticStringElements * 3 + 1);
 
   for (let index = 1; index < imag.length; index++) {
-    newImag[index * requiredSympatheticStringElements * 3] += imag[index] * loudness;
-    newImag[index * requiredSympatheticStringElements * 2] += imag[index] * loudness; // higher strings
-    newImag[index * requiredSympatheticStringElements] += imag[index]; // real string
-    newImag[index * requiredSympatheticStringElements * (1 / 2)] += imag[index] * loudness; // lower strings
-    newImag[index * requiredSympatheticStringElements * (1 / 3)] += imag[index] * loudness;
+    const value = imag[index];
+    const dulledValue = makeDuller(value);
+
+    newImag[index * requiredSympatheticStringElements * 3] += dulledValue * loudness;
+    newImag[index * requiredSympatheticStringElements * 2] += dulledValue * loudness; // higher strings
+    newImag[index * requiredSympatheticStringElements] += value; // real string
+    newImag[index * requiredSympatheticStringElements * (1 / 2)] += dulledValue * loudness; // lower strings
+    newImag[index * requiredSympatheticStringElements * (1 / 3)] += dulledValue * loudness;
   }
 
   return newImag;
@@ -24,25 +27,30 @@ const getSympatheticStringPitch = (pitch = 440.0) => pitch / requiredSympathetic
 const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   const { gain = 1.0, getPitch } = oscillator;
   const strings = [oscillator];
+  const dullerImag = oscillator.imag?.map(makeDuller);
 
   strings.push({
     ...oscillator,
+    imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 2.0,
     gain: gain * loudness,
   });
   strings.push({
     ...oscillator,
+    imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * 3.0,
     gain: gain * loudness,
   });
 
   strings.push({
     ...oscillator,
+    imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 2.0),
     gain: gain * loudness,
   });
   strings.push({
     ...oscillator,
+    imag: dullerImag,
     getPitch: (pitch = 440.0) => (getPitch ? getPitch(pitch) : pitch) * (1.0 / 3.0),
     gain: gain * loudness,
   });
@@ -1256,7 +1264,7 @@ export const pluckedViolin = new InstrumentPreset({
     }),
     ...copySympatheticStrings({
       ...pluckedHighEnvelope,
-      imag: stretchOvertones(violinHighImag.map(dampen)),
+      imag: stretchOvertones(violinHighImag),
       getPitch: getStretchedOvertonesPitch,
     }),
   ],
@@ -1272,7 +1280,7 @@ export const pluckedViola = new InstrumentPreset({
     }),
     ...copySympatheticStrings({
       ...pluckedHighEnvelope,
-      imag: stretchOvertones(violaHighImag.map(dampen)),
+      imag: stretchOvertones(violaHighImag),
       getPitch: getStretchedOvertonesPitch,
     }),
   ],
@@ -1288,7 +1296,7 @@ export const pluckedCello = new InstrumentPreset({
     }),
     ...copySympatheticStrings({
       ...pluckedHighEnvelope,
-      imag: stretchOvertones(celloHighImag.map(dampen)),
+      imag: stretchOvertones(celloHighImag),
       getPitch: getStretchedOvertonesPitch,
     }),
   ],
@@ -1304,7 +1312,7 @@ export const pluckedContrabass = new InstrumentPreset({
     }),
     ...copySympatheticStrings({
       ...pluckedHighEnvelope,
-      imag: stretchOvertones(contrabassHighImag.map(dampen)),
+      imag: stretchOvertones(contrabassHighImag),
       getPitch: getStretchedOvertonesPitch,
     }),
   ],
