@@ -891,14 +891,14 @@ export const piano = new InstrumentPreset({
       imag: stretchOvertones(pianoHighImag),
       getPitch: getStretchedOvertonesPitch,
       attack: 0.018,
-      decay: 0.146,
+      decay: 0.3 * 0.382,
       release: 0.056,
       velocitySensitivity: -1,
     },
   ],
 
   attack: 0.008,
-  decay: 0.382,
+  decay: 0.3,
   sustain: 0.0,
   release: 0.09,
 
@@ -954,14 +954,14 @@ export const hammeredDulcimer = new InstrumentPreset({
       imag: stretchOvertones(hammeredDulcimerHighImag),
       getPitch: getStretchedOvertonesPitch,
       attack: 0.021,
-      decay: 0.146,
+      decay: 0.3 * 0.382,
       release: 0.09,
       velocitySensitivity: -1,
     },
   ],
 
   attack: 0.013,
-  decay: 0.382,
+  decay: 0.3,
   sustain: 0.0,
   release: 0.146,
 
