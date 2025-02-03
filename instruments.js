@@ -374,8 +374,8 @@ export const attackInstrument = (
   // Tell the oscillators what to do
   const attackInstabilityAttack = 0.001;
   let attackInstabilityStopsAt = dynamicStartAt;
-  let longestAttack = 0.0;
-  let longestDecay = 0.0;
+  let firstAttack = undefined;
+  let firstDecay = undefined;
 
   for (const oscillator of oscillators) {
     const {
@@ -404,7 +404,7 @@ export const attackInstrument = (
       attackMultiplier;
 
     const dynamicAttack = attack * attackDynamics;
-    longestAttack = Math.max(longestAttack, dynamicAttack);
+    firstAttack = firstAttack ?? dynamicAttack;
 
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
     gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, dynamicStartAt, dynamicAttack);
@@ -414,7 +414,7 @@ export const attackInstrument = (
       oscillatorNode.detune.setTargetAtTime(attackDetune * velocity, dynamicStartAt, glide);
       oscillatorNode.detune.setTargetAtTime(
         0.0,
-        dynamicStartAt + glide * 4.0,
+        dynamicStartAt + glide * 5.0,
         attackDetuneDurationMultiplier * dynamicAttack,
       );
     }
@@ -423,11 +423,11 @@ export const attackInstrument = (
     if (attackInstability > 0.0) {
       attackInstabilityStopsAt = Math.max(
         attackInstabilityStopsAt,
-        attackInstabilityStopsAt + dynamicAttack * 3.0,
+        attackInstabilityStopsAt + dynamicAttack * 5.0,
       );
 
       const attackInstabilityDecaysAt = Math.min(
-        dynamicStartAt + attackInstabilityAttack * 4.0,
+        dynamicStartAt + attackInstabilityAttack * 5.0,
         attackInstabilityStopsAt,
       );
 
@@ -448,14 +448,17 @@ export const attackInstrument = (
     // Decay and sustain
     if (sustain === 1.0 && decay === 0) continue;
 
-    const decayAt = dynamicStartAt + dynamicAttack * 4.0;
+    const decayAt = dynamicStartAt + dynamicAttack * 5.0;
     const decayDynamics =
-      (2.0 - 1.618 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
+      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
-    longestDecay = Math.max(longestDecay, dynamicDecay);
+    firstDecay = firstDecay ?? dynamicDecay;
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
+
+  firstAttack = firstAttack ?? 0.0;
+  firstDecay = firstDecay ?? 0.0;
 
   // Fire up vibrato oscillator for attack instability
   if (attackInstabilityStopsAt !== dynamicStartAt) {
@@ -466,8 +469,8 @@ export const attackInstrument = (
 
   // Fire up vibrato
   if (canVibrato && vibratoAmount > 0.0) {
-    const attack = longestAttack * 0.013;
-    const gainAttack = longestAttack * 0.056;
+    const attack = firstAttack * 0.013;
+    const gainAttack = firstAttack * 0.056;
     const vibratoAt = attackInstabilityStopsAt + attack;
 
     vibratoMain.frequency.setTargetAtTime(vibratoFrequency, vibratoAt, attack);
@@ -495,8 +498,8 @@ export const attackInstrument = (
   instrument.previousEndAt = Number.POSITIVE_INFINITY;
   instrument.previousPitch = pitch;
   instrument.previousVelocity = velocity;
-  instrument.previousAttack = longestAttack;
-  instrument.previousDecay = longestDecay;
+  instrument.previousAttack = firstAttack;
+  instrument.previousDecay = firstDecay;
 };
 
 const highPitchnessReference = 1200.0 * Math.log2(4186.009 / 27.5);
@@ -518,8 +521,8 @@ export const releaseInstrument = (
   const relativePitchness = highPitchness * 2.0 - 1.0;
   const relativeVelocity = velocity * 2.0 - 1.0;
 
-  let earliestEndAt = endAt;
-  let longestRelease = 0.0;
+  let firstEndAt = undefined;
+  let firstRelease = undefined;
 
   // FIXME: duplicate work here, ugh
   for (const oscillator of oscillators) {
@@ -539,9 +542,12 @@ export const releaseInstrument = (
         )
       : endAt;
 
-    earliestEndAt = Math.min(earliestEndAt, dynamicEndAt);
-    longestRelease = Math.max(longestRelease, dynamicRelease);
+    firstEndAt = firstEndAt ?? dynamicEndAt;
+    firstRelease = firstRelease ?? dynamicRelease;
   }
+
+  firstEndAt = firstEndAt ?? 0.0;
+  firstRelease = firstRelease ?? 0.0;
 
   for (const oscillator of oscillators) {
     const {
@@ -560,19 +566,19 @@ export const releaseInstrument = (
     const dynamicRelease = release * releaseDynamics;
     const vibratoGainRelease = dynamicRelease * 0.09;
 
-    cancelPendingOscillatorEvents(oscillator, earliestEndAt);
+    cancelPendingOscillatorEvents(oscillator, firstEndAt);
 
-    gainNode.gain.setTargetAtTime(0.0, earliestEndAt, dynamicRelease);
+    gainNode.gain.setTargetAtTime(0.0, firstEndAt, dynamicRelease);
 
-    attackInstabilityGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
-    vibratoPitchGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
-    vibratoVolumeGain?.gain.setTargetAtTime(0.0, earliestEndAt, vibratoGainRelease);
+    attackInstabilityGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
+    vibratoPitchGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
+    vibratoVolumeGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
   }
 
-  cancelPendingInstrumentEvents(instrument, earliestEndAt);
-  vibratoMain.frequency.setTargetAtTime(0.0, earliestEndAt, 0.008);
+  cancelPendingInstrumentEvents(instrument, firstEndAt);
+  vibratoMain.frequency.setTargetAtTime(0.0, firstEndAt, 0.008);
 
-  instrument.previousEndAt = releaseEarly ? earliestEndAt : endAt + longestRelease * 0.618;
+  instrument.previousEndAt = releaseEarly ? firstEndAt : endAt + firstRelease * 0.618;
 };
 
 const cancelPendingInstrumentEvents = (

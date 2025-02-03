@@ -137,7 +137,7 @@ const getWindNoiseOscillator = ({
     attack,
     decay,
     sustain: 0.0,
-    release: attack * 0.236,
+    release: attack * 0.618,
     attackDetune,
     attackDetuneDurationMultiplier: (attack + decay) / attack,
   });
@@ -158,22 +158,27 @@ const getDrumNoiseOscillator = ({
     attack,
     decay,
     sustain: 0.0,
-    release: 0.0,
+    release: attack * 0.618,
     attackDetune,
     attackDetuneDurationMultiplier: (attack + decay) / attack,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
   });
 
-const getIdiophoneOscillator = ({ attackDetune = 200, pitchMultiplier = 0.890899 } = {}) =>
+const getIdiophoneOscillator = ({
+  attack = 0.008,
+  decay = 0.09,
+  attackDetune = 200,
+  pitchMultiplier = 0.890899,
+} = {}) =>
   new OscillatorPreset({
     type: "noise",
     noiseType: "lowpass",
     noiseQ: 32,
     gain: 0.236 / 32,
-    attack: 0.008,
-    decay: 0.09,
+    attack,
+    decay,
     sustain: 0.0,
-    release: 0.0,
+    release: attack * 0.618,
     attackDetune,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier, // -200 cents
   });
@@ -891,16 +896,16 @@ export const piano = new InstrumentPreset({
       imag: stretchOvertones(pianoHighImag),
       getPitch: getStretchedOvertonesPitch,
       attack: 0.018,
-      decay: 0.3 * 0.382,
+      decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
     },
   ],
 
   attack: 0.008,
-  decay: 0.3,
+  decay: 0.236,
   sustain: 0.0,
-  release: 0.09,
+  release: 0.034,
 
   attackDetune: 100,
   attackDetuneDurationMultiplier: 0.236,
@@ -954,16 +959,15 @@ export const hammeredDulcimer = new InstrumentPreset({
       imag: stretchOvertones(hammeredDulcimerHighImag),
       getPitch: getStretchedOvertonesPitch,
       attack: 0.021,
-      decay: 0.3 * 0.382,
-      release: 0.09,
+      decay: 0.09,
       velocitySensitivity: -1,
     },
   ],
 
   attack: 0.013,
-  decay: 0.3,
+  decay: 0.236,
   sustain: 0.0,
-  release: 0.146,
+  release: 0.034,
 
   attackDetune: 100,
   attackDetuneDurationMultiplier: 0.333333,
@@ -994,7 +998,7 @@ export const taikoDrum = new InstrumentPreset({
   attack: 0.008,
   decay: 0.146,
   sustain: 0.0,
-  release: 0.09,
+  release: 0.056,
 
   attackDetune: 200,
   attackDetuneDurationMultiplier: 0.013 / 0.008,
@@ -1073,7 +1077,7 @@ export const marimba = new InstrumentPreset({
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,
-  release: 0.09,
+  release: 0.034,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -1148,12 +1152,11 @@ export const glockenspiel = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attack: 0.008,
       decay: 0.056,
-      release: 0.021,
     },
     getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 400 }),
   ],
 
-  decay: 0.382,
+  decay: 0.236,
 });
 
 // https://www.hibberts.co.uk/the-upper-partials-of-bells/
@@ -1183,11 +1186,11 @@ export const bell = new InstrumentPreset({
       ...glockenspiel.oscillators[1],
       imag: bellHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
-      decay: 0.382,
+      decay: 0.236,
     },
     getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 500 }),
   ],
-  decay: 0.5,
+  decay: 0.382,
 });
 
 // Plucked string transients
@@ -1201,7 +1204,7 @@ const plucked = {
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,
-  release: 0.056,
+  release: 0.034,
 
   attackDetune: 100,
   attackDetuneDurationMultiplier: 0.382,

@@ -109,7 +109,6 @@ export const Keyboard = new Magic(
     render(
       html`
         <h2>Playable demo</h2>
-        ${keyboard}
         <form @input=${onInput}>
           <fieldset>
             <legend>Play settings</legend>
@@ -125,6 +124,7 @@ export const Keyboard = new Magic(
             ${topKeysInput(topKeysSet)}
           </fieldset>
         </form>
+        ${keyboard}
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
         <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
       `,
@@ -537,12 +537,19 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, alt
 
   const { releaseMultiplier, sustain } = Keyboard.get();
 
-  const sustainedDuration = Math.max(
+  const remainingAttack = Math.max(
     0.0,
-    audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 4.0,
+    instrument.previousAttack * 5.0 - (audioContext.currentTime - instrument.previousStartAt),
   );
-  const remainingDecay = Math.max(0.0, instrument.previousDecay * 5.0 - sustainedDuration);
-  const releaseAt = audioContext.currentTime + remainingDecay * (shiftKey ? 1.0 : sustain);
+  const decayedDuration = Math.max(
+    0.0,
+    audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 5.0,
+  );
+  const remainingDecay = Math.max(0.0, instrument.previousDecay * 5.0 - decayedDuration);
+
+  const releaseAt =
+    audioContext.currentTime +
+    Math.max(remainingAttack, remainingDecay * (shiftKey ? 1.0 : sustain));
   releaseInstrument(instrument, releaseAt, releaseMultiplier, false);
 
   playingControllers.delete(controllerId);

@@ -1,6 +1,6 @@
 {
   "name": "@vuoro/pelimanni",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "type": "module",
   "main": "./instruments.js",
   "exports": {
