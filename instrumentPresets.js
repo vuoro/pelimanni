@@ -894,7 +894,7 @@ export const piano = new InstrumentPreset({
         imag: stretchOvertones(pianoHighImag),
         getPitch: getStretchedOvertonesPitch,
         attack: 0.018,
-        decay: 0.236,
+        decay: 0.146,
         release: 0.056,
         velocitySensitivity: -1,
       },
@@ -903,7 +903,7 @@ export const piano = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.618,
+  decay: 0.382,
   sustain: 0.0,
   release: 0.09,
 
@@ -960,7 +960,7 @@ export const hammeredDulcimer = new InstrumentPreset({
         imag: stretchOvertones(hammeredDulcimerHighImag),
         getPitch: getStretchedOvertonesPitch,
         attack: 0.021,
-        decay: 0.236,
+        decay: 0.146,
         release: 0.09,
         velocitySensitivity: -1,
       },
@@ -969,7 +969,7 @@ export const hammeredDulcimer = new InstrumentPreset({
   ],
 
   attack: 0.013,
-  decay: 0.618,
+  decay: 0.382,
   sustain: 0.0,
   release: 0.146,
 
@@ -1000,7 +1000,7 @@ export const taikoDrum = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.382,
+  decay: 0.146,
   sustain: 0.0,
   release: 0.09,
 
@@ -1211,7 +1211,7 @@ export const bell = new InstrumentPreset({
       ...glockenspiel.oscillators[1],
       imag: bellHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
-      decay: 0.5,
+      decay: 0.382,
     },
     idiophoneNoiseOscillator,
   ],

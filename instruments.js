@@ -450,7 +450,7 @@ export const attackInstrument = (
 
     const decayAt = dynamicStartAt + dynamicAttack * 4.0;
     const decayDynamics =
-      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
+      (2.0 - 1.618 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     longestDecay = Math.max(longestDecay, dynamicDecay);
 
