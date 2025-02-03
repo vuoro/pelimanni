@@ -129,34 +129,44 @@ const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
   return pitch / inharmonicityPrecision;
 };
 
-const windNoiseOscillator = new OscillatorPreset({
-  type: "noise",
-  noiseQ: 32,
-  noiseType: "highpass",
-  gain: 0.236 / 32,
-  attack: 0.021,
-  decay: 0.0034,
-  sustain: 0.0,
-  release: 0.001,
-});
+const getWindNoiseOscillator = ({
+  attackDetune = 200,
+  attack = 0.021,
+  decay = 0.056,
+  noiseQ = 32,
+  gain = 0.236,
+} = {}) =>
+  new OscillatorPreset({
+    type: "noise",
+    noiseQ,
+    noiseType: "highpass",
+    gain: gain / noiseQ,
+    attack,
+    decay,
+    sustain: 0.0,
+    release: attack * 0.236,
+    attackDetune,
+    attackDetuneDurationMultiplier: (attack + decay) / attack,
+  });
 
-const getDrumNoiseOscillator = (
-  detuneOctaves = 2,
+const getDrumNoiseOscillator = ({
+  attackDetune = 2400,
   decay = 0.146,
   pitchMultiplier = 2.0,
-  noiseQ = 2,
+  noiseQ = 2.618,
   attack = 0.008,
-) =>
+  gain = 2.0,
+} = {}) =>
   new OscillatorPreset({
     type: "noise",
     noiseType: "lowpass",
     noiseQ,
-    gain: 1.618,
+    gain: gain / noiseQ,
     attack,
     decay,
     sustain: 0.0,
     release: 0.0,
-    attackDetune: 1200 * detuneOctaves,
+    attackDetune,
     attackDetuneDurationMultiplier: (attack + decay) / attack,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
     // getPitch: (pitch = 440.0) => {
@@ -220,7 +230,7 @@ export const flute = new InstrumentPreset({
       velocitySensitivity: -1,
       vibratoEffectOnVolume: 0.382,
     },
-    windNoiseOscillator,
+    getWindNoiseOscillator(),
   ],
 
   attack: 0.056,
@@ -249,7 +259,7 @@ export const ocarina = new InstrumentPreset({
       ),
       getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
-    windNoiseOscillator,
+    getWindNoiseOscillator(),
   ],
 
   highPassFrequency: 261.6,
@@ -289,7 +299,7 @@ export const oboe = new InstrumentPreset({
       release: 0.021,
       velocitySensitivity: -1,
     },
-    windNoiseOscillator,
+    getWindNoiseOscillator({ attackDetune: 100 }),
   ],
 
   attack: 0.056,
@@ -333,7 +343,7 @@ export const bassoon = new InstrumentPreset({
         0.005,
       ),
     },
-    windNoiseOscillator,
+    getWindNoiseOscillator({ attackDetune: 100 }),
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 1108.73,
@@ -392,7 +402,7 @@ export const clarinet = new InstrumentPreset({
       release: 0.021,
       velocitySensitivity: -1,
     },
-    windNoiseOscillator,
+    getWindNoiseOscillator({ attackDetune: 0 }),
   ],
 
   attack: 0.056,
@@ -1038,7 +1048,7 @@ export const timpani = new InstrumentPreset({
       imag: timpaniImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator(),
+    getDrumNoiseOscillator({ pitchMultiplier: 1.5 }),
   ],
 });
 
@@ -1057,27 +1067,7 @@ export const bassDrum = new InstrumentPreset({
       imag: bassDrumImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator(),
-  ],
-});
-
-const snareImag = new Float32Array(20 * 3.45 + 1);
-snareImag[20 * 1] = 0.618;
-snareImag[20 * 1.5] = 1.0;
-snareImag[20 * 1.8] = 0.618;
-snareImag[20 * 2.25] = 0.382;
-snareImag[20 * 2.4] = 0.236;
-snareImag[20 * 2.85] = 0.146;
-snareImag[20 * 3.45] = 0.09;
-
-export const snareDrum = new InstrumentPreset({
-  ...taikoDrum,
-  oscillators: [
-    {
-      imag: snareImag,
-      getPitch: (pitch = 440.0) => pitch / 20.0,
-    },
-    getDrumNoiseOscillator(),
+    getDrumNoiseOscillator({ pitchMultiplier: 1 }),
   ],
 });
 
