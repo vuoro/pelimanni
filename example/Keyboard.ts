@@ -23,6 +23,7 @@ export const Keyboard = new Magic(
       sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
+      topKeys: string[];
     } = {
       instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
         ? localStorage.getItem("instrumentName")
@@ -36,6 +37,7 @@ export const Keyboard = new Magic(
       sustain: +(localStorage.getItem("sustain") ?? 0.0),
       keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 48),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
+      topKeys: JSON.parse(localStorage.getItem("topKeys") || '["1", "3", "6", "8", "10"]'),
     },
     message?: {
       instrumentName: keyof typeof allInstrumentPresets;
@@ -47,6 +49,7 @@ export const Keyboard = new Magic(
       sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
+      topKeys: string[];
     },
   ) => {
     if (message) {
@@ -64,6 +67,7 @@ export const Keyboard = new Magic(
       const sustain = data.get("sustain") as string;
       const keyboardOffset = data.get("keyboardOffset") as string;
       const blackKeys = data.getAll("blackKeys") as string[];
+      const topKeys = data.getAll("topKeys") as string[];
 
       localStorage.setItem("instrumentName", instrumentName);
       localStorage.setItem("velocity", velocity);
@@ -74,6 +78,7 @@ export const Keyboard = new Magic(
       localStorage.setItem("sustain", sustain);
       localStorage.setItem("keyboardOffset", keyboardOffset);
       localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
+      localStorage.setItem("topKeys", JSON.stringify(topKeys));
 
       Keyboard.update({
         instrumentName,
@@ -85,15 +90,18 @@ export const Keyboard = new Magic(
         sustain: +sustain,
         keyboardOffset: +keyboardOffset,
         blackKeys,
+        topKeys,
       });
     };
 
     const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
+    const topKeysSet = new Set(state.topKeys.map((v) => +v));
     const instrumentPreset =
       allInstrumentPresets[state.instrumentName as keyof typeof allInstrumentPresets];
 
     const keyboard = keys(
       blackKeysSet,
+      topKeysSet,
       frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5),
       frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009),
     );
@@ -114,6 +122,7 @@ export const Keyboard = new Magic(
             ${vibratoFrequencyInput(state.vibratoFrequency)}
             ${keyboardOffsetInput(state.keyboardOffset)}
             ${blackKeysInput(blackKeysSet)}
+            ${topKeysInput(topKeysSet)}
           </fieldset>
         </form>
         <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
@@ -210,7 +219,33 @@ const blackKeysInput = (blackKeysSet: Set<number>) => {
   return html`
     <div>
       <label for="blackKeys">Black keys</label>
-      <div class="black-key-checkboxes">${checkboxes}</div>
+      <div class="key-checkboxes">${checkboxes}</div>
+    <div>
+  `;
+};
+
+const topKeysInput = (topKeysSet: Set<number>) => {
+  const checkboxes = [];
+
+  for (let index = 0; index < 12; index++) {
+    checkboxes.push(html`
+      <label>
+        <span>${keyLabels[index]}</span>
+        <input
+          aria-label="Key ${index} of octave"
+          type="checkbox"
+          name="topKeys"
+          value=${index}
+          ?checked=${topKeysSet.has(index)}
+        />
+      </label>
+    `);
+  }
+
+  return html`
+    <div>
+      <label for="topKeys">Top keys</label>
+      <div class="key-checkboxes">${checkboxes}</div>
     <div>
   `;
 };
@@ -240,12 +275,13 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
   `;
 };
 
-const keys = (blackKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
+const keys = (blackKeysSet: Set<number>, topKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
   const keys = [];
 
   for (let note = fromNote; note < toNote; note++) {
     const isBlack = blackKeysSet.has(note % 12);
-    keys.push(key(note, isBlack));
+    const isTop = topKeysSet.has(note % 12);
+    keys.push(key(note, isBlack, isTop));
   }
 
   const pointerdown = (event: PointerEvent) => {
@@ -314,12 +350,12 @@ const keys = (blackKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
 const pointersDown = new Set();
 const keyLabels = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-const key = (midiNumber: number, isBlack = false) => {
+const key = (midiNumber: number, isBlack = false, isTop = false) => {
   const note = midiNumber % 12;
   const octave = Math.floor(midiNumber / 12);
 
   return html`
-    <div class="key ${isBlack ? "black" : "white"} key-${note}">
+    <div class="key ${isBlack ? "black" : "white"} ${isTop ? "top" : "bottom"} key-${note}">
       <button
         type="button"
         data-midi-number="${midiNumber}"

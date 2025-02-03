@@ -54,7 +54,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   border: 1px solid black;
 }
 
-.black-key-checkboxes {
+.key-checkboxes {
   display: grid;
   grid-template-columns: repeat(auto-fill, 1rlh);
   gap: 0.25rlh;
@@ -90,14 +90,13 @@ cite {
 }
 
 #keyboard {
-  --key-columns: 1fr 0 1fr 0 1fr 1fr 0 1fr 0 1fr 0 1fr;
 }
 
 .keys {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 1.5rlh 0;
+  gap: 2rlh 0;
 }
 
 .keys,
@@ -106,27 +105,20 @@ cite {
   user-select: none;
 }
 
-/* .keys .octave {
-  display: grid;
-  grid-template-columns: var(--key-columns);
-  border: 0.5px solid light-dark(black, #999);
-  border-radius: calc(0.375rlh + 1px);
-} */
-
 .key {
-  --key-width: calc(2rlh + 1vmin);
-  --key-height: calc(var(--key-width) * 2.5);
+  --key-width: calc(2rlh + 2vmin);
+  --key-height: calc(var(--key-width) * 3);
   width: var(--key-width);
   pointer-events: none;
 }
 
-.black:not(.black + .black) {
+.top:not(.top + .top) {
   width: 0;
   display: grid;
   justify-content: center;
 }
 
-.black + .black {
+.top + .top {
   padding-left: calc(var(--key-width) * 0.5);
 }
 
@@ -152,15 +144,18 @@ cite {
   pointer-events: none;
 }
 
-.black button {
+.top button {
   height: calc(var(--key-height) * 0.5);
+  justify-self: center;
+  position: relative;
+  z-index: 1;
+}
+
+.black button {
   background-color: black;
   border-color: light-dark(white, #999);
   outline-color: light-dark(white, #999);
   color: white;
-  justify-self: center;
-  position: relative;
-  z-index: 1;
 }
 
 @media (prefers-color-scheme: light) {
@@ -171,7 +166,7 @@ cite {
   }
 }
 
-.white + .white + .black button,
+/* .white + .white + .black button,
 .white:first-child + .black button,
 .black:first-child button {
   border-bottom-left-radius: 0.25rlh;
@@ -181,7 +176,7 @@ cite {
 .black:has(+ .white:last-child) button,
 .black:last-child button {
   border-bottom-right-radius: 0.25rlh;
-}
+} */
 
 .key button:hover {
   filter: invert(14.6%);
