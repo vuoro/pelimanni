@@ -155,7 +155,7 @@ const getDrumNoiseOscillator = ({
   pitchMultiplier = 2.0,
   noiseQ = 2.618,
   attack = 0.008,
-  gain = 2.0,
+  gain = 2.618,
 } = {}) =>
   new OscillatorPreset({
     type: "noise",
@@ -169,34 +169,21 @@ const getDrumNoiseOscillator = ({
     attackDetune,
     attackDetuneDurationMultiplier: (attack + decay) / attack,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
-    // getPitch: (pitch = 440.0) => {
-    //   let closestPitch = pitch;
-
-    //   if (pitch < 160.0) {
-    //     while (closestPitch < 160.0) {
-    //       closestPitch *= 2.0;
-    //     }
-    //   } else {
-    //     while (closestPitch >= 160.0) {
-    //       closestPitch *= 0.5;
-    //     }
-    //   }
-
-    //   return closestPitch;
-    // },
   });
 
-const idiophoneNoiseOscillator = new OscillatorPreset({
-  type: "noise",
-  noiseType: "lowpass",
-  noiseQ: 32,
-  gain: 1.0 / 32,
-  attack: 0.008,
-  decay: 0.013,
-  sustain: 0.0,
-  release: 0.0,
-  attackDetune: 100,
-});
+const getIdiophoneOscillator = ({ attackDetune = 200, pitchMultiplier = 0.890899 } = {}) =>
+  new OscillatorPreset({
+    type: "noise",
+    noiseType: "lowpass",
+    noiseQ: 32,
+    gain: 0.236 / 32,
+    attack: 0.008,
+    decay: 0.09,
+    sustain: 0.0,
+    release: 0.0,
+    attackDetune,
+    getPitch: (pitch = 440.0) => pitch * pitchMultiplier, // -200 cents
+  });
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -1097,7 +1084,7 @@ export const marimba = new InstrumentPreset({
       release: 0.056,
       velocitySensitivity: -1,
     },
-    idiophoneNoiseOscillator,
+    getIdiophoneOscillator(),
   ],
 
   attack: 0.008,
@@ -1135,7 +1122,7 @@ export const xylophone = new InstrumentPreset({
       attack: 0.013,
       decay: 0.09,
     },
-    idiophoneNoiseOscillator,
+    getIdiophoneOscillator(),
   ],
 
   decay: 0.146,
@@ -1180,7 +1167,7 @@ export const glockenspiel = new InstrumentPreset({
       decay: 0.056,
       release: 0.021,
     },
-    idiophoneNoiseOscillator,
+    getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 400 }),
   ],
 
   decay: 0.382,
@@ -1215,7 +1202,7 @@ export const bell = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       decay: 0.382,
     },
-    idiophoneNoiseOscillator,
+    getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 500 }),
   ],
   decay: 0.5,
 });
