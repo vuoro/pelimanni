@@ -526,9 +526,43 @@ const attackWithController = (
 
   if (key) {
     key.classList.add("active");
-    key.dataset.controller = `${controllerId}`;
+    controllerKeys.set(controllerId, key);
+  }
+
+  for (const element of document.querySelectorAll(".fading")) {
+    element.classList.remove("fading");
+  }
+
+  for (const offset of consonances) {
+    const key = document.querySelector(
+      `[data-midi-number="${midiNumber + offset}"]`,
+    ) as HTMLButtonElement;
+
+    if (key) key.classList.add("consonant");
+  }
+
+  for (const offset of weakConsonances) {
+    const key = document.querySelector(
+      `[data-midi-number="${midiNumber + offset}"]`,
+    ) as HTMLButtonElement;
+
+    if (key) key.classList.add("weakly-consonant");
+  }
+
+  for (const offset of dissonances) {
+    const key = document.querySelector(
+      `[data-midi-number="${midiNumber + offset}"]`,
+    ) as HTMLButtonElement;
+
+    if (key) key.classList.add("dissonant");
   }
 };
+
+const consonances = [-12, -7, -5, 5, 7, 12];
+const weakConsonances = [-9, -8, -4, -3, 3, 4, 8, 9];
+const dissonances = [-11, -10, -6, -2, -1, 1, 2, 6, 10, 11];
+
+const controllerKeys = new Map();
 
 const releaseWithController = (controllerId: ControllerId, shiftKey = false, _altKey = false) => {
   const { audioContext } = AudioSystem.get();
@@ -555,10 +589,15 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
   playingControllers.delete(controllerId);
   freeInstruments.add(instrument);
 
-  const key = document.querySelector(`[data-controller="${controllerId}"]`) as HTMLButtonElement;
+  const key = controllerKeys.get(controllerId);
 
   if (key) {
     key.classList.remove("active");
-    key.dataset.controller = "free";
+    controllerKeys.delete(controllerId);
+  }
+
+  for (const element of document.querySelectorAll(".consonant, .dissonant, .weakly-consonant")) {
+    element.classList.remove("consonant", "dissonant", "weakly-consonant");
+    element.classList.add("fading");
   }
 };

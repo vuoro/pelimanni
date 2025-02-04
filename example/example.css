@@ -94,8 +94,12 @@ cite {
 
 .keys {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(calc(var(--total-columns) * 1rlh), 1fr));
-  gap: 2rlh 0.5rlh;
+  grid-template-columns: repeat(
+      auto-fit,
+      minmax(calc(var(--total-columns) * (0.625rlh + 1vmin)), 1fr)
+    );
+  gap: 2rlh 0rlh;
+  margin-bottom: 1rlh;
 }
 
 .keys,
@@ -116,29 +120,25 @@ cite {
   grid-row: var(--row);
   pointer-events: none;
   position: relative;
-}
-
-.top {
-  z-index: 1;
-}
-.bottom {
-  z-index: 0;
+  z-index: calc(64 + -1 * var(--column) + var(--row));
+  box-shadow: 0 0 0.25rlh #6669, 0 0 0.5rlh #6667, 0 0 1rlh #6665;
 }
 
 .key button {
   cursor: pointer;
   width: 100%;
-  aspect-ratio: 1 / 1.5;
+  aspect-ratio: 1 / 1.333333;
   border: none;
   display: flex;
-  justify-content: center;
-  align-items: end;
-  line-height: 2;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 0.25rlh;
+  padding-bottom: 0.5rlh;
   touch-action: none;
   pointer-events: all;
   font-weight: 300;
-  padding-bottom: 0.25rlh;
-  box-shadow: 0 0 0.25rlh #6669, 0 0 0.5rlh #6667, 0 0 1rlh #6665;
+  transition: none;
 }
 
 .white button {
@@ -149,6 +149,25 @@ cite {
 .black button {
   background-color: black;
   color: white;
+}
+
+.key .fading {
+  transition: box-shadow 3000ms ease-in;
+}
+
+.key .consonant {
+  box-shadow: inset 0 0 2rlh color(display-p3 0.09 0.764 1.0 / 1), 0 0 0.25rlh
+    color(display-p3 0.09 0.764 1.0 / 1);
+}
+
+.key .weakly-consonant {
+  box-shadow: inset 0 0 2rlh color(display-p3 1.0 0.764 0.09 / 1), 0 0 0.25rlh
+    color(display-p3 1.0 0.764 0.09 / 1);
+}
+
+.key .dissonant {
+  box-shadow: inset 0 0 2rlh color(display-p3 1.0 0.236 0.146 / 1), 0 0 0.25rlh
+    color(display-p3 1.0 0.236 0.146 / 1);
 }
 
 /* .key:first-child button {
@@ -172,7 +191,7 @@ cite {
 } */
 
 .key button:hover {
-  filter: invert(5.6%);
+  filter: invert(9%);
 }
 
 .key button.active {
@@ -181,23 +200,6 @@ cite {
 
 .key button * {
   pointer-events: none;
-}
-
-.key-0 {
-}
-.key-1 {
-}
-.key-2 {
-}
-.key-3 {
-}
-.key-4 {
-}
-.key-5 {
-}
-.key-6 {
-}
-.key-7 {
 }
 
 h1 {
