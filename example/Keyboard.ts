@@ -10,7 +10,7 @@ import { frequencyToMidi, midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
 import { Magic } from "./magic";
 
-export const Keyboard = new Magic(
+const KeyboardState = new Magic(
   (
     state: {
       instrumentName: keyof typeof allInstrumentPresets;
@@ -53,150 +53,107 @@ export const Keyboard = new Magic(
     },
   ) => {
     if (message) {
-      Object.assign(state, message);
+      return { ...state, ...message };
     }
-
-    const onInput = (event: Event) => {
-      const data = new FormData(event.currentTarget as HTMLFormElement);
-      const instrumentName = data.get("instrumentName") as keyof typeof allInstrumentPresets;
-      const velocity = data.get("velocity") as string;
-      const attackMultiplier = data.get("attackMultiplier") as string;
-      const releaseMultiplier = data.get("releaseMultiplier") as string;
-      const vibratoAmount = data.get("vibratoAmount") as string;
-      const vibratoFrequency = data.get("vibratoFrequency") as string;
-      const sustain = data.get("sustain") as string;
-      const keyboardOffset = data.get("keyboardOffset") as string;
-      const blackKeys = data.getAll("blackKeys") as string[];
-      const topKeys = data.getAll("topKeys") as string[];
-
-      localStorage.setItem("instrumentName", instrumentName);
-      localStorage.setItem("velocity", velocity);
-      localStorage.setItem("attackMultiplier", attackMultiplier);
-      localStorage.setItem("releaseMultiplier", releaseMultiplier);
-      localStorage.setItem("vibratoAmount", vibratoAmount);
-      localStorage.setItem("vibratoFrequency", vibratoFrequency);
-      localStorage.setItem("sustain", sustain);
-      localStorage.setItem("keyboardOffset", keyboardOffset);
-      localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
-      localStorage.setItem("topKeys", JSON.stringify(topKeys));
-
-      Keyboard.update({
-        instrumentName,
-        velocity: +velocity,
-        attackMultiplier: +attackMultiplier,
-        releaseMultiplier: +releaseMultiplier,
-        vibratoAmount: +vibratoAmount,
-        vibratoFrequency: +vibratoFrequency,
-        sustain: +sustain,
-        keyboardOffset: +keyboardOffset,
-        blackKeys,
-        topKeys,
-      });
-    };
-
-    const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
-    const topKeysSet = new Set(state.topKeys.map((v) => +v));
-    const instrumentPreset =
-      allInstrumentPresets[state.instrumentName as keyof typeof allInstrumentPresets];
-
-    const keyboard = keys(
-      blackKeysSet,
-      topKeysSet,
-      frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5),
-      frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009),
-    );
-
-    render(
-      html`
-        <h2>Playable demo</h2>
-        <form @input=${onInput}>
-          <fieldset>
-            <legend>Play settings</legend>
-            ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
-            ${velocityInput(state.velocity)}
-            ${sustainInput(state.sustain)}
-            ${attackMultiplierInput(state.attackMultiplier)}
-            ${releaseMultiplierInput(state.releaseMultiplier)}
-            ${vibratoAmountInput(state.vibratoAmount)}
-            ${vibratoFrequencyInput(state.vibratoFrequency)}
-            ${keyboardOffsetInput(state.keyboardOffset)}
-            ${blackKeysInput(blackKeysSet)}
-            ${topKeysInput(topKeysSet)}
-          </fieldset>
-        </form>
-        ${keyboard}
-        <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
-        <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
-      `,
-      document.getElementById("keyboard") as HTMLElement,
-    );
-
     return state;
   },
 );
 
-const velocityInput = (velocity: number) => {
-  return html`
-    <label>
-      <span>Velocity: ${velocity * 100}%</span>
-      <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
-    </label>
-  `;
-};
+export const KeyboardSettings = new Magic(() => {
+  const onInput = (event: Event) => {
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const instrumentName = data.get("instrumentName") as keyof typeof allInstrumentPresets;
+    const velocity = data.get("velocity") as string;
+    const attackMultiplier = data.get("attackMultiplier") as string;
+    const releaseMultiplier = data.get("releaseMultiplier") as string;
+    const vibratoAmount = data.get("vibratoAmount") as string;
+    const vibratoFrequency = data.get("vibratoFrequency") as string;
+    const sustain = data.get("sustain") as string;
+    const keyboardOffset = data.get("keyboardOffset") as string;
+    const blackKeys = data.getAll("blackKeys") as string[];
+    const topKeys = data.getAll("topKeys") as string[];
 
-const attackMultiplierInput = (attackMultiplier: number) => {
-  return html`
-    <label>
-      <span>Attack time &times; ${attackMultiplier}</span>
-      <input name="attackMultiplier" type="range" min="0.25" max="8" step="0.25" .value=${attackMultiplier}/>
-    </label>
-  `;
-};
+    localStorage.setItem("instrumentName", instrumentName);
+    localStorage.setItem("velocity", velocity);
+    localStorage.setItem("attackMultiplier", attackMultiplier);
+    localStorage.setItem("releaseMultiplier", releaseMultiplier);
+    localStorage.setItem("vibratoAmount", vibratoAmount);
+    localStorage.setItem("vibratoFrequency", vibratoFrequency);
+    localStorage.setItem("sustain", sustain);
+    localStorage.setItem("keyboardOffset", keyboardOffset);
+    localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
+    localStorage.setItem("topKeys", JSON.stringify(topKeys));
 
-const releaseMultiplierInput = (releaseMultiplier: number) => {
-  return html`
-    <label>
-      <span>Release time &times; ${releaseMultiplier}</span>
-      <input name="releaseMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${releaseMultiplier}/>
-    </label>
-  `;
-};
+    KeyboardState.update({
+      instrumentName,
+      velocity: +velocity,
+      attackMultiplier: +attackMultiplier,
+      releaseMultiplier: +releaseMultiplier,
+      vibratoAmount: +vibratoAmount,
+      vibratoFrequency: +vibratoFrequency,
+      sustain: +sustain,
+      keyboardOffset: +keyboardOffset,
+      blackKeys,
+      topKeys,
+    });
+  };
 
-const vibratoAmountInput = (vibratoAmount: number) => {
-  return html`
-    <label>
-      <span>Vibrato amount: ${vibratoAmount}</span>
-      <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
-    </label>
-  `;
-};
+  const state = KeyboardState.get();
+  const {
+    velocity,
+    sustain,
+    attackMultiplier,
+    releaseMultiplier,
+    vibratoAmount,
+    vibratoFrequency,
+    keyboardOffset,
+  } = state;
 
-const vibratoFrequencyInput = (vibratoFrequency: number) => {
-  return html`
-    <label>
-      <span>Vibrato frequency: ${vibratoFrequency} hz</span>
-      <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
-    </label>
-  `;
-};
+  const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
+  const topKeysSet = new Set(state.topKeys.map((v) => +v));
 
-const sustainInput = (sustain: number) => {
-  return html`
-    <label>
-      <span>Sustain after release: ${sustain * 100}%</span>
-      <input name="sustain" type="range" min="0.0" max="1.0" step="0.05" .value=${sustain}/>
-    </label>
-  `;
-};
-
-const keyboardOffsetInput = (keyboardOffset: number) => {
-  return html`
-    <label>
-      <span>Keyboard offset: ${keyboardOffset}</span>
-      <input name="keyboardOffset" type="range" min="12" max="102" step="1" .value=${keyboardOffset}/>
-    </label>
-  `;
-};
+  render(
+    html`
+      <form @input=${onInput}>
+        <fieldset>
+          <legend>Play settings</legend>
+          ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
+          <label>
+            <span>Velocity: ${velocity * 100}%</span>
+            <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
+          </label>
+          <label>
+            <span>Sustain after release: ${sustain * 100}%</span>
+            <input name="sustain" type="range" min="0.0" max="1.0" step="0.05" .value=${sustain}/>
+          </label>
+          <label>
+            <span>Attack time &times; ${attackMultiplier}</span>
+            <input name="attackMultiplier" type="range" min="0.25" max="8" step="0.25" .value=${attackMultiplier}/>
+          </label>
+          <label>
+            <span>Release time &times; ${releaseMultiplier}</span>
+            <input name="releaseMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${releaseMultiplier}/>
+          </label>
+          <label>
+            <span>Vibrato amount: ${vibratoAmount}</span>
+            <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
+          </label>
+          <label>
+            <span>Vibrato frequency: ${vibratoFrequency} hz</span>
+            <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
+          </label>
+          <label>
+            <span>Keyboard offset: ${keyboardOffset}</span>
+            <input name="keyboardOffset" type="range" min="12" max="102" step="1" .value=${keyboardOffset}/>
+          </label>
+          ${blackKeysInput(blackKeysSet)}
+          ${topKeysInput(topKeysSet)}
+        </fieldset>
+      </form>
+    `,
+    document.getElementById("keyboard-settings") as HTMLElement,
+  );
+});
 
 const blackKeysInput = (blackKeysSet: Set<number>) => {
   const checkboxes = [];
@@ -274,6 +231,30 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
     </label>
   `;
 };
+
+export const Keyboard = new Magic(() => {
+  const { blackKeys, topKeys, instrumentName } = KeyboardState.get();
+
+  const blackKeysSet = new Set(blackKeys.map((v) => +v));
+  const topKeysSet = new Set(topKeys.map((v) => +v));
+  const instrumentPreset =
+    allInstrumentPresets[instrumentName as keyof typeof allInstrumentPresets];
+
+  render(
+    html`
+      <h2>Playable demo</h2>
+      ${keys(
+        blackKeysSet,
+        topKeysSet,
+        frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5),
+        frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009),
+      )}
+      <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
+      <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
+    `,
+    document.getElementById("keyboard") as HTMLElement,
+  );
+});
 
 const keys = (blackKeysSet: Set<number>, topKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
   const keys = [];
@@ -472,7 +453,7 @@ const attackWithController = (
   altKey = false,
 ) => {
   const { instrumentName, velocity, attackMultiplier, vibratoAmount, vibratoFrequency } =
-    Keyboard.get();
+    KeyboardState.get();
   const { audioContext, connectInstrument } = AudioSystem.get();
 
   if (audioContext.state !== "running") audioContext.resume();
@@ -535,7 +516,7 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, alt
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
 
-  const { releaseMultiplier, sustain } = Keyboard.get();
+  const { releaseMultiplier, sustain } = KeyboardState.get();
 
   const remainingAttack = Math.max(
     0.0,
