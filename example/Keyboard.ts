@@ -1,4 +1,5 @@
 import { html, nothing, render } from "lit-html";
+import { styleMap } from "lit-html/directives/style-map.js";
 import * as allInstrumentPresets from "../instrumentPresets.js";
 import {
   attackInstrument,
@@ -240,15 +241,49 @@ export const Keyboard = new Magic(() => {
   const instrumentPreset =
     allInstrumentPresets[instrumentName as keyof typeof allInstrumentPresets];
 
+  const keys = [];
+  const fromNote = frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5);
+  const toNote = frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009);
+  const fromOctave = Math.floor(fromNote / 12);
+  const toOctave = Math.ceil(toNote / 12);
+  const hasTopKeys = topKeysSet.size > 0 && topKeysSet.size < 12;
+  let totalColumns = 0;
+
+  for (let octave = fromOctave; octave < toOctave; octave++) {
+    const octaveKeys = [];
+    let column = 2;
+    let lastRow = 0;
+
+    for (let note = octave * 12; note < (octave + 1) * 12; note++) {
+      const isBlack = blackKeysSet.has(note % 12);
+      const isTop = topKeysSet.has(note % 12);
+      const row = hasTopKeys ? (isTop ? 1 : 2) : 1;
+
+      if (lastRow !== row) column -= 1;
+      lastRow = row;
+
+      octaveKeys.push(key(note, isBlack, column, row));
+
+      column += 2;
+    }
+
+    keys.push(html`<div class="octave">${octaveKeys}</div>`);
+    totalColumns = Math.max(totalColumns, column);
+  }
+
   render(
     html`
       <h2>Playable demo</h2>
-      ${keys(
-        blackKeysSet,
-        topKeysSet,
-        frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5),
-        frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009),
-      )}
+      <div class="keys"
+        style="--total-columns: ${totalColumns}"
+        @pointerdown=${pointerdown}
+        @pointerup=${pointerup}
+        @pointerout=${pointerout}
+        @pointerover=${pointerover}
+        @contextmenu=${contextmenu}
+      >
+        ${keys}
+      </div>
       <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
       <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
     `,
@@ -256,87 +291,18 @@ export const Keyboard = new Magic(() => {
   );
 });
 
-const keys = (blackKeysSet: Set<number>, topKeysSet: Set<number>, fromNote = 0, toNote = 120) => {
-  const keys = [];
-
-  for (let note = fromNote; note < toNote; note++) {
-    const isBlack = blackKeysSet.has(note % 12);
-    const isTop = topKeysSet.has(note % 12);
-    keys.push(key(note, isBlack, isTop));
-  }
-
-  const pointerdown = (event: PointerEvent) => {
-    const target = event.target as HTMLElement;
-    event.stopPropagation();
-    if (!target || target === event.currentTarget) return;
-
-    target.releasePointerCapture(event.pointerId);
-    pointersDown.add(event.pointerId);
-
-    if (!target.dataset.midiNumber) return;
-    attackWithController(
-      event.pointerId,
-      +(target.dataset.midiNumber ?? 0),
-      event.shiftKey,
-      event.altKey,
-    );
-  };
-
-  const pointerup = (event: PointerEvent) => {
-    pointersDown.delete(event.pointerId);
-    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
-
-    event.stopPropagation();
-    event.preventDefault();
-  };
-
-  const pointerout = (event: PointerEvent) => {
-    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
-
-    event.stopPropagation();
-  };
-
-  const contextmenu = (event: Event) => {
-    event.stopPropagation();
-    event.preventDefault();
-  };
-
-  const pointerover = (event: PointerEvent) => {
-    const target = event.target as HTMLElement;
-    event.stopPropagation();
-    if (!target || target === event.currentTarget) return;
-
-    if (pointersDown.has(event.pointerId))
-      attackWithController(
-        event.pointerId,
-        +(target.dataset.midiNumber ?? 0),
-        event.shiftKey,
-        event.altKey,
-      );
-  };
-
-  return html`
-    <div class="keys"
-      @pointerdown=${pointerdown}
-      @pointerup=${pointerup}
-      @pointerout=${pointerout}
-      @pointerover=${pointerover}
-      @contextmenu=${contextmenu}
-    >
-      ${keys}
-    </div>
-  `;
-};
-
-const pointersDown = new Set();
-const keyLabels = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-const key = (midiNumber: number, isBlack = false, isTop = false) => {
+const key = (midiNumber: number, isBlack = false, column = 0, row = 0) => {
   const note = midiNumber % 12;
   const octave = Math.floor(midiNumber / 12);
 
   return html`
-    <div class="key ${isBlack ? "black" : "white"} ${isTop ? "top" : "bottom"} key-${note}">
+    <div
+      class="key ${isBlack ? "black" : "white"} ${row === 1 ? "top" : "bottom"} key-${note}"
+      style="${styleMap({
+        "--column": column,
+        "--row": row,
+      })}"
+    >
       <button
         type="button"
         data-midi-number="${midiNumber}"
@@ -349,11 +315,64 @@ const key = (midiNumber: number, isBlack = false, isTop = false) => {
   `;
 };
 
+const pointerdown = (event: PointerEvent) => {
+  const target = event.target as HTMLElement;
+  event.stopPropagation();
+  if (!target || target === event.currentTarget) return;
+
+  target.releasePointerCapture(event.pointerId);
+  pointersDown.add(event.pointerId);
+
+  if (!target.dataset.midiNumber) return;
+  attackWithController(
+    event.pointerId,
+    +(target.dataset.midiNumber ?? 0),
+    event.shiftKey,
+    event.altKey,
+  );
+};
+
+const pointerup = (event: PointerEvent) => {
+  pointersDown.delete(event.pointerId);
+  releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+
+  event.stopPropagation();
+  event.preventDefault();
+};
+
+const pointerout = (event: PointerEvent) => {
+  releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+
+  event.stopPropagation();
+};
+
+const contextmenu = (event: Event) => {
+  event.stopPropagation();
+  event.preventDefault();
+};
+
+const pointerover = (event: PointerEvent) => {
+  const target = event.target as HTMLElement;
+  event.stopPropagation();
+  if (!target || target === event.currentTarget) return;
+
+  if (pointersDown.has(event.pointerId))
+    attackWithController(
+      event.pointerId,
+      +(target.dataset.midiNumber ?? 0),
+      event.shiftKey,
+      event.altKey,
+    );
+};
+
+const pointersDown = new Set();
+const keyLabels = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   const { code, repeat, metaKey, ctrlKey } = event;
   if (repeat || metaKey || ctrlKey) return;
 
-  const { keyboardOffset } = Keyboard.get();
+  const { keyboardOffset } = KeyboardState.get();
 
   const keyOffsets = {
     Digit1: 0,
@@ -498,7 +517,7 @@ const attackWithController = (
     audioContext.currentTime,
     velocity * (1.0 + 0.056 * Math.sin(audioContext.currentTime * 0.236) + 0.034 * Math.random()),
     attackMultiplier,
-    1.0,
+    0.7,
     altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
   );
@@ -511,7 +530,7 @@ const attackWithController = (
   }
 };
 
-const releaseWithController = (controllerId: ControllerId, shiftKey = false, altKey = false) => {
+const releaseWithController = (controllerId: ControllerId, shiftKey = false, _altKey = false) => {
   const { audioContext } = AudioSystem.get();
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;

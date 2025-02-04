@@ -76,7 +76,7 @@ cite {
 
 #visualizer {
   gap: 0.25rlh;
-  border: 1px solid;
+  border: 1px solid black;
   /* position: sticky;
   top: 1rlh;
   z-index: 10;
@@ -93,10 +93,9 @@ cite {
 }
 
 .keys {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 2rlh 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--total-columns) * 1rlh), 1fr));
+  gap: 2rlh 0.5rlh;
 }
 
 .keys,
@@ -105,72 +104,71 @@ cite {
   user-select: none;
 }
 
-.key {
-  --key-width: calc(2rlh + 2vmin);
-  --key-height: calc(var(--key-width) * 3);
-  width: var(--key-width);
+.octave {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-rows: 1fr;
   pointer-events: none;
 }
 
-.top:not(.top + .top) {
-  width: 0;
-  display: grid;
-  justify-content: center;
+.key {
+  grid-column: var(--column) / span 2;
+  grid-row: var(--row);
+  pointer-events: none;
+  position: relative;
 }
 
-.top + .top {
-  padding-left: calc(var(--key-width) * 0.5);
+.top {
+  z-index: 1;
+}
+.bottom {
+  z-index: 0;
 }
 
 .key button {
   cursor: pointer;
-  width: var(--key-width);
-  height: var(--key-height);
-  border: 0.5px solid light-dark(black, #999);
-  outline: 0.5px solid light-dark(black, #999);
-  background-color: light-dark(white, #222);
+  width: 100%;
+  aspect-ratio: 1 / 1.5;
+  border: none;
   display: flex;
   justify-content: center;
   align-items: end;
   line-height: 2;
   touch-action: none;
   pointer-events: all;
-  font-weight: 200;
+  font-weight: 300;
   padding-bottom: 0.25rlh;
+  box-shadow: 0 0 0.25rlh #6669, 0 0 0.5rlh #6667, 0 0 1rlh #6665;
 }
 
-.top button {
-  height: calc(var(--key-height) * 0.5);
-  justify-self: center;
-  position: relative;
-  z-index: 1;
+.white button {
+  background-color: white;
+  color: black;
 }
 
 .black button {
   background-color: black;
-  border-color: light-dark(white, #999);
-  outline-color: light-dark(white, #999);
   color: white;
 }
 
-@media (prefers-color-scheme: light) {
-  .black button {
-    outline: none;
-    border-width: 0 0.5px;
-    border-top: 1px solid black;
-  }
-}
-
-/* .white + .white + .black button,
-.white:first-child + .black button,
-.black:first-child button {
+/* .key:first-child button {
+  border-top-left-radius: 0.25rlh;
   border-bottom-left-radius: 0.25rlh;
 }
 
-.black:has(+ .white + .white) button,
-.black:has(+ .white:last-child) button,
-.black:last-child button {
+.key:last-child button {
+  border-top-right-radius: 0.25rlh;
   border-bottom-right-radius: 0.25rlh;
+}
+
+.key.bottom + .key.bottom + .key.top button,
+.key.bottom:first-child + .key.top button {
+  border-top-left-radius: 0.25rlh;
+}
+
+.key.top + .key.top + .key.bottom button,
+.key.top:first-child + .key.bottom button {
+  border-bottom-left-radius: 0.25rlh;
 } */
 
 .key button:hover {
