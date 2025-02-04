@@ -56,9 +56,29 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 .key-checkboxes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 1rlh);
+  grid-template-columns: repeat(auto-fill, 1.5rlh);
   gap: 0.25rlh;
   margin-top: 0.25rlh;
+}
+
+.key-checkboxes input {
+  display: none;
+}
+
+.key-checkboxes label {
+  background: light-dark(white, black);
+  color: #666;
+  outline: 1px solid;
+  text-align: center;
+  border-radius: 0.25rlh;
+  line-height: 1.5rlh;
+  cursor: pointer;
+}
+
+.key-checkboxes label:has(input:checked) {
+  filter: invert(100%);
+  color: light-dark(black, white);
+  outline-color: transparent;
 }
 
 pre {
@@ -99,7 +119,6 @@ cite {
       minmax(calc(var(--total-columns) * (0.625rlh + 1vmin)), 1fr)
     );
   gap: 2rlh 0rlh;
-  margin-bottom: 1rlh;
 }
 
 .keys,

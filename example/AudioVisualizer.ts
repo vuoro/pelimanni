@@ -55,7 +55,7 @@ export const AudioVisualizer = new Magic(() => {
       const highness = index / (areas.length - 1);
       const relativeStart = Math.max(0, Math.log(start - minFrequency) / logMaxFrequency);
       const relativeEnd = Math.log(end - minFrequency) / logMaxFrequency;
-      const brightness = (0.764 + 0.236 * highness) * 255;
+      const brightness = (0.5 + 0.5 * highness) * 255;
       drawer.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
       drawer.fillRect(
         relativeStart * width,

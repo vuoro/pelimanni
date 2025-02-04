@@ -25,33 +25,23 @@ const KeyboardState = new Magic(
       keyboardOffset: number;
       blackKeys: string[];
       topKeys: string[];
+      coloriseIntervals: boolean;
     } = {
-      instrumentName: ((localStorage.getItem("instrumentName") ?? "none") in allInstrumentPresets
-        ? localStorage.getItem("instrumentName")
-        : "piano") as keyof typeof allInstrumentPresets,
-      velocity: +(localStorage.getItem("velocity") ?? 0.8),
-      attackMultiplier: +(localStorage.getItem("attackMultiplier") ?? 1.0),
-      releaseMultiplier: +(localStorage.getItem("releaseMultiplier") ?? 1.0),
-      duration: +(localStorage.getItem("duration") ?? 0.5),
-      vibratoAmount: +(localStorage.getItem("vibratoAmount") ?? 0.0),
-      vibratoFrequency: +(localStorage.getItem("vibratoFrequency") ?? 5.0),
-      sustain: +(localStorage.getItem("sustain") ?? 0.0),
-      keyboardOffset: +(localStorage.getItem("keyboardOffset") ?? 48),
-      blackKeys: JSON.parse(localStorage.getItem("blackKeys") || '["1", "3", "6", "8", "10"]'),
-      topKeys: JSON.parse(localStorage.getItem("topKeys") || '["1", "3", "6", "8", "10"]'),
+      instrumentName: (localStorage.getItem("instrumentName") ??
+        "piano") as keyof typeof allInstrumentPresets,
+      velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.8"),
+      attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0"),
+      releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0"),
+      duration: JSON.parse(localStorage.getItem("duration") ?? "0.5"),
+      vibratoAmount: JSON.parse(localStorage.getItem("vibratoAmount") ?? "0.0"),
+      vibratoFrequency: JSON.parse(localStorage.getItem("vibratoFrequency") ?? "5.0"),
+      sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0"),
+      keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48"),
+      blackKeys: JSON.parse(localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]'),
+      topKeys: JSON.parse(localStorage.getItem("topKeys") ?? '["1", "3", "6", "8", "10"]'),
+      coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "true"),
     },
-    message?: {
-      instrumentName: keyof typeof allInstrumentPresets;
-      velocity: number;
-      attackMultiplier: number;
-      releaseMultiplier: number;
-      vibratoAmount: number;
-      vibratoFrequency: number;
-      sustain: number;
-      keyboardOffset: number;
-      blackKeys: string[];
-      topKeys: string[];
-    },
+    message?: Partial<typeof state>,
   ) => {
     if (message) {
       return { ...state, ...message };
@@ -73,6 +63,7 @@ export const KeyboardSettings = new Magic(() => {
     const keyboardOffset = data.get("keyboardOffset") as string;
     const blackKeys = data.getAll("blackKeys") as string[];
     const topKeys = data.getAll("topKeys") as string[];
+    const coloriseIntervals = data.get("coloriseIntervals") as string;
 
     localStorage.setItem("instrumentName", instrumentName);
     localStorage.setItem("velocity", velocity);
@@ -84,6 +75,7 @@ export const KeyboardSettings = new Magic(() => {
     localStorage.setItem("keyboardOffset", keyboardOffset);
     localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
     localStorage.setItem("topKeys", JSON.stringify(topKeys));
+    localStorage.setItem("coloriseIntervals", JSON.stringify(coloriseIntervals === "on"));
 
     KeyboardState.update({
       instrumentName,
@@ -96,6 +88,7 @@ export const KeyboardSettings = new Magic(() => {
       keyboardOffset: +keyboardOffset,
       blackKeys,
       topKeys,
+      coloriseIntervals: coloriseIntervals === "on",
     });
   };
 
@@ -108,6 +101,7 @@ export const KeyboardSettings = new Magic(() => {
     vibratoAmount,
     vibratoFrequency,
     keyboardOffset,
+    coloriseIntervals,
   } = state;
 
   const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
@@ -117,8 +111,8 @@ export const KeyboardSettings = new Magic(() => {
     html`
       <form @input=${onInput}>
         <fieldset>
-          <legend>Play settings</legend>
-          ${instrumentSelect(state.instrumentName, "instrumentName", "Instrument preset")}
+          <legend>Instrument</legend>
+          ${instrumentSelect(state.instrumentName, "instrumentName", "Preset")}
           <label>
             <span>Velocity: ${velocity * 100}%</span>
             <input name="velocity" type="range" min="0" max="1" step="0.1" .value=${velocity}/>
@@ -127,30 +121,43 @@ export const KeyboardSettings = new Magic(() => {
             <span>Sustain after release: ${sustain * 100}%</span>
             <input name="sustain" type="range" min="0.0" max="1.0" step="0.05" .value=${sustain}/>
           </label>
+        </fieldset>
+        <fieldset>
+          <legend>Playstyle</legend>
           <label>
             <span>Attack time &times; ${attackMultiplier}</span>
             <input name="attackMultiplier" type="range" min="0.25" max="8" step="0.25" .value=${attackMultiplier}/>
           </label>
           <label>
             <span>Release time &times; ${releaseMultiplier}</span>
-            <input name="releaseMultiplier" type="range" min="0.125" max="8" step="0.125" .value=${releaseMultiplier}/>
+            <input name="releaseMultiplier" type="range" min="0.25" max="8" step="0.25" .value=${releaseMultiplier}/>
           </label>
           <label>
-            <span>Vibrato amount: ${vibratoAmount}</span>
+            <span>Vibrato amount: ${vibratoAmount * 100}%</span>
             <input name="vibratoAmount" type="range" min="0.0" max="1" step="0.1" .value=${vibratoAmount}/>
           </label>
           <label>
             <span>Vibrato frequency: ${vibratoFrequency} hz</span>
             <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
           </label>
+        </fieldset>
+        <fieldset>
+          <legend>Keyboard</legend>
           <label>
-            <span>Keyboard offset: ${keyboardOffset}</span>
+            <span>WASD offset: ${keyboardOffset}</span>
             <input name="keyboardOffset" type="range" min="12" max="102" step="1" .value=${keyboardOffset}/>
           </label>
           ${blackKeysInput(blackKeysSet)}
           ${topKeysInput(topKeysSet)}
+          <label>
+            <span>Color keys while playing</span>
+            <span><input name="coloriseIntervals" type="checkbox" ?checked=${coloriseIntervals}/> ${coloriseIntervals ? "Enabled" : "Disabled"}</span>
+          </label>
         </fieldset>
       </form>
+
+      <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
+      <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "WASD offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
     `,
     document.getElementById("keyboard-settings") as HTMLElement,
   );
@@ -284,8 +291,6 @@ export const Keyboard = new Magic(() => {
       >
         ${keys}
       </div>
-      <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
-      <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "Keyboard offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
     `,
     document.getElementById("keyboard") as HTMLElement,
   );
@@ -471,8 +476,14 @@ const attackWithController = (
   shiftKey = false,
   altKey = false,
 ) => {
-  const { instrumentName, velocity, attackMultiplier, vibratoAmount, vibratoFrequency } =
-    KeyboardState.get();
+  const {
+    instrumentName,
+    velocity,
+    attackMultiplier,
+    vibratoAmount,
+    vibratoFrequency,
+    coloriseIntervals,
+  } = KeyboardState.get();
   const { audioContext, connectInstrument } = AudioSystem.get();
 
   if (audioContext.state !== "running") audioContext.resume();
@@ -529,6 +540,8 @@ const attackWithController = (
     controllerKeys.set(controllerId, key);
   }
 
+  if (!coloriseIntervals) return;
+
   for (const element of document.querySelectorAll(".fading")) {
     element.classList.remove("fading");
   }
@@ -559,8 +572,8 @@ const attackWithController = (
 };
 
 const consonances = [-12, -7, -5, 5, 7, 12];
-const weakConsonances = [-9, -8, -4, -3, 3, 4, 8, 9];
-const dissonances = [-11, -10, -6, -2, -1, 1, 2, 6, 10, 11];
+const weakConsonances = [-10, -9, -8, -4, -3, -2, 2, 3, 4, 8, 9, 10];
+const dissonances = [-11, -6, -1, 1, 6, 11];
 
 const controllerKeys = new Map();
 
@@ -569,7 +582,7 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
 
-  const { releaseMultiplier, sustain } = KeyboardState.get();
+  const { releaseMultiplier, sustain, coloriseIntervals } = KeyboardState.get();
 
   const remainingAttack = Math.max(
     0.0,
@@ -596,8 +609,10 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
     controllerKeys.delete(controllerId);
   }
 
-  for (const element of document.querySelectorAll(".consonant, .dissonant, .weakly-consonant")) {
-    element.classList.remove("consonant", "dissonant", "weakly-consonant");
-    element.classList.add("fading");
+  if (coloriseIntervals) {
+    for (const element of document.querySelectorAll(".consonant, .dissonant, .weakly-consonant")) {
+      element.classList.remove("consonant", "dissonant", "weakly-consonant");
+      element.classList.add("fading");
+    }
   }
 };
