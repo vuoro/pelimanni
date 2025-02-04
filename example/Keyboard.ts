@@ -39,7 +39,7 @@ const KeyboardState = new Magic(
       keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48"),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]'),
       topKeys: JSON.parse(localStorage.getItem("topKeys") ?? '["1", "3", "6", "8", "10"]'),
-      coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "true"),
+      coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "false"),
     },
     message?: Partial<typeof state>,
   ) => {
