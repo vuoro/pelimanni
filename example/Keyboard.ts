@@ -570,8 +570,8 @@ const updateConsonances = (midiNumber = 0, sign = 1.0) => {
 
   for (const key of updatedConsonanceKeys) {
     const relativeConsonance = ongoingConsonances.get(key) ?? 0.0;
-    const consonance = Math.max(0.0, relativeConsonance);
-    const dissonance = Math.max(0.0, -relativeConsonance);
+    const consonance = Math.min(Math.max(0.0, relativeConsonance), 1.0);
+    const dissonance = Math.min(Math.max(0.0, -relativeConsonance), 1.0);
 
     // color(display-p3 0.09 0.764 1.0 / 1)
     // color(display-p3 1.0 0.236 0.146 / 1)
@@ -595,13 +595,32 @@ const ongoingConsonances = new WeakMap();
 const updatedConsonanceKeys = new Set<HTMLElement>();
 
 const consonances = [
-  [6, -6],
-  [1, -1, 11, -11],
-  [2, -2, 10, -10],
-  [3, -3, 9, -9],
-  [4, -4, 8, -8],
-  [5, -5, 7, -7],
+  [1, -1],
+  [11, -11, 2, -2],
+  [6, -6, 8, -8],
+  [3, -3, 4, -4],
+  [10, -10],
+  [9, -9],
+  [5, -5],
+  [7, -7],
 ];
+
+// https://music.stackexchange.com/questions/89641/just-intonation-equal-temperament-consonance-and-dissonance
+// Minor Second = 293
+
+// Major Seventh = 148
+// Major Second = 147
+
+// Tritone = 101
+// Minor Sixth = 101
+
+// Minor Third = 93
+// Major Third = 82
+// Minor Seventh = 73
+
+// Major Sixth = 54
+// Perfect Fourth = 50
+// Perfect Fifth = 29
 
 const controllerKeys = new Map();
 
