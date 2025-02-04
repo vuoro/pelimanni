@@ -171,50 +171,14 @@ cite {
 }
 
 .key .fading {
-  transition: box-shadow 3000ms ease-in;
+  transition: box-shadow 2000ms ease-in;
 }
 
-.key .consonant {
-  box-shadow: inset 0 0 2rlh color(display-p3 0.09 0.764 1.0 / 1), 0 0 0.25rlh
-    color(display-p3 0.09 0.764 1.0 / 1);
+.white button.active {
+  box-shadow: inset 0 0 2rlh black !important;
 }
-
-.key .weakly-consonant {
-  box-shadow: inset 0 0 2rlh color(display-p3 1.0 0.764 0.09 / 1), 0 0 0.25rlh
-    color(display-p3 1.0 0.764 0.09 / 1);
-}
-
-.key .dissonant {
-  box-shadow: inset 0 0 2rlh color(display-p3 1.0 0.236 0.146 / 1), 0 0 0.25rlh
-    color(display-p3 1.0 0.236 0.146 / 1);
-}
-
-/* .key:first-child button {
-  border-top-left-radius: 0.25rlh;
-  border-bottom-left-radius: 0.25rlh;
-}
-
-.key:last-child button {
-  border-top-right-radius: 0.25rlh;
-  border-bottom-right-radius: 0.25rlh;
-}
-
-.key.bottom + .key.bottom + .key.top button,
-.key.bottom:first-child + .key.top button {
-  border-top-left-radius: 0.25rlh;
-}
-
-.key.top + .key.top + .key.bottom button,
-.key.top:first-child + .key.bottom button {
-  border-bottom-left-radius: 0.25rlh;
-} */
-
-.key button:hover {
-  filter: invert(9%);
-}
-
-.key button.active {
-  filter: invert(33.333%);
+.black button.active {
+  box-shadow: inset 0 0 2rlh white !important;
 }
 
 .key button * {

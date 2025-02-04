@@ -540,40 +540,68 @@ const attackWithController = (
     controllerKeys.set(controllerId, key);
   }
 
-  if (!coloriseIntervals) return;
+  if (coloriseIntervals) {
+    for (const element of document.querySelectorAll(".fading")) {
+      element.classList.remove("fading");
+    }
 
-  for (const element of document.querySelectorAll(".fading")) {
-    element.classList.remove("fading");
-  }
-
-  for (const offset of consonances) {
-    const key = document.querySelector(
-      `[data-midi-number="${midiNumber + offset}"]`,
-    ) as HTMLButtonElement;
-
-    if (key) key.classList.add("consonant");
-  }
-
-  for (const offset of weakConsonances) {
-    const key = document.querySelector(
-      `[data-midi-number="${midiNumber + offset}"]`,
-    ) as HTMLButtonElement;
-
-    if (key) key.classList.add("weakly-consonant");
-  }
-
-  for (const offset of dissonances) {
-    const key = document.querySelector(
-      `[data-midi-number="${midiNumber + offset}"]`,
-    ) as HTMLButtonElement;
-
-    if (key) key.classList.add("dissonant");
+    updateConsonances(midiNumber, 1.0);
   }
 };
 
-const consonances = [-12, -7, -5, 5, 7, 12];
-const weakConsonances = [-10, -9, -8, -4, -3, -2, 2, 3, 4, 8, 9, 10];
-const dissonances = [-11, -6, -1, 1, 6, 11];
+const updateConsonances = (midiNumber = 0, sign = 1.0) => {
+  for (let index = 0; index < consonances.length; index++) {
+    for (const offset of consonances[index]) {
+      const key = document.querySelector(
+        `[data-midi-number="${midiNumber + offset}"]`,
+      ) as HTMLButtonElement;
+
+      if (key) {
+        const consonance = ((index / (consonances.length - 1)) * 2.0 - 1.0) * sign;
+
+        ongoingConsonances.set(
+          key,
+          Math.round(((ongoingConsonances.get(key) || 0) + consonance) * 1000) * 0.001,
+        );
+        updatedConsonanceKeys.add(key);
+      }
+    }
+  }
+
+  for (const key of updatedConsonanceKeys) {
+    const relativeConsonance = ongoingConsonances.get(key) ?? 0.0;
+    const consonance = Math.max(0.0, relativeConsonance);
+    const dissonance = Math.max(0.0, -relativeConsonance);
+
+    // color(display-p3 0.09 0.764 1.0 / 1)
+    // color(display-p3 1.0 0.236 0.146 / 1)
+    const r = 1.0 - 0.91 * consonance;
+    const g = 1.0 - 0.764 * dissonance - consonance * 0.5;
+    const b = 1.0 - 0.854 * dissonance ** 0.5;
+    const a = Math.abs(relativeConsonance) ** 0.013;
+
+    // console.log(consonance, r, g, b);
+
+    const rgb = `color(display-p3 ${r} ${g} ${b} / ${a})`;
+    key.style.setProperty("box-shadow", `inset 0 0 2rlh ${rgb}, 0 0 0.25rlh ${rgb}`);
+
+    if (sign === -1.0) key.classList.add("fading");
+  }
+
+  updatedConsonanceKeys.clear();
+};
+
+const ongoingConsonances = new WeakMap();
+const updatedConsonanceKeys = new Set<HTMLElement>();
+
+const consonances = [
+  [6, -6],
+  [1, -1, 11, -11],
+  [2, -2, 10, -10],
+  [3, -3, 9, -9],
+  [4, -4, 8, -8],
+  [5, -5, 7, -7],
+];
 
 const controllerKeys = new Map();
 
@@ -583,16 +611,17 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
   if (!instrument) return;
 
   const { releaseMultiplier, sustain, coloriseIntervals } = KeyboardState.get();
+  const { previousStartAt, previousAttack, previousDecay, previousPitch } = instrument;
 
   const remainingAttack = Math.max(
     0.0,
-    instrument.previousAttack * 5.0 - (audioContext.currentTime - instrument.previousStartAt),
+    previousAttack * 5.0 - (audioContext.currentTime - previousStartAt),
   );
   const decayedDuration = Math.max(
     0.0,
-    audioContext.currentTime - instrument.previousStartAt - instrument.previousAttack * 5.0,
+    audioContext.currentTime - previousStartAt - previousAttack * 5.0,
   );
-  const remainingDecay = Math.max(0.0, instrument.previousDecay * 5.0 - decayedDuration);
+  const remainingDecay = Math.max(0.0, previousDecay * 5.0 - decayedDuration);
 
   const releaseAt =
     audioContext.currentTime +
@@ -609,10 +638,5 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
     controllerKeys.delete(controllerId);
   }
 
-  if (coloriseIntervals) {
-    for (const element of document.querySelectorAll(".consonant, .dissonant, .weakly-consonant")) {
-      element.classList.remove("consonant", "dissonant", "weakly-consonant");
-      element.classList.add("fading");
-    }
-  }
+  if (coloriseIntervals) updateConsonances(frequencyToMidi(previousPitch), -1.0);
 };
