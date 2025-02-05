@@ -18,7 +18,7 @@ npm install @vuoro/pelimanni
 
 ## Instruments
 
-A set of pretend classical instruments, made with subtractive synthesis methods.
+A set of pretend classical instruments, made with `PeriodicWave` based synthesis methods.
 
 The following are all the instrument presets currently implemented.
 
