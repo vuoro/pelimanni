@@ -174,11 +174,8 @@ cite {
   transition: box-shadow 2000ms ease-in;
 }
 
-.white button.active {
-  box-shadow: inset 0 0 2rlh black !important;
-}
-.black button.active {
-  box-shadow: inset 0 0 2rlh white !important;
+.key button.active {
+  box-shadow: inset 0 0 2rlh #666 !important;
 }
 
 .key button * {

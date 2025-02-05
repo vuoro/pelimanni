@@ -1153,7 +1153,7 @@ export const glockenspiel = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
-      ...marimba.oscillators[0],
+      ...marimba.oscillators[1],
       imag: glockenspielHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attack: 0.008,
