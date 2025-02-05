@@ -108,6 +108,8 @@ export class OscillatorPreset {
 
   /** @type {InstrumentPreset["velocitySensitivity"]=} */
   velocitySensitivity = undefined;
+  /** @type {number} determines how much of the oscillator's gain is impacted by velocity */
+  velocityImpactOnGain = 0.0;
 
   /** @type {InstrumentPreset["vibratoEffectOnPitch"]=} */
   vibratoEffectOnPitch = undefined;
@@ -221,6 +223,7 @@ export const createInstrument = (
     sustain = preset.sustain,
     release = preset.release,
     velocitySensitivity = preset.velocitySensitivity,
+    velocityImpactOnGain,
     attackDetune = preset.attackDetune,
     attackDetuneDurationMultiplier = preset.attackDetuneDurationMultiplier,
     noiseType,
@@ -286,6 +289,7 @@ export const createInstrument = (
       sustain,
       release,
       velocitySensitivity,
+      velocityImpactOnGain,
       attackDetune,
       attackDetuneDurationMultiplier,
       attackInstabilityGain,
@@ -365,8 +369,6 @@ export const attackInstrument = (
   const relativePitchness = highPitchness * 2.0 - 1.0;
   const relativeVelocity = velocity * 2.0 - 1.0;
 
-  const volumeTarget = volume * (0.5 + velocity * 0.5);
-
   const dynamicStartAt = Math.max(instrument.output.context.currentTime, at);
 
   cancelPendingInstrumentEvents(instrument, dynamicStartAt);
@@ -385,6 +387,7 @@ export const attackInstrument = (
       attack,
       glide,
       velocitySensitivity,
+      velocityImpactOnGain,
       attackDetune,
       attackDetuneDurationMultiplier,
       getPitch,
@@ -406,8 +409,10 @@ export const attackInstrument = (
     const dynamicAttack = attack * attackDynamics;
     firstAttack = firstAttack ?? dynamicAttack;
 
+    const gainWithVelocity = gainTarget * (1.0 - velocityImpactOnGain * (1.0 - velocity)) * volume;
+
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
-    gainNode.gain.setTargetAtTime(gainTarget * volumeTarget, dynamicStartAt, dynamicAttack);
+    gainNode.gain.setTargetAtTime(gainWithVelocity, dynamicStartAt, dynamicAttack);
 
     // Detune attack, if needed
     if (attackDetune !== 0.0) {

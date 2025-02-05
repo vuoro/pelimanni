@@ -14,7 +14,7 @@ import { Magic, MagicState } from "./magic";
 const KeyboardState = new MagicState({
   instrumentName: (localStorage.getItem("instrumentName") ??
     "piano") as keyof typeof allInstrumentPresets,
-  velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.8") as number,
+  velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.7") as number,
   attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0") as number,
   releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0") as number,
   duration: JSON.parse(localStorage.getItem("duration") ?? "0.5") as number,

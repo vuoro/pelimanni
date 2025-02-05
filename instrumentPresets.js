@@ -213,6 +213,7 @@ export const flute = new InstrumentPreset({
       decay: 0.146,
       release: 0.021,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
       vibratoEffectOnVolume: 0.382,
     },
     getWindNoiseOscillator(),
@@ -283,6 +284,7 @@ export const oboe = new InstrumentPreset({
       sustain: 0.854,
       release: 0.021,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 100 }),
   ],
@@ -386,6 +388,7 @@ export const clarinet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.021,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 0 }),
   ],
@@ -442,6 +445,7 @@ export const saxophone = new InstrumentPreset({
       decay: 0.146,
       release: 0.09,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
       attackInstability: 0.09,
     },
   ],
@@ -497,6 +501,7 @@ export const trumpet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.056,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
       attackInstability: 0.09,
     },
   ],
@@ -645,6 +650,7 @@ export const violin = new InstrumentPreset({
       attack: 0.146,
       sustain: 0.854,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -895,6 +901,7 @@ export const piano = new InstrumentPreset({
       decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -957,6 +964,7 @@ export const hammeredDulcimer = new InstrumentPreset({
       attack: 0.021,
       decay: 0.09,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -1066,6 +1074,7 @@ export const marimba = new InstrumentPreset({
       decay: 0.146,
       release: 0.056,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
     getIdiophoneOscillator(),
   ],
@@ -1144,6 +1153,7 @@ export const glockenspiel = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
     {
+      ...marimba.oscillators[0],
       imag: glockenspielHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attack: 0.008,
@@ -1215,6 +1225,8 @@ const pluckedHighEnvelope = {
   decay: 0.09,
   sustain: 0.0,
   release: 0.034,
+  velocitySensivitity: -1,
+  velocityImpactOnGain: 0.91,
 };
 
 export const pluckedViolin = new InstrumentPreset({
