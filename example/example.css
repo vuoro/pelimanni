@@ -116,7 +116,7 @@ cite {
   display: grid;
   grid-template-columns: repeat(
       auto-fit,
-      minmax(calc(var(--total-columns) * (0.625rlh + 1vmin)), 1fr)
+      minmax(calc(var(--total-columns) * (0.75rlh + 0.5vmin)), 1fr)
     );
   gap: 2rlh 0rlh;
 }
