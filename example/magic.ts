@@ -158,3 +158,11 @@ export const defaultOptions = {
 const destroyed = () => {
   throw new Error("This has been .destroy()'d and is no longer callable");
 };
+
+export class MagicState<State> extends Magic<State, State> {
+  constructor(initialState: State, options = defaultOptions) {
+    super((state: State = initialState, message?: State) => {
+      return message === undefined ? state : message;
+    }, options);
+  }
+}

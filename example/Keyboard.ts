@@ -9,46 +9,25 @@ import {
 } from "../instruments";
 import { frequencyToMidi, midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
-import { Magic } from "./magic";
+import { Magic, MagicState } from "./magic";
 
-const KeyboardState = new Magic(
-  (
-    state: {
-      instrumentName: keyof typeof allInstrumentPresets;
-      velocity: number;
-      attackMultiplier: number;
-      releaseMultiplier: number;
-      duration: number;
-      vibratoAmount: number;
-      vibratoFrequency: number;
-      sustain: number;
-      keyboardOffset: number;
-      blackKeys: string[];
-      coloriseIntervals: boolean;
-      octaveStartsFrom: number;
-    } = {
-      instrumentName: (localStorage.getItem("instrumentName") ??
-        "piano") as keyof typeof allInstrumentPresets,
-      velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.8"),
-      attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0"),
-      releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0"),
-      duration: JSON.parse(localStorage.getItem("duration") ?? "0.5"),
-      vibratoAmount: JSON.parse(localStorage.getItem("vibratoAmount") ?? "0.0"),
-      vibratoFrequency: JSON.parse(localStorage.getItem("vibratoFrequency") ?? "5.0"),
-      sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0"),
-      keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48"),
-      blackKeys: JSON.parse(localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]'),
-      coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "false"),
-      octaveStartsFrom: JSON.parse(localStorage.getItem("octaveStartsFrom") ?? "0"),
-    },
-    message?: Partial<typeof state>,
-  ) => {
-    if (message) {
-      return { ...state, ...message };
-    }
-    return state;
-  },
-);
+const KeyboardState = new MagicState({
+  instrumentName: (localStorage.getItem("instrumentName") ??
+    "piano") as keyof typeof allInstrumentPresets,
+  velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.8") as number,
+  attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0") as number,
+  releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0") as number,
+  duration: JSON.parse(localStorage.getItem("duration") ?? "0.5") as number,
+  vibratoAmount: JSON.parse(localStorage.getItem("vibratoAmount") ?? "0.0") as number,
+  vibratoFrequency: JSON.parse(localStorage.getItem("vibratoFrequency") ?? "5.0") as number,
+  sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0") as number,
+  keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48") as number,
+  blackKeys: JSON.parse(
+    localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]',
+  ) as string[],
+  coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "false") as boolean,
+  octaveStartsFrom: JSON.parse(localStorage.getItem("octaveStartsFrom") ?? "0") as number,
+});
 
 export const KeyboardSettings = new Magic(() => {
   const onInput = (event: Event) => {
@@ -78,6 +57,7 @@ export const KeyboardSettings = new Magic(() => {
     localStorage.setItem("octaveStartsFrom", octaveStartsFrom);
 
     KeyboardState.update({
+      ...KeyboardState.get(),
       instrumentName,
       velocity: +velocity,
       attackMultiplier: +attackMultiplier,

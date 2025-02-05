@@ -658,10 +658,6 @@ export const violin = new InstrumentPreset({
   highPassFrequency: 174.61,
   lowPassFrequency: 4186.01,
 
-  // FIXME: there should be some of this, but `attackDetuneDurationMultiplier` ends up bad with slow attacks
-  // attackDetune: 30,
-  // attackDetuneDurationMultiplier: 0.236,
-
   vibratoEffectOnPitch: 30,
   formants: [
     { frequency: 349.23, Q: 3.450463, gain: 1 + 3 / 6 }, // half wood resonance
