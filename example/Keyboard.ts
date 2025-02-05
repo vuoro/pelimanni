@@ -24,7 +24,6 @@ const KeyboardState = new Magic(
       sustain: number;
       keyboardOffset: number;
       blackKeys: string[];
-      topKeys: string[];
       coloriseIntervals: boolean;
     } = {
       instrumentName: (localStorage.getItem("instrumentName") ??
@@ -38,7 +37,6 @@ const KeyboardState = new Magic(
       sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0"),
       keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48"),
       blackKeys: JSON.parse(localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]'),
-      topKeys: JSON.parse(localStorage.getItem("topKeys") ?? '["1", "3", "6", "8", "10"]'),
       coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "false"),
     },
     message?: Partial<typeof state>,
@@ -62,7 +60,6 @@ export const KeyboardSettings = new Magic(() => {
     const sustain = data.get("sustain") as string;
     const keyboardOffset = data.get("keyboardOffset") as string;
     const blackKeys = data.getAll("blackKeys") as string[];
-    const topKeys = data.getAll("topKeys") as string[];
     const coloriseIntervals = data.get("coloriseIntervals") as string;
 
     localStorage.setItem("instrumentName", instrumentName);
@@ -74,7 +71,6 @@ export const KeyboardSettings = new Magic(() => {
     localStorage.setItem("sustain", sustain);
     localStorage.setItem("keyboardOffset", keyboardOffset);
     localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
-    localStorage.setItem("topKeys", JSON.stringify(topKeys));
     localStorage.setItem("coloriseIntervals", JSON.stringify(coloriseIntervals === "on"));
 
     KeyboardState.update({
@@ -87,7 +83,6 @@ export const KeyboardSettings = new Magic(() => {
       sustain: +sustain,
       keyboardOffset: +keyboardOffset,
       blackKeys,
-      topKeys,
       coloriseIntervals: coloriseIntervals === "on",
     });
   };
@@ -105,7 +100,6 @@ export const KeyboardSettings = new Magic(() => {
   } = state;
 
   const blackKeysSet = new Set(state.blackKeys.map((v) => +v));
-  const topKeysSet = new Set(state.topKeys.map((v) => +v));
 
   render(
     html`
@@ -147,12 +141,11 @@ export const KeyboardSettings = new Magic(() => {
             <span>WASD offset: ${keyboardOffset}</span>
             <input name="keyboardOffset" type="range" min="12" max="102" step="1" .value=${keyboardOffset}/>
           </label>
-          ${blackKeysInput(blackKeysSet)}
-          ${topKeysInput(topKeysSet)}
           <label>
-            <span>Color keys while playing</span>
+            <span>Color intervals while playing</span>
             <span><input name="coloriseIntervals" type="checkbox" ?checked=${coloriseIntervals}/> ${coloriseIntervals ? "Enabled" : "Disabled"}</span>
           </label>
+          ${blackKeysInput(blackKeysSet)}
         </fieldset>
       </form>
 
@@ -189,32 +182,6 @@ const blackKeysInput = (blackKeysSet: Set<number>) => {
   `;
 };
 
-const topKeysInput = (topKeysSet: Set<number>) => {
-  const checkboxes = [];
-
-  for (let index = 0; index < 12; index++) {
-    checkboxes.push(html`
-      <label>
-        <span>${keyLabels[index]}</span>
-        <input
-          aria-label="Key ${index} of octave"
-          type="checkbox"
-          name="topKeys"
-          value=${index}
-          ?checked=${topKeysSet.has(index)}
-        />
-      </label>
-    `);
-  }
-
-  return html`
-    <div>
-      <label for="topKeys">Top keys</label>
-      <div class="key-checkboxes">${checkboxes}</div>
-    <div>
-  `;
-};
-
 export const instrumentSelect = (selected: string, name: string, label?: string) => {
   const groupArrays = new Map();
 
@@ -241,10 +208,9 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
 };
 
 export const Keyboard = new Magic(() => {
-  const { blackKeys, topKeys, instrumentName } = KeyboardState.get();
+  const { blackKeys, instrumentName } = KeyboardState.get();
 
   const blackKeysSet = new Set(blackKeys.map((v) => +v));
-  const topKeysSet = new Set(topKeys.map((v) => +v));
   const instrumentPreset =
     allInstrumentPresets[instrumentName as keyof typeof allInstrumentPresets];
 
@@ -253,7 +219,7 @@ export const Keyboard = new Magic(() => {
   const toNote = frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009);
   const fromOctave = Math.floor(fromNote / 12);
   const toOctave = Math.ceil(toNote / 12);
-  const hasTopKeys = topKeysSet.size > 0 && topKeysSet.size < 12;
+  const hasBlacKeys = blackKeysSet.size > 0 && blackKeysSet.size < 12;
   let totalColumns = 0;
 
   for (let octave = fromOctave; octave < toOctave; octave++) {
@@ -263,8 +229,7 @@ export const Keyboard = new Magic(() => {
 
     for (let note = octave * 12; note < (octave + 1) * 12; note++) {
       const isBlack = blackKeysSet.has(note % 12);
-      const isTop = topKeysSet.has(note % 12);
-      const row = hasTopKeys ? (isTop ? 1 : 2) : 1;
+      const row = hasBlacKeys ? (isBlack ? 1 : 2) : 1;
 
       if (lastRow !== row) column -= 1;
       lastRow = row;
