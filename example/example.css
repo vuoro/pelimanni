@@ -175,6 +175,7 @@ cite {
   pointer-events: all;
   font-weight: 300;
   transition: none;
+  outline: none;
 }
 
 .white button {
