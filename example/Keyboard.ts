@@ -1,5 +1,4 @@
 import { html, nothing, render } from "lit-html";
-import { styleMap } from "lit-html/directives/style-map.js";
 import * as allInstrumentPresets from "../instrumentPresets.js";
 import {
   attackInstrument,
@@ -13,8 +12,8 @@ import { Magic, MagicState } from "./magic";
 
 const KeyboardState = new MagicState({
   instrumentName: (localStorage.getItem("instrumentName") ??
-    "piano") as keyof typeof allInstrumentPresets,
-  velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.7") as number,
+    "cello") as keyof typeof allInstrumentPresets,
+  velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.5") as number,
   attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0") as number,
   releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0") as number,
   duration: JSON.parse(localStorage.getItem("duration") ?? "0.5") as number,
@@ -209,39 +208,33 @@ export const Keyboard = new Magic(() => {
   const toNote = frequencyToMidi(instrumentPreset?.lowPassFrequency ?? 4186.009);
   const fromOctave = Math.floor((fromNote - octaveStartsFrom) / 12);
   const toOctave = Math.ceil((toNote - octaveStartsFrom) / 12);
-  const hasBlacKeys = blackKeysSet.size > 0 && blackKeysSet.size < 12;
-  let totalColumns = 0;
+
+  let octaveGridTrack = "";
+  let isFirstOctave = true;
 
   for (let octave = fromOctave; octave < toOctave; octave++) {
-    const octaveKeys = [];
-    let column = 2;
-    let lastRow = 0;
-
     for (
       let note = octave * 12 + octaveStartsFrom;
       note < (octave + 1) * 12 + octaveStartsFrom;
       note++
     ) {
       const isBlack = blackKeysSet.has(note % 12);
-      const row = hasBlacKeys ? (isBlack ? 1 : 2) : 1;
+      const nextIsBlack = blackKeysSet.has((note + 1) % 12);
+      keys.push(key(note, isBlack));
 
-      if (lastRow !== row) column -= 1;
-      lastRow = row;
-
-      octaveKeys.push(key(note, isBlack, column, row));
-
-      column += 2;
+      if (isFirstOctave)
+        octaveGridTrack += nextIsBlack === isBlack ? "var(--slot) var(--slot) " : "var(--slot) ";
     }
 
-    keys.push(html`<div class="octave">${octaveKeys}</div>`);
-    totalColumns = Math.max(totalColumns, column);
+    isFirstOctave = false;
   }
 
   render(
     html`
       <h2>Playable demo</h2>
-      <div class="keys"
-        style="--total-columns: ${totalColumns}"
+      <div
+        class="keys"
+        style="--octave-grid-track: ${octaveGridTrack}"
         @pointerdown=${pointerdown}
         @pointerup=${pointerup}
         @pointerout=${pointerout}
@@ -255,19 +248,16 @@ export const Keyboard = new Magic(() => {
   );
 });
 
-const key = (midiNumber: number, isBlack = false, column = 0, row = 0) => {
+const key = (midiNumber: number, isBlack = false) => {
   const note = midiNumber % 12;
   const octave = Math.floor(midiNumber / 12);
 
   return html`
     <div
-      class="key ${isBlack ? "black" : "white"} ${row === 1 ? "top" : "bottom"} key-${note}"
-      style="${styleMap({
-        "--column": column,
-        "--row": row,
-      })}"
+      class="key ${isBlack ? "black" : "white"}"
     >
       <button
+        tabindex="-1"
         type="button"
         data-midi-number="${midiNumber}"
       >

@@ -113,12 +113,22 @@ cite {
 }
 
 .keys {
+  --key-width: 2.5rlh;
+  --key-height: 2.5rlh;
+  --slot: minmax(0, calc(var(--key-width) / 2));
   display: grid;
-  grid-template-columns: repeat(
-      auto-fit,
-      minmax(calc(var(--total-columns) * (0.75rlh + 0.5vmin)), 1fr)
-    );
-  gap: 2rlh 0rlh;
+  grid-template-columns: repeat(auto-fit, var(--octave-grid-track));
+  align-items: end;
+  gap: 1rlh 0rlh;
+
+  @media (min-width: 60rlh) and (min-height: 40rlh) {
+    --key-width: 2.5rlh;
+    --key-height: 4rlh;
+  }
+}
+
+.keys:has(.white:first-child ~ .black:last-child, .black:first-child ~ .white:last-child) {
+  padding-right: calc(var(--key-width) / 2);
 }
 
 .keys,
@@ -127,26 +137,33 @@ cite {
   user-select: none;
 }
 
-.octave {
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-auto-rows: 1fr;
+.key {
+  width: 100%;
+  height: var(--key-height);
   pointer-events: none;
+  box-shadow: 0 0 0.25rlh #6669, 0 0 0.5rlh #6667, 0 0 1rlh #6665;
 }
 
-.key {
-  grid-column: var(--column) / span 2;
-  grid-row: var(--row);
-  pointer-events: none;
-  position: relative;
-  z-index: calc(64 + -1 * var(--column) + var(--row));
-  box-shadow: 0 0 0.25rlh #6669, 0 0 0.5rlh #6667, 0 0 1rlh #6665;
+.black {
+  width: 200%;
+  margin-bottom: var(--key-height);
+}
+
+.white {
+  z-index: 0;
+  width: 200%;
+}
+
+.white:has(+ .white),
+.black:has(+ .black) {
+  width: 100%;
+  grid-column-end: span 2;
 }
 
 .key button {
   cursor: pointer;
   width: 100%;
-  aspect-ratio: 1 / 1.333333;
+  height: 100%;
   border: none;
   display: flex;
   flex-direction: column;
