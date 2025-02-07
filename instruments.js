@@ -583,7 +583,7 @@ export const releaseInstrument = (
   cancelPendingInstrumentEvents(instrument, firstEndAt);
   vibratoMain.frequency.setTargetAtTime(0.0, firstEndAt, 0.008);
 
-  instrument.previousEndAt = releaseEarly ? firstEndAt : endAt + firstRelease * 0.618;
+  instrument.previousEndAt = releaseEarly ? firstEndAt : endAt + firstRelease * 0.236;
 };
 
 const cancelPendingInstrumentEvents = (

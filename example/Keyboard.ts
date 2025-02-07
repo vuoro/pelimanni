@@ -438,23 +438,21 @@ const attackWithController = (
   if (audioContext.state !== "running") audioContext.resume();
 
   const isAlreadyPlaying = playingControllers.has(controllerId);
-  if (isAlreadyPlaying) releaseWithController(controllerId, shiftKey, altKey);
+  let instrument = isAlreadyPlaying ? releaseWithController(controllerId, shiftKey, altKey) : null;
 
   const preset = allInstrumentPresets[instrumentName];
-
-  let instrument: Instrument | null = null;
 
   for (const freeInstrument of freeInstruments) {
     if (
       !instrument &&
       freeInstrument.preset === preset &&
-      freeInstrument.previousEndAt < audioContext.currentTime
+      freeInstrument.previousEndAt <= audioContext.currentTime
     ) {
       // Use instrument
       console.log("adopting", controllerId);
       instrument = freeInstrument;
       freeInstruments.delete(freeInstrument);
-    } else if (freeInstrument.previousEndAt + 5 < audioContext.currentTime) {
+    } else if (freeInstrument.previousEndAt + 1 < audioContext.currentTime) {
       // Destroy long unused instrument
       console.log("destroying");
       destroyInstrument(freeInstrument);
@@ -607,4 +605,6 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
   }
 
   if (coloriseIntervals) updateConsonances(frequencyToMidi(previousPitch), -1.0);
+
+  return instrument;
 };
