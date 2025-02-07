@@ -441,7 +441,11 @@ export const attackInstrument = (
 
     // Detune attack
     if (attackDetune !== 0.0) {
-      oscillatorNode.detune.setTargetAtTime(attackDetune * velocity, dynamicStartAt, glide);
+      oscillatorNode.detune.setTargetAtTime(
+        attackDetune * velocity ** 0.414,
+        dynamicStartAt,
+        glide,
+      );
 
       oscillatorNode.detune.setTargetAtTime(
         0.0,
@@ -452,9 +456,7 @@ export const attackInstrument = (
 
     // Apply attack noise
     if (attackNoiseGain) {
-      attackNoiseGain.gain.setTargetAtTime(attackNoise * velocity, dynamicStartAt, glide);
-
-      console.log(attackNoiseDuration, attackNoiseDuration * attackDynamics);
+      attackNoiseGain.gain.setTargetAtTime(attackNoise * velocity ** 0.414, dynamicStartAt, glide);
 
       attackNoiseGain.gain.setTargetAtTime(
         0.0,

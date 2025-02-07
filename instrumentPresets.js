@@ -891,8 +891,8 @@ export const piano = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackNoise: 1200,
-  attackDetuneDuration: 0.013,
+  attackNoise: 700,
+  attackDetuneDuration: 0.008,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -954,8 +954,8 @@ export const hammeredDulcimer = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackNoise: 900,
-  attackDetuneDuration: 0.018,
+  attackNoise: 700,
+  attackDetuneDuration: 0.013,
 });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -977,7 +977,8 @@ export const taikoDrum = new InstrumentPreset({
       imag: taikoImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attackDetune: 200,
-      attackNoise: 1200,
+      attackNoise: 900,
+      attackNoiseDuration: 0.008,
     },
     getDrumNoiseOscillator(),
   ],
@@ -1065,8 +1066,8 @@ export const marimba = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackNoise: 900,
-  attackNoiseDuration: 0.018,
+  attackNoise: 500,
+  attackNoiseDuration: 0.008,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -1101,9 +1102,6 @@ export const xylophone = new InstrumentPreset({
   ],
 
   decay: 0.146,
-
-  attackNoise: 700,
-  attackNoiseDuration: 0.013,
 });
 
 // Pure idiophone overtones
@@ -1147,8 +1145,8 @@ export const glockenspiel = new InstrumentPreset({
     },
   ],
 
-  attackNoise: 900,
-  attackNoiseDuration: 0.013,
+  attackNoise: 700,
+  attackNoiseDuration: 0.008,
 
   decay: 0.236,
 });
@@ -1186,8 +1184,8 @@ export const bell = new InstrumentPreset({
 
   decay: 0.382,
 
-  attackNoise: 1200,
-  attackNoiseDuration: 0.013,
+  attackNoise: 700,
+  attackNoiseDuration: 0.008,
 });
 
 // Plucked string transients
@@ -1207,10 +1205,10 @@ const plucked = {
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnStage: 0.0,
 
-  attackNoise: 1200,
-  attackNoiseDuration: 0.013,
+  attackNoise: 700,
+  attackNoiseDuration: 0.005,
   attackDetune: 100,
-  attackDetuneDuration: 0.008,
+  attackDetuneDuration: 0.005,
 };
 
 const pluckedHighEnvelope = {
