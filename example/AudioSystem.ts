@@ -28,7 +28,7 @@ export const AudioSystem = new Magic(
     }
 
     // General nodes and reverb
-    const audioContext = new AudioContext({ latencyHint: "balanced" });
+    const audioContext = new AudioContext({ latencyHint: "interactive" });
     const musicGain = new GainNode(audioContext, { gain: 0.5 });
     const effectsGain = new GainNode(audioContext, { gain: 0.5 });
     const mainGain = new GainNode(audioContext, { gain: 1.0 });
