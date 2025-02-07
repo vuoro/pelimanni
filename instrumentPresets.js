@@ -139,7 +139,7 @@ const getWindNoiseOscillator = ({
     sustain: 0.0,
     release: attack * 0.618,
     attackDetune,
-    attackDetuneDurationMultiplier: (attack + decay) / attack,
+    attackDetuneDuration: attack + decay,
   });
 
 const getDrumNoiseOscillator = ({
@@ -160,27 +160,8 @@ const getDrumNoiseOscillator = ({
     sustain: 0.0,
     release: attack * 0.618,
     attackDetune,
-    attackDetuneDurationMultiplier: (attack + decay) / attack,
+    attackDetuneDuration: attack + decay,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
-  });
-
-const getIdiophoneOscillator = ({
-  attack = 0.008,
-  decay = 0.09,
-  attackDetune = 200,
-  pitchMultiplier = 0.890899,
-} = {}) =>
-  new OscillatorPreset({
-    type: "noise",
-    noiseType: "lowpass",
-    noiseQ: 32,
-    gain: 0.236 / 32,
-    attack,
-    decay,
-    sustain: 0.0,
-    release: attack * 0.618,
-    attackDetune,
-    getPitch: (pitch = 440.0) => pitch * pitchMultiplier, // -200 cents
   });
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -451,7 +432,7 @@ export const saxophone = new InstrumentPreset({
   ],
 
   attackDetune: 30, // FIXME: is this a thing?
-  attackDetuneDurationMultiplier: 5.0,
+  attackDetuneDuration: 5.0,
 
   attack: 0.056,
   decay: 0.236,
@@ -897,7 +878,7 @@ export const piano = new InstrumentPreset({
     {
       imag: stretchOvertones(pianoHighImag),
       getPitch: getStretchedOvertonesPitch,
-      attack: 0.018,
+      attack: 0.013,
       decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
@@ -910,8 +891,8 @@ export const piano = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackDetune: 100,
-  attackDetuneDurationMultiplier: 0.236,
+  attackNoise: 1200,
+  attackDetuneDuration: 0.013,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -961,7 +942,7 @@ export const hammeredDulcimer = new InstrumentPreset({
     {
       imag: stretchOvertones(hammeredDulcimerHighImag),
       getPitch: getStretchedOvertonesPitch,
-      attack: 0.021,
+      attack: 0.018,
       decay: 0.09,
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.91,
@@ -973,8 +954,8 @@ export const hammeredDulcimer = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackDetune: 100,
-  attackDetuneDurationMultiplier: 0.333333,
+  attackNoise: 900,
+  attackDetuneDuration: 0.018,
 });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -995,6 +976,8 @@ export const taikoDrum = new InstrumentPreset({
     {
       imag: taikoImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
+      attackDetune: 200,
+      attackNoise: 1200,
     },
     getDrumNoiseOscillator(),
   ],
@@ -1003,9 +986,6 @@ export const taikoDrum = new InstrumentPreset({
   decay: 0.146,
   sustain: 0.0,
   release: 0.056,
-
-  attackDetune: 200,
-  attackDetuneDurationMultiplier: 0.013 / 0.008,
 
   highPassFrequency: 38.89,
   lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
@@ -1023,6 +1003,7 @@ export const timpani = new InstrumentPreset({
   ...taikoDrum,
   oscillators: [
     {
+      ...taikoDrum.oscillators[0],
       imag: timpaniImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
@@ -1042,6 +1023,7 @@ export const bassDrum = new InstrumentPreset({
   ...taikoDrum,
   oscillators: [
     {
+      ...taikoDrum.oscillators[0],
       imag: bassDrumImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
@@ -1076,13 +1058,15 @@ export const marimba = new InstrumentPreset({
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.91,
     },
-    getIdiophoneOscillator(),
   ],
 
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,
   release: 0.034,
+
+  attackNoise: 900,
+  attackNoiseDuration: 0.018,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -1114,10 +1098,12 @@ export const xylophone = new InstrumentPreset({
       attack: 0.013,
       decay: 0.09,
     },
-    getIdiophoneOscillator(),
   ],
 
   decay: 0.146,
+
+  attackNoise: 700,
+  attackNoiseDuration: 0.013,
 });
 
 // Pure idiophone overtones
@@ -1156,11 +1142,13 @@ export const glockenspiel = new InstrumentPreset({
       ...marimba.oscillators[1],
       imag: glockenspielHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
-      attack: 0.008,
+      attack: 0.013,
       decay: 0.056,
     },
-    getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 400 }),
   ],
+
+  attackNoise: 900,
+  attackNoiseDuration: 0.013,
 
   decay: 0.236,
 });
@@ -1194,9 +1182,12 @@ export const bell = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       decay: 0.236,
     },
-    getIdiophoneOscillator({ pitchMultiplier: 1.0, attackDetune: 500 }),
   ],
+
   decay: 0.382,
+
+  attackNoise: 1200,
+  attackNoiseDuration: 0.013,
 });
 
 // Plucked string transients
@@ -1212,12 +1203,14 @@ const plucked = {
   sustain: 0.0,
   release: 0.034,
 
-  attackDetune: 100,
-  attackDetuneDurationMultiplier: 0.382,
-
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnStage: 0.0,
+
+  attackNoise: 1200,
+  attackNoiseDuration: 0.013,
+  attackDetune: 100,
+  attackDetuneDuration: 0.008,
 };
 
 const pluckedHighEnvelope = {

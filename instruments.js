@@ -10,7 +10,7 @@ export class InstrumentPreset {
   attack = 0.008;
   /** a `timeConstant` for how long before the note reaches the `sustain` level after finishing its `attack` */
   decay = 0.0;
-  /** a `timeConstant` for how loud the note after it has fully decayed */
+  /** how loud the note after it has fully decayed */
   sustain = 0.0;
   /** a `timeConstant` for how long the note takes to "fade out" */
   release = 0.0;
@@ -32,8 +32,13 @@ export class InstrumentPreset {
 
   /** @type {number} detunes oscillator by this many cents * velocity */
   attackDetune = 0.0;
-  /** @type {number} multiplies `attack` to get the duration of `attackDetune` */
-  attackDetuneDurationMultiplier = 1.0;
+  /** @type {number=} a `timeConstant` for how long `attackDetune` should occur, defaults to `attack` */
+  attackDetuneDuration = undefined;
+
+  /** @type {number} detunes the oscillator with noise with a range of this many cents * velocity */
+  attackNoise = 0.0;
+  /** @type {number=} a `timeConstant` for how long `attackNoise` should occur, defaults to `attack` */
+  attackNoiseDuration = undefined;
 
   // Values mostly from these sources:
   // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/orchins.html
@@ -120,8 +125,13 @@ export class OscillatorPreset {
 
   /** @type {InstrumentPreset["attackDetune"]=} */
   attackDetune = undefined;
-  /** @type {InstrumentPreset["attackDetuneDurationMultiplier"]=} */
-  attackDetuneDurationMultiplier = undefined;
+  /** @type {InstrumentPreset["attackDetuneDuration"]=} */
+  attackDetuneDuration = undefined;
+
+  /** @type {InstrumentPreset["attackNoise"]=} */
+  attackNoise = undefined;
+  /** @type {InstrumentPreset["attackNoiseDuration"]=} */
+  attackNoiseDuration = undefined;
 
   /** @type {BiquadFilterType} used when `type` is "noise": determines the type of filter used to filter the noise */
   noiseType = "lowpass";
@@ -225,7 +235,9 @@ export const createInstrument = (
     velocitySensitivity = preset.velocitySensitivity,
     velocityImpactOnGain,
     attackDetune = preset.attackDetune,
-    attackDetuneDurationMultiplier = preset.attackDetuneDurationMultiplier,
+    attackDetuneDuration = preset.attackDetuneDuration,
+    attackNoise = preset.attackNoise,
+    attackNoiseDuration = preset.attackNoiseDuration,
     noiseType,
     noiseQ,
     getPitch = passPitchThrough,
@@ -253,6 +265,13 @@ export const createInstrument = (
     if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);
 
     oscillatorNode.connect(gainNode).connect(input);
+
+    // Percussion-style attack noise
+    let attackNoiseGain = null;
+    if (attackNoise > 0.0) {
+      attackNoiseGain = new GainNode(audioContext, { gain: 0.0 });
+      getNoiseOscillator(audioContext).connect(attackNoiseGain).connect(oscillatorNode.detune);
+    }
 
     // Brass-style attack instability
     let attackInstabilityGain = null;
@@ -291,8 +310,11 @@ export const createInstrument = (
       velocitySensitivity,
       velocityImpactOnGain,
       attackDetune,
-      attackDetuneDurationMultiplier,
+      attackDetuneDuration,
       attackInstabilityGain,
+      attackNoiseGain,
+      attackNoise,
+      attackNoiseDuration,
       vibratoVolumeGain,
       vibratoPitchGain,
       attackInstability,
@@ -389,12 +411,15 @@ export const attackInstrument = (
       velocitySensitivity,
       velocityImpactOnGain,
       attackDetune,
-      attackDetuneDurationMultiplier,
+      attackDetuneDuration = attack,
       getPitch,
       decay,
       sustain,
       attackInstabilityGain,
       attackInstability,
+      attackNoise,
+      attackNoiseDuration = attack,
+      attackNoiseGain,
     } = oscillator;
 
     cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
@@ -414,13 +439,27 @@ export const attackInstrument = (
     oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
     gainNode.gain.setTargetAtTime(gainWithVelocity, dynamicStartAt, dynamicAttack);
 
-    // Detune attack, if needed
+    // Detune attack
     if (attackDetune !== 0.0) {
       oscillatorNode.detune.setTargetAtTime(attackDetune * velocity, dynamicStartAt, glide);
+
       oscillatorNode.detune.setTargetAtTime(
         0.0,
         dynamicStartAt + glide * 5.0,
-        attackDetuneDurationMultiplier * dynamicAttack,
+        attackDetuneDuration * attackDynamics,
+      );
+    }
+
+    // Apply attack noise
+    if (attackNoiseGain) {
+      attackNoiseGain.gain.setTargetAtTime(attackNoise * velocity, dynamicStartAt, glide);
+
+      console.log(attackNoiseDuration, attackNoiseDuration * attackDynamics);
+
+      attackNoiseGain.gain.setTargetAtTime(
+        0.0,
+        dynamicStartAt + glide * 5.0,
+        attackNoiseDuration * attackDynamics,
       );
     }
 

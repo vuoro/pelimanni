@@ -43,7 +43,7 @@ export const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => 
     noiseOscillator = new OscillatorNode(audioContext, {
       type: "custom",
       periodicWave: new PeriodicWave(audioContext, { imag, real }),
-      frequency: 20000 / noiseSize,
+      frequency: 16000 / noiseSize,
     });
 
     noiseOscillator.start();

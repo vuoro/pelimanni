@@ -121,9 +121,14 @@ cite {
   align-items: end;
   gap: 1rlh 0rlh;
 
-  @media (min-width: 60rlh) and (min-height: 40rlh) {
-    --key-width: 2.5rlh;
+  @media (min-width: 40rlh) and (min-height: 40rlh) {
+    --key-width: 3rlh;
     --key-height: 4rlh;
+  }
+
+  @media (min-width: 60rlh) and (min-height: 40rlh) {
+    --key-width: 3rlh;
+    --key-height: 5rlh;
   }
 }
 
