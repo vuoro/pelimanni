@@ -1,10 +1,10 @@
 import { html, nothing, render } from "lit-html";
 import * as allInstrumentPresets from "../instrumentPresets.js";
 import {
-    attackInstrument,
-    createInstrument,
-    destroyInstrument,
-    releaseInstrument,
+  attackInstrument,
+  createInstrument,
+  destroyInstrument,
+  releaseInstrument,
 } from "../instruments";
 import { frequencyToMidi, midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
@@ -518,20 +518,15 @@ const updateConsonances = (midiNumber = 0, sign = 1.0) => {
 
   for (const key of updatedConsonanceKeys) {
     const relativeConsonance = ongoingConsonances.get(key) ?? 0.0;
-    const consonance = Math.min(Math.max(0.0, relativeConsonance), 1.0);
-    const dissonance = Math.min(Math.max(0.0, -relativeConsonance), 1.0);
+    const absoluteConsonance = Math.abs(relativeConsonance);
 
-    // color(display-p3 0.09 0.764 1.0 / 1)
-    // color(display-p3 1.0 0.236 0.146 / 1)
-    const r = 1.0 - 0.91 * consonance;
-    const g = 1.0 - 0.764 * dissonance - consonance * 0.5;
-    const b = 1.0 - 0.854 * dissonance ** 0.5;
-    const a = Math.abs(relativeConsonance) ** 0.013;
+    const r = mix(1, 0, (relativeConsonance * 0.5 + 0.5) ** Math.SQRT1_2);
+    const g = mix(0.09, 0.618, (relativeConsonance * 0.5 + 0.5) ** Math.SQRT1_2);
+    const b = mix(0, 1, (relativeConsonance * 0.5 + 0.5) ** 2);
+    const alpha = absoluteConsonance ** 0.013;
 
-    // console.log(consonance, r, g, b);
-
-    const rgb = `color(display-p3 ${r} ${g} ${b} / ${a})`;
-    key.style.setProperty("box-shadow", `inset 0 0 2rlh ${rgb}, 0 0 0.25rlh ${rgb}`);
+    const color = `color(display-p3 ${r} ${g} ${b} / ${alpha})`;
+    key.style.setProperty("box-shadow", `inset 0 0 2rlh ${color}, 0 0 0.25rlh ${color}`);
 
     if (sign === -1.0) key.classList.add("fading");
   }
@@ -539,36 +534,65 @@ const updateConsonances = (midiNumber = 0, sign = 1.0) => {
   updatedConsonanceKeys.clear();
 };
 
+const mix = (a = 0, b = 1, amount = 0) => a * (1.0 - amount) + b * amount;
+
 const ongoingConsonances = new WeakMap();
 const updatedConsonanceKeys = new Set<HTMLElement>();
 
+// When rounded to closest just tones
+// https://www.flickr.com/photos/omegatron/7524758406/in/album-72157629941546057
+// 1 ~ 16/15 = very high
+// 2 ~ 9/8 = over 4
+// 6 ~ 45/32 or 64/56 = around 3.5–4.0
+// 3 ~ 6/5 = 3.8
+// 4 ~ 5/4 = 3.6
+// 8 ~ 8/5 = around 3.1
+// 11 ~ 15/8 = 3
+// 5 ~ 4/3 = 2.9
+// 10 ~ 16/9 = around 2.6
+// 9 ~ 5/3 = 2.5
+// 7 ~ 3/2 = 2.1
+
+// Using the above ranking + some manual adjustments based on how far notes are from their closest just tones
 const consonances = [
   [1, -1],
-  [11, -11, 2, -2],
-  [6, -6, 8, -8],
-  [3, -3, 4, -4],
+  [2, -2],
+  [6, -6],
+  [3, -3],
+  [4, -4],
+  [0],
+  [8, -8],
+  [11, -11],
   [10, -10],
   [9, -9],
   [5, -5],
   [7, -7],
 ];
 
+// When based on this
 // https://music.stackexchange.com/questions/89641/just-intonation-equal-temperament-consonance-and-dissonance
 // Minor Second = 293
-
 // Major Seventh = 148
 // Major Second = 147
-
 // Tritone = 101
 // Minor Sixth = 101
-
 // Minor Third = 93
 // Major Third = 82
 // Minor Seventh = 73
-
 // Major Sixth = 54
 // Perfect Fourth = 50
 // Perfect Fifth = 29
+
+// const consonances = [
+//   [1, -1],
+//   [11, -11, 2, -2],
+//   [6, -6, 8, -8],
+//   [3, -3, 4, -4],
+//   [10, -10],
+//   [9, -9],
+//   [5, -5],
+//   [7, -7],
+// ];
 
 const controllerKeys = new Map();
 
