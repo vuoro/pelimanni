@@ -498,6 +498,8 @@ const attackWithController = (
 };
 
 const updateConsonances = (midiNumber = 0, sign = 1.0) => {
+  // const frequency = midiToFrequency(midiNumber);
+
   for (let index = 0; index < consonances.length; index++) {
     for (const offset of consonances[index]) {
       const key = document.querySelector(
@@ -506,6 +508,8 @@ const updateConsonances = (midiNumber = 0, sign = 1.0) => {
 
       if (key) {
         const consonance = ((index / (consonances.length - 1)) * 2.0 - 1.0) * sign;
+        // const consonance =
+        //   (1 - getRoughness(frequency, midiToFrequency(midiNumber + offset)) / 0.091) * sign;
 
         ongoingConsonances.set(
           key,
@@ -538,6 +542,28 @@ const mix = (a = 0, b = 1, amount = 0) => a * (1.0 - amount) + b * amount;
 
 const ongoingConsonances = new WeakMap();
 const updatedConsonanceKeys = new Set<HTMLElement>();
+
+// https://www.acousticslab.org/learnmoresra/moremodel.html
+const getRoughness = (frequencyA = 440.0, frequencyB = 440.0, amplitudeA = 1, amplitudeB = 1) => {
+  const minFrequency = Math.min(frequencyA, frequencyB);
+  const maxFrequency = Math.max(frequencyA, frequencyB);
+  const minAmplitude = Math.min(amplitudeA, amplitudeB);
+  const maxAmplitude = Math.max(amplitudeA, amplitudeB);
+
+  const x = minAmplitude * maxAmplitude;
+  const y = (2 * minAmplitude) / (minAmplitude + maxAmplitude);
+
+  const b1 = 3.5;
+  const b2 = 5.75;
+  const s1 = 0.0207;
+  const s2 = 18.96;
+  const s = 0.24 / (s1 * minFrequency + s2);
+  const z =
+    Math.E ** (-b1 * s * (maxFrequency - minFrequency)) -
+    Math.E ** (-b2 * s * (maxFrequency - minFrequency));
+
+  return x ** 0.1 * (0.5 * y ** 3.11) * z;
+};
 
 // When rounded to closest just tones
 // https://www.flickr.com/photos/omegatron/7524758406/in/album-72157629941546057
