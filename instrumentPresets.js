@@ -93,18 +93,18 @@ const stretchOvertones = (imag) => {
   // e = 0.429601
   // produces an acceptable fit for a Steinway B.
 
+  // https://www.flickr.com/photos/omegatron/7744786930/in/album-72157629941546057
+
   for (let index = 1; index < imag.length; index++) {
     const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
 
-    // FIXME: is this needed?
-    const correctionForRatiosBetweenOvertones = index === 1 ? 1 : 1.0 / ((index - 1) / index);
+    // FIXME: is this correct? The results seem fine at least?
+    const octaveRatio = inharmonicityRatio / 2; // same as / (2 ** (index + 1) / 2 ** index)
 
-    const offset = Math.round(
-      inharmonicityPrecision * inharmonicityRatio * correctionForRatiosBetweenOvertones,
-    );
+    const offset = Math.round(inharmonicityPrecision * octaveRatio);
     newImag[index * inharmonicityPrecision + offset] = imag[index];
 
-    // console.log(index, inharmonicityRatio, offset / inharmonicityPrecision, offset);
+    // console.log(index, 2 ** (index + offset / inharmonicityPrecision) / 2 ** index, index + offset);
   }
 
   return newImag;

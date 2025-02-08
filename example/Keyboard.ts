@@ -1,10 +1,10 @@
 import { html, nothing, render } from "lit-html";
 import * as allInstrumentPresets from "../instrumentPresets.js";
 import {
-  attackInstrument,
-  createInstrument,
-  destroyInstrument,
-  releaseInstrument,
+    attackInstrument,
+    createInstrument,
+    destroyInstrument,
+    releaseInstrument,
 } from "../instruments";
 import { frequencyToMidi, midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
@@ -473,6 +473,7 @@ const attackWithController = (
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
+    // NOTE: Can't use `pressure` for velocity here, since iPhone always sets it to 0.0 instead of 0.5
     velocity * (1.0 + 0.056 * Math.sin(audioContext.currentTime * 0.236) + 0.034 * Math.random()),
     attackMultiplier,
     0.7,
