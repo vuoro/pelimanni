@@ -55,7 +55,7 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   return strings;
 };
 
-const inharmonicityPrecision = 512;
+const inharmonicityPrecision = 96; // higher values seem to cause some kind of imprecision, resulting in missing overtones
 const inharmonicityReferenceFrequency = 440.0; // this should vary by note, but oh well
 const a = 5.22964 * 10 ** -6;
 const b = 1.21012 * 10 ** -6;
@@ -72,9 +72,9 @@ const inharmonicityCoefficient =
 
 /** @param {Float32Array} imag */
 const stretchOvertones = (imag) => {
-  if (imag.length > 17)
-    throw new Error("Can't safely stretch overtones in imags with more than 17 entries");
-  const newImag = new Float32Array((imag.length - 1) * inharmonicityPrecision + 1);
+  const newImag = new Float32Array(imag.length * inharmonicityPrecision);
+
+  // console.log(newImag.length);
 
   // https://forum.pianoworld.com/ubbthreads.php/topics/2438314/Inharmonicity_Math.html
   // Fn = n * F (1 + 0.5(n^2 - 1) * B) (Fletcher, Blackham & Stratton 1962)
@@ -99,12 +99,13 @@ const stretchOvertones = (imag) => {
     const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
 
     // FIXME: is this correct? The results seem fine at least?
-    const octaveRatio = inharmonicityRatio / 2; // same as / (2 ** (index + 1) / 2 ** index)
+    const octaveRatio = inharmonicityRatio / 2.0;
 
     const offset = Math.round(inharmonicityPrecision * octaveRatio);
-    newImag[index * inharmonicityPrecision + offset] = imag[index];
+    const slot = index * inharmonicityPrecision + offset;
+    newImag[slot] = imag[index];
 
-    // console.log(index, 2 ** (index + offset / inharmonicityPrecision) / 2 ** index, index + offset);
+    // console.log(index, 2 ** (index + offset / inharmonicityPrecision) / 2 ** index, slot, offset);
   }
 
   return newImag;
@@ -194,7 +195,6 @@ export const flute = new InstrumentPreset({
       decay: 0.146,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
       vibratoEffectOnVolume: 0.382,
     },
     getWindNoiseOscillator(),
@@ -265,7 +265,6 @@ export const oboe = new InstrumentPreset({
       sustain: 0.854,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 100 }),
   ],
@@ -369,7 +368,6 @@ export const clarinet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 0 }),
   ],
@@ -426,7 +424,6 @@ export const saxophone = new InstrumentPreset({
       decay: 0.146,
       release: 0.09,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
       attackInstability: 0.09,
     },
   ],
@@ -482,7 +479,6 @@ export const trumpet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.056,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
       attackInstability: 0.09,
     },
   ],
@@ -631,7 +627,6 @@ export const violin = new InstrumentPreset({
       attack: 0.146,
       sustain: 0.854,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -839,30 +834,37 @@ const pianoLowImag = Float32Array.of(
   0.0,
   // First 4 are quite high and often in a U shape
   1.0,
-  0.146,
-  0.146,
+  0.382,
   0.236,
+  0.146,
+  // Then there's a pair arcing up
+  0.146,
+  0.09,
+  // And down
+  0.09,
 );
 
 const pianoHighImag = Float32Array.of(
   0.0,
   // First 4 are quite high and often in a U shape
   0.0,
-  0.618,
   0.382,
+  0.146,
   0.382,
   // Then there's a pair arcing up
+  0.0,
   0.146,
-  0.236,
   // And down
-  0.146,
-  0.09,
+  0.056,
   0.056,
   0.034,
   0.021,
   0.013,
   0.008,
   0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 export const piano = new InstrumentPreset({
@@ -873,7 +875,7 @@ export const piano = new InstrumentPreset({
         imag: stretchOvertones(pianoLowImag),
         getPitch: getStretchedOvertonesPitch,
       },
-      0.146,
+      0.09,
     ),
     {
       imag: stretchOvertones(pianoHighImag),
@@ -882,7 +884,6 @@ export const piano = new InstrumentPreset({
       decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -892,7 +893,7 @@ export const piano = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 700,
-  attackDetuneDuration: 0.008,
+  attackNoiseDuration: 0.008,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -937,7 +938,7 @@ export const hammeredDulcimer = new InstrumentPreset({
         imag: stretchOvertones(hammeredDulcimerLowImag),
         getPitch: getStretchedOvertonesPitch,
       },
-      0.146,
+      0.09,
     ),
     {
       imag: stretchOvertones(hammeredDulcimerHighImag),
@@ -945,7 +946,6 @@ export const hammeredDulcimer = new InstrumentPreset({
       attack: 0.018,
       decay: 0.09,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -977,7 +977,7 @@ export const taikoDrum = new InstrumentPreset({
       imag: taikoImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attackDetune: 200,
-      attackNoise: 900,
+      attackNoise: 1200,
       attackNoiseDuration: 0.008,
     },
     getDrumNoiseOscillator(),
@@ -1057,7 +1057,6 @@ export const marimba = new InstrumentPreset({
       decay: 0.146,
       release: 0.056,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -1217,7 +1216,6 @@ const pluckedHighEnvelope = {
   sustain: 0.0,
   release: 0.034,
   velocitySensivitity: -1,
-  velocityImpactOnGain: 0.91,
 };
 
 export const pluckedViolin = new InstrumentPreset({

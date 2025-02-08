@@ -255,8 +255,12 @@ export const createInstrument = (
             }),
           })
         : type === "noise"
-          ? new BiquadFilterNode(audioContext, { type: noiseType, Q: noiseQ })
-          : new OscillatorNode(audioContext, { type });
+          ? new BiquadFilterNode(audioContext, {
+              type: noiseType,
+              frequency: getPitch(440),
+              Q: noiseQ,
+            })
+          : new OscillatorNode(audioContext, { type, frequency: getPitch(440) });
 
     const gainNode = new GainNode(audioContext, { gain: 0 });
     const gainTarget = (gain / maxPeak) ** Math.SQRT1_2;

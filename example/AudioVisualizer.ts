@@ -19,8 +19,8 @@ export const AudioVisualizer = new Magic(() => {
   analyser.minDecibels = -100.0;
   // analyser.smoothingTimeConstant = 0.8;
 
-  const minFrequency = 29;
-  const maxFrequency = 16000;
+  const minFrequency = 440 / 2 ** 4;
+  const maxFrequency = 14080;
   const logMaxFrequency = Math.log(maxFrequency);
 
   const binCount = Math.floor(
@@ -34,11 +34,11 @@ export const AudioVisualizer = new Magic(() => {
   drawer.strokeStyle = "black";
 
   const areas = [
-    { start: minFrequency, end: 60 },
-    { start: 60, end: 250 },
-    { start: 250, end: 2000 },
-    { start: 2000, end: 6000 },
-    { start: 6000, end: maxFrequency },
+    { start: minFrequency, end: 440 / 2 ** 3 },
+    { start: 440 / 2 ** 3, end: 440 / 2 },
+    { start: 440 / 2, end: 440 * 2 ** 2 },
+    { start: 440 * 2 ** 2, end: 440 * 2 ** 4 },
+    { start: 440 * 2 ** 4, end: maxFrequency },
   ];
 
   const draw = () => {
