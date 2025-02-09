@@ -127,13 +127,13 @@ const stretchOvertones = (imag) => {
   return newImag;
 };
 
-// Tries to match the above
-const getStretchedOvertonesPitch = (pitch = 440.0) => {
-  const fromReference = Math.log2(pitch / inharmonicityReferenceFrequency);
-  const inharmonicityRatio =
-    0.5 * (Math.abs(fromReference) ** 4.0 * Math.sign(fromReference)) * inharmonicityCoefficient;
-  return (pitch * (1.0 + inharmonicityRatio)) / inharmonicityPrecision;
-};
+// // Tries to match the above
+// const getStretchedOvertonesPitch = (pitch = 440.0) => {
+//   const fromReference = Math.log2(pitch / inharmonicityReferenceFrequency);
+//   const inharmonicityRatio =
+//     0.5 * (Math.abs(fromReference) ** 4.0 * Math.sign(fromReference)) * inharmonicityCoefficient;
+//   return (pitch * (1.0 + inharmonicityRatio)) / inharmonicityPrecision;
+// };
 
 const getStretchedOvertonesPitchWithoutTuning = (pitch = 440.0) => {
   return pitch / inharmonicityPrecision;
@@ -157,6 +157,7 @@ const getWindNoiseOscillator = ({
     release: attack * 0.618,
     attackDetune,
     attackDetuneDuration: attack + decay,
+    velocityImpactOnGain: 0.618,
   });
 
 const getDrumNoiseOscillator = ({
@@ -179,6 +180,7 @@ const getDrumNoiseOscillator = ({
     attackDetune,
     attackDetuneDuration: attack + decay,
     getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
+    velocityImpactOnGain: 0.618,
   });
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -212,6 +214,7 @@ export const flute = new InstrumentPreset({
       release: 0.021,
       velocitySensitivity: -1,
       vibratoEffectOnVolume: 0.382,
+      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator(),
   ],
@@ -281,6 +284,7 @@ export const oboe = new InstrumentPreset({
       sustain: 0.854,
       release: 0.021,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 100 }),
   ],
@@ -384,6 +388,7 @@ export const clarinet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.021,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
     getWindNoiseOscillator({ attackDetune: 0 }),
   ],
@@ -441,6 +446,7 @@ export const saxophone = new InstrumentPreset({
       release: 0.09,
       velocitySensitivity: -1,
       attackInstability: 0.09,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -496,6 +502,7 @@ export const trumpet = new InstrumentPreset({
       release: 0.056,
       velocitySensitivity: -1,
       attackInstability: 0.09,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -643,6 +650,7 @@ export const violin = new InstrumentPreset({
       attack: 0.146,
       sustain: 0.854,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -900,6 +908,7 @@ export const piano = new InstrumentPreset({
       decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -968,6 +977,7 @@ export const hammeredDulcimer = new InstrumentPreset({
       attack: 0.018,
       decay: 0.09,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -1079,6 +1089,7 @@ export const marimba = new InstrumentPreset({
       decay: 0.146,
       release: 0.056,
       velocitySensitivity: -1,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -1238,6 +1249,7 @@ const pluckedHighEnvelope = {
   sustain: 0.0,
   release: 0.034,
   velocitySensivitity: -1,
+  velocityImpactOnGain: 0.91,
 };
 
 export const pluckedViolin = new InstrumentPreset({
