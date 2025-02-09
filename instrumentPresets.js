@@ -847,8 +847,8 @@ const pianoLowImag = Float32Array.of(
   // First 4 are quite high and often in a U shape
   1.0,
   0.382,
-  0.236,
   0.146,
+  0.236,
   // Then there's a pair arcing up
   0.146,
   0.09,
@@ -861,8 +861,8 @@ const pianoHighImag = Float32Array.of(
   // First 4 are quite high and often in a U shape
   0.0,
   0.382,
-  0.146,
-  0.382,
+  0.236,
+  0.236,
   // Then there's a pair arcing up
   0.0,
   0.146,
@@ -910,35 +910,41 @@ export const piano = new InstrumentPreset({
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
 
-// Very much like piano, but less bassy? Dunno really. Sounds a bit like a harp right now.
 const hammeredDulcimerLowImag = Float32Array.of(
   0.0,
   // These 4 are quite high and often in a U shape
   0.382,
-  0.146,
+  0.236,
   0.146,
   0.236,
+  // Then there's a pair arcing up
+  0.056,
+  0.09,
+  // And down
+  0.056,
 );
 
 const hammeredDulcimerHighImag = Float32Array.of(
   0.0,
   // These 4 are quite high and often in a U shape
   0.618,
-  0.382,
   0.236,
-  0.382,
+  0.236,
+  0.236,
   // Then there's a pair arcing up
-  0.146,
-  0.236,
+  0.056,
+  0.056,
   // And down
-  0.146,
-  0.09,
+  0.065,
   0.056,
   0.034,
   0.021,
   0.013,
   0.008,
   0.005,
+  0.003,
+  0.002,
+  0.001,
 );
 
 export const hammeredDulcimer = new InstrumentPreset({
