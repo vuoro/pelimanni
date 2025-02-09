@@ -214,7 +214,7 @@ export const flute = new InstrumentPreset({
       release: 0.021,
       velocitySensitivity: -1,
       vibratoEffectOnVolume: 0.382,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
     getWindNoiseOscillator(),
   ],
@@ -284,7 +284,7 @@ export const oboe = new InstrumentPreset({
       sustain: 0.854,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
     getWindNoiseOscillator({ attackDetune: 100 }),
   ],
@@ -388,7 +388,7 @@ export const clarinet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
     getWindNoiseOscillator({ attackDetune: 0 }),
   ],
@@ -446,7 +446,7 @@ export const saxophone = new InstrumentPreset({
       release: 0.09,
       velocitySensitivity: -1,
       attackInstability: 0.09,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -502,7 +502,7 @@ export const trumpet = new InstrumentPreset({
       release: 0.056,
       velocitySensitivity: -1,
       attackInstability: 0.09,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -650,7 +650,7 @@ export const violin = new InstrumentPreset({
       attack: 0.146,
       sustain: 0.854,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -908,7 +908,7 @@ export const piano = new InstrumentPreset({
       decay: 0.09,
       release: 0.056,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -977,7 +977,7 @@ export const hammeredDulcimer = new InstrumentPreset({
       attack: 0.018,
       decay: 0.09,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -1089,7 +1089,7 @@ export const marimba = new InstrumentPreset({
       decay: 0.146,
       release: 0.056,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.91,
+      velocityImpactOnGain: 0.764,
     },
   ],
 
@@ -1249,7 +1249,7 @@ const pluckedHighEnvelope = {
   sustain: 0.0,
   release: 0.034,
   velocitySensivitity: -1,
-  velocityImpactOnGain: 0.91,
+  velocityImpactOnGain: 0.764,
 };
 
 export const pluckedViolin = new InstrumentPreset({

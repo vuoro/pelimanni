@@ -431,9 +431,7 @@ export const attackInstrument = (
     // Glide and attack
     const pitchTarget = getPitch(pitch, velocity);
     const attackDynamics =
-      (1.0 - 0.236 * relativePitchness) *
-      (1.0 - 0.146 * relativeVelocity * velocitySensitivity) *
-      attackMultiplier;
+      (1.0 - 0.236 * relativePitchness) * (1.0 - 0.146 * relativeVelocity) * attackMultiplier;
 
     const dynamicAttack = attack * attackDynamics;
     firstAttack = firstAttack ?? dynamicAttack;
@@ -500,7 +498,7 @@ export const attackInstrument = (
 
     const decayAt = dynamicStartAt + dynamicAttack * 5.0;
     const decayDynamics =
-      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.146 * relativeVelocity * velocitySensitivity);
+      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.236 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 
@@ -576,12 +574,10 @@ export const releaseInstrument = (
 
   // FIXME: duplicate work here, ugh
   for (const oscillator of oscillators) {
-    const { release, velocitySensitivity } = oscillator;
+    const { release } = oscillator;
 
     const releaseDynamics =
-      (1.0 - 0.236 * relativePitchness) *
-      (1.0 + 0.146 * relativeVelocity * velocitySensitivity) *
-      releaseMultiplier;
+      (1.0 - 0.236 * relativePitchness) * (1.0 + 0.146 * relativeVelocity) * releaseMultiplier;
     const dynamicRelease = release * releaseDynamics;
 
     const dynamicEndAt = releaseEarly
