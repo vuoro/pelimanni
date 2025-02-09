@@ -55,7 +55,8 @@ const copySympatheticStrings = (oscillator, loudness = 0.09) => {
   return strings;
 };
 
-const inharmonicityPrecision = 96; // higher values seem to cause some kind of imprecision, resulting in missing overtones
+// The higher the precision, the more aliasing will occur. 128+ is noticeable. 256+ starts causing severe artifacts.
+const inharmonicityPrecision = 64;
 const inharmonicityReferenceFrequency = 440.0; // this should vary by note, but oh well
 const a = 5.22964 * 10 ** -6;
 const b = 1.21012 * 10 ** -6;
@@ -93,19 +94,30 @@ const stretchOvertones = (imag) => {
   // e = 0.429601
   // produces an acceptable fit for a Steinway B.
 
-  // https://www.flickr.com/photos/omegatron/7744786930/in/album-72157629941546057
+  // // Test case
+  // ratio = 1.05
+  // precision = 96
+  // frequency = 440
+  // index = 5
+
+  // slot = index × precision + ((ratio − 1) × precision ×  index)
+
+  // (slot / precision) × frequency
+  // frequency × index × ratio
 
   for (let index = 1; index < imag.length; index++) {
     const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
-
-    // FIXME: is this correct? The results seem fine at least?
-    const octaveRatio = inharmonicityRatio / 2.0;
-
-    const offset = Math.round(inharmonicityPrecision * octaveRatio);
+    const offset = Math.round(inharmonicityRatio * inharmonicityPrecision);
     const slot = index * inharmonicityPrecision + offset;
     newImag[slot] = imag[index];
 
-    // console.log(index, 2 ** (index + offset / inharmonicityPrecision) / 2 ** index, slot, offset);
+    // console.log(
+    //   index,
+    //   index + offset / inharmonicityPrecision,
+    //   1.0 + inharmonicityRatio,
+    //   slot,
+    //   offset,
+    // );
   }
 
   return newImag;
@@ -873,13 +885,13 @@ export const piano = new InstrumentPreset({
     ...copySympatheticStrings(
       {
         imag: stretchOvertones(pianoLowImag),
-        getPitch: getStretchedOvertonesPitch,
+        getPitch: getStretchedOvertonesPitchWithoutTuning,
       },
       0.09,
     ),
     {
       imag: stretchOvertones(pianoHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       attack: 0.013,
       decay: 0.09,
       release: 0.056,
@@ -936,13 +948,13 @@ export const hammeredDulcimer = new InstrumentPreset({
     ...copySympatheticStrings(
       {
         imag: stretchOvertones(hammeredDulcimerLowImag),
-        getPitch: getStretchedOvertonesPitch,
+        getPitch: getStretchedOvertonesPitchWithoutTuning,
       },
       0.09,
     ),
     {
       imag: stretchOvertones(hammeredDulcimerHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
       attack: 0.018,
       decay: 0.09,
       velocitySensitivity: -1,
@@ -1224,12 +1236,12 @@ export const pluckedViolin = new InstrumentPreset({
   oscillators: [
     ...copySympatheticStrings({
       imag: stretchOvertones(violinLowImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     }),
     {
       ...pluckedHighEnvelope,
       imag: stretchOvertones(violinHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
   ],
 });
@@ -1240,12 +1252,12 @@ export const pluckedViola = new InstrumentPreset({
   oscillators: [
     ...copySympatheticStrings({
       imag: stretchOvertones(violaLowImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     }),
     {
       ...pluckedHighEnvelope,
       imag: stretchOvertones(violaHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
   ],
 });
@@ -1256,12 +1268,12 @@ export const pluckedCello = new InstrumentPreset({
   oscillators: [
     ...copySympatheticStrings({
       imag: stretchOvertones(celloLowImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     }),
     {
       ...pluckedHighEnvelope,
       imag: stretchOvertones(celloHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
   ],
 });
@@ -1272,12 +1284,12 @@ export const pluckedContrabass = new InstrumentPreset({
   oscillators: [
     ...copySympatheticStrings({
       imag: stretchOvertones(contrabassLowImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     }),
     {
       ...pluckedHighEnvelope,
       imag: stretchOvertones(contrabassHighImag),
-      getPitch: getStretchedOvertonesPitch,
+      getPitch: getStretchedOvertonesPitchWithoutTuning,
     },
   ],
 });
