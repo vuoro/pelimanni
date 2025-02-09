@@ -74,6 +74,10 @@ const inharmonicityCoefficient =
 /** @param {Float32Array} imag */
 const stretchOvertones = (imag) => {
   const newImag = new Float32Array(imag.length * inharmonicityPrecision);
+  if (newImag.length > 8192 - 1)
+    throw new Error(
+      `Too many imag entries: ${imag.length} out of a maximum of ${8192 / inharmonicityPrecision - 1}`,
+    );
 
   // console.log(newImag.length);
 
@@ -107,13 +111,13 @@ const stretchOvertones = (imag) => {
 
   for (let index = 1; index < imag.length; index++) {
     const inharmonicityRatio = 0.5 * (index ** 2.0 - 1) * inharmonicityCoefficient;
-    const offset = Math.round(inharmonicityRatio * inharmonicityPrecision);
+    const offset = Math.ceil(inharmonicityRatio * inharmonicityPrecision);
     const slot = index * inharmonicityPrecision + offset;
     newImag[slot] = imag[index];
 
     // console.log(
     //   index,
-    //   index + offset / inharmonicityPrecision,
+    //   1.0 + offset / inharmonicityPrecision,
     //   1.0 + inharmonicityRatio,
     //   slot,
     //   offset,
@@ -1225,7 +1229,7 @@ const plucked = {
   attackNoise: 700,
   attackNoiseDuration: 0.005,
   attackDetune: 100,
-  attackDetuneDuration: 0.005,
+  attackDetuneDuration: 0.008,
 };
 
 const pluckedHighEnvelope = {
