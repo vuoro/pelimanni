@@ -100,9 +100,12 @@ export const AudioSystem = new Magic(
       .then(() => {
         const reverbNode = new AudioWorkletNode(audioContext, "DattorroReverb", {
           outputChannelCount: [2],
+          parameterData: {
+            ...defaultReverbParameters,
+            preDelay: defaultReverbParameters.preDelay * audioContext.sampleRate,
+          },
         });
 
-        configureReverb(audioContext, reverbNode, defaultReverbOptions);
         mainGain.connect(reverbNode).connect(lowPeak);
 
         resolveReverb(reverbNode);
@@ -156,54 +159,7 @@ const onStateChange = function (this: AudioContext) {
   }
 };
 
-export const configureReverb = (
-  audioContext: AudioContext,
-  reverb: AudioWorkletNode,
-  options: {
-    /** extra distance the first reflection has to travel, in seconds; room-like sounds */
-    preDelay?: number;
-    /** first reflection lowpass filter weakness; hard spaces */
-    bandwidth?: number;
-    /** first reflection diffusion amount; uneven spaces */
-    inputDiffusion1?: number;
-    /** first reflection alternating diffusion amount; uneven spaces */
-    inputDiffusion2?: number;
-    /** echoiness; space enclosedness */
-    decay?: number;
-    /** diffusion amount; uneven spaces */
-    decayDiffusion1?: number;
-    /** alternating diffusion amount; uneven spaces */
-    decayDiffusion2?: number;
-    /** lowpass filter strength; soft spaces, */
-    damping?: number;
-    /** how quickly diffusors shift in time; wandering echo */
-    excursionRate?: number;
-    /** how much diffusors shift; booming echo */
-    excursionDepth?: number;
-    /** how much of the original sound is heard */
-    dry?: number;
-    /** how much of reverb is heard */
-    wet?: number;
-  },
-  /** `timeConstant` passed to `setTargetAtTime` when setting the new values */
-  speed = 0.618,
-) => {
-  const time = audioContext.currentTime;
-
-  for (const key in options) {
-    const value = options[key as keyof typeof options]; // FIXME: ??? why does TS want me to do this?
-    if (value === undefined) continue;
-    const finalValue =
-      key === "preDelay"
-        ? value * audioContext.sampleRate
-        : key === "excursionRate" || key === "excursionDepth"
-          ? value * 2.0
-          : value;
-    reverb.parameters.get(key)?.setTargetAtTime(finalValue, time, speed);
-  }
-};
-
-export const defaultReverbOptions = {
+export const defaultReverbParameters = {
   preDelay: 0.034, // could be up to 0.04ms before being obvious
   bandwidth: 0.91,
   inputDiffusion1: 0.414,
@@ -212,8 +168,8 @@ export const defaultReverbOptions = {
   decayDiffusion1: 0.3,
   decayDiffusion2: 0.618,
   damping: 0.09,
-  excursionRate: 0.236,
-  excursionDepth: 0.236,
+  excursionRate: 0.146,
+  excursionDepth: 0.382,
   dry: 0.618,
   wet: 0.382,
 };

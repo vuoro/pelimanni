@@ -1,6 +1,6 @@
 import { html, render } from "lit-html";
 import { live } from "lit-html/directives/live.js";
-import { AudioSystem, configureReverb, defaultReverbOptions } from "./AudioSystem.js";
+import { AudioSystem, defaultReverbParameters } from "./AudioSystem.js";
 import { Magic } from "./magic.js";
 
 export const AudioControls = new Magic(() => {
@@ -18,8 +18,8 @@ export const AudioControls = new Magic(() => {
 
   const reverbSliders = [];
 
-  for (const key in defaultReverbOptions) {
-    reverbSliders.push(reverbSlider(key as keyof typeof defaultReverbOptions));
+  for (const key in defaultReverbParameters) {
+    reverbSliders.push(reverbSlider(key as keyof typeof defaultReverbParameters));
   }
 
   return render(
@@ -75,17 +75,24 @@ const volumeSlider = (title: string, gainNode: GainNode, maxGain: number) => {
   `;
 };
 
-const reverbSlider = (title: keyof typeof defaultReverbOptions) => {
+const reverbSlider = (title: keyof typeof defaultReverbParameters) => {
   const handleInput = async ({ target }: Event) => {
     if (!(target instanceof HTMLInputElement)) return;
     const { audioContext, reverb } = AudioSystem.get();
-    configureReverb(audioContext, await reverb, { [title]: Number.parseFloat(target.value) });
+    const reverbNode = await reverb;
+
+    const value =
+      Number.parseFloat(target.value) * (title === "preDelay" ? audioContext.sampleRate : 1);
+
+    reverbNode.parameters.get(title)?.setTargetAtTime(value, audioContext.currentTime, 0.013);
   };
+
+  const max = title.startsWith("excursion") ? 2 : 1;
 
   return html`
     <label>
       <span>${title}</span>
-      <input type="range" @input=${handleInput} min="0" max="1" step="0.0001" value="${defaultReverbOptions[title]}" />
+      <input type="range" @input=${handleInput} min="0" max="${max}" step="0.001" value="${defaultReverbParameters[title]}" />
     </label>
   `;
 };
