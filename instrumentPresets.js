@@ -451,7 +451,7 @@ export const saxophone = new InstrumentPreset({
   ],
 
   attackDetune: 30, // FIXME: is this a thing?
-  attackDetuneDuration: 5.0,
+  attackDetuneDuration: 0.382,
 
   attack: 0.056,
   decay: 0.236,
@@ -987,7 +987,7 @@ export const hammeredDulcimer = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 700,
-  attackDetuneDuration: 0.013,
+  attackNoiseDuration: 0.013,
 });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -1010,7 +1010,6 @@ export const taikoDrum = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attackDetune: 200,
       attackNoise: 1200,
-      attackNoiseDuration: 0.008,
     },
     getDrumNoiseOscillator(),
   ],

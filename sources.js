@@ -36,9 +36,13 @@ export const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => 
     const real = new Float32Array(noiseSize);
 
     for (let index = 0; index < imag.length; index++) {
-      imag[index] = Math.random() * 2.0 - 1.0;
-      real[index] = Math.random() * 2.0 - 1.0;
+      const amplitudeDivisor = 1 + (0.005 * index) ** 2; // red?
+      // const amplitudeDivisor = 1 + index; // pink?
+      imag[index] = (Math.random() * 2.0 - 1.0) / amplitudeDivisor;
+      real[index] = (Math.random() * 2.0 - 1.0) / amplitudeDivisor;
     }
+
+    console.log(imag);
 
     noiseOscillator = new OscillatorNode(audioContext, {
       type: "custom",
