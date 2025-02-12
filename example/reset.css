@@ -17,11 +17,12 @@
 
 /* Conveniences */
 html {
-  -webkit-text-size-adjust: 100%;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  font-synthesis: none;
   font-size: 100%;
   line-height: 1.25;
   font-family: system-ui;
-  font-synthesis: none;
   overflow-wrap: break-word;
   text-box-trim: trim-both;
   text-box-edge: cap alphabetic;
@@ -30,7 +31,7 @@ html {
 /* Selective un-resets */
 b,
 strong {
-  font-weight: bolder;
+  font-weight: 700;
 }
 
 i,

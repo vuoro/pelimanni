@@ -162,7 +162,7 @@ const getWindNoiseOscillator = ({
 
 const getDrumNoiseOscillator = ({
   attackDetune = 2400,
-  decay = 0.146,
+  decay = 0.09,
   pitchMultiplier = 2.0,
   noiseQ = 2.618,
   attack = 0.008,
@@ -1008,8 +1008,6 @@ export const taikoDrum = new InstrumentPreset({
     {
       imag: taikoImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
-      attackDetune: 200,
-      attackNoise: 1200,
     },
     getDrumNoiseOscillator(),
   ],
@@ -1018,6 +1016,8 @@ export const taikoDrum = new InstrumentPreset({
   decay: 0.146,
   sustain: 0.0,
   release: 0.056,
+
+  attackDetune: 200,
 
   highPassFrequency: 38.89,
   lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
@@ -1035,7 +1035,6 @@ export const timpani = new InstrumentPreset({
   ...taikoDrum,
   oscillators: [
     {
-      ...taikoDrum.oscillators[0],
       imag: timpaniImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
@@ -1055,7 +1054,6 @@ export const bassDrum = new InstrumentPreset({
   ...taikoDrum,
   oscillators: [
     {
-      ...taikoDrum.oscillators[0],
       imag: bassDrumImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
