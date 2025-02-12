@@ -166,7 +166,7 @@ const getDrumNoiseOscillator = ({
   pitchMultiplier = 2.0,
   noiseQ = 2.618,
   attack = 0.008,
-  gain = 2.618,
+  gain = 1.618,
 } = {}) =>
   new OscillatorPreset({
     type: "noise",
@@ -1017,7 +1017,7 @@ export const taikoDrum = new InstrumentPreset({
   sustain: 0.0,
   release: 0.056,
 
-  attackDetune: 200,
+  attackDetune: 500,
 
   highPassFrequency: 38.89,
   lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
