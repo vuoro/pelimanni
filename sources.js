@@ -42,8 +42,6 @@ export const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => 
       real[index] = (Math.random() * 2.0 - 1.0) / amplitudeDivisor;
     }
 
-    console.log(imag);
-
     noiseOscillator = new OscillatorNode(audioContext, {
       type: "custom",
       periodicWave: new PeriodicWave(audioContext, { imag, real }),
