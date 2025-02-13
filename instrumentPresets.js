@@ -3,8 +3,11 @@ import { InstrumentPreset, OscillatorPreset } from "./instruments";
 const requiredSympatheticStringElements = 4 * 3 * 2;
 
 /** @param {Float32Array} imag */
-const addSympatheticStringsToImag = (imag, loudness = 0.056) => {
+const addSympatheticStringsToImag = (imag, loudness = 0.0) => {
   const newImag = new Float32Array((imag.length - 1) * requiredSympatheticStringElements * 4 + 1);
+
+  if (newImag.length >= 1024)
+    throw new Error("Imag too long for adding sympathetic strings. Would cause aliasing.");
 
   for (let index = 1; index < imag.length; index++) {
     const value = imag[index];
@@ -719,8 +722,8 @@ const pianoImag = Float32Array.of(
   0.382,
   0.5,
   // Then there's a pair arcing up
+  0.09,
   0.146,
-  0.236,
   // And 7th is weak
   0.034,
   0.09,
@@ -765,35 +768,30 @@ const getPianoPitch = (pitch = 440.0, partialIndex = 1, inharmonicity = 1.0) => 
 };
 
 const addStringOscillator = (imag = pianoImag, preset = piano, from = 0, to = imag.length - 1) => {
-  const partialIndex = from;
-  const partialProgression = ((from - 1 + to) / 2 / (imag.length - 2)) ** Math.SQRT1_2;
-  console.log(from, to, partialProgression);
+  const partialIndex = (from + to) / 2;
+  const partialProgression = ((partialIndex - 1) / (imag.length - 1)) ** Math.SQRT1_2;
+  const shouldAddSympatheticStrings = partialIndex < 3;
 
   const newImag = imag.slice(0, to + 1).map((value, index) => (index < from ? 0.0 : value));
 
   const oscillator = new OscillatorPreset({
-    // imag: addSympatheticStringsToImag(newImag),
-    // getPitch: (pitch = 440.0) => getSympatheticStringPitch(getPianoPitch(pitch, partialIndex)),
-    imag: newImag,
-    getPitch: (pitch = 440.0) => getPianoPitch(pitch, partialIndex),
-    attack: preset.attack * (1.0 + 0.618 * partialProgression),
-    decay: preset.decay * (1.0 - 0.618 * partialProgression),
-    release: preset.release * (1.0 - 0.618 * partialProgression),
+    imag: shouldAddSympatheticStrings ? addSympatheticStringsToImag(newImag) : newImag,
+    getPitch: (pitch = 440.0) => {
+      const pianoPitch = getPianoPitch(pitch, partialIndex);
+      return shouldAddSympatheticStrings ? getSympatheticStringPitch(pianoPitch) : pianoPitch;
+    },
+    attack: preset.attack * (1.0 + 0.5 * partialProgression),
+    decay: preset.decay * (1.0 - 0.764 * partialProgression),
+    release: preset.release * (1.0 - 0.764 * partialProgression),
     velocitySensitivity: 1 - 2 * partialProgression,
-    velocityImpactOnGain: 1.0 - 0.382 * partialProgression,
+    velocityImpactOnGain: 1.0 - 0.618 * partialProgression,
   });
-
-  console.log(oscillator);
 
   return oscillator;
 };
 
 export const piano = new InstrumentPreset({
   group: "Strings (hammered)",
-  // oscillators: [
-  //   { imag: addSympatheticStringsToImag(pianoImag), getPitch: getSympatheticStringPitch },
-  // ],
-  oscillators: [],
 
   attack: 0.008,
   decay: 0.236,
@@ -807,39 +805,24 @@ export const piano = new InstrumentPreset({
 });
 
 piano.oscillators.push(addStringOscillator(pianoImag, piano, 1, 1));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, 2, 4));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, 5, 8));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, 9, 12));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, 13));
+piano.oscillators.push(addStringOscillator(pianoImag, piano, 2, 6));
+piano.oscillators.push(addStringOscillator(pianoImag, piano, 7, 10));
+piano.oscillators.push(addStringOscillator(pianoImag, piano, 11, 13));
+piano.oscillators.push(addStringOscillator(pianoImag, piano, 14));
 
-console.log(piano);
-
-const hammeredDulcimerLowImag = Float32Array.of(
+const hammeredDulcimerImag = Float32Array.of(
   0.0,
   // These 4 are quite high and often in a U shape
+  1.0,
+  0.5,
   0.382,
-  0.236,
-  0.146,
-  0.236,
-  // Then there's a pair arcing up
-  0.056,
-  0.09,
-  // And down
-  0.056,
-);
-
-const hammeredDulcimerHighImag = Float32Array.of(
-  0.0,
-  // These 4 are quite high and often in a U shape
   0.618,
-  0.236,
-  0.236,
-  0.236,
   // Then there's a pair arcing up
-  0.056,
-  0.056,
+  0.09,
+  0.146,
   // And down
-  0.065,
+  0.09,
+  0.056,
   0.056,
   0.034,
   0.021,
@@ -854,28 +837,29 @@ const hammeredDulcimerHighImag = Float32Array.of(
 export const hammeredDulcimer = new InstrumentPreset({
   ...piano,
   group: "Strings (hammered)",
-  oscillators: [
-    {
-      imag: addSympatheticStringsToImag(hammeredDulcimerLowImag),
-      getPitch: getSympatheticStringPitch,
-    },
-    {
-      imag: hammeredDulcimerHighImag,
-      attack: 0.018,
-      decay: 0.09,
-      velocitySensitivity: -1,
-      velocityImpactOnGain: 0.764,
-    },
-  ],
 
-  attack: 0.013,
+  attack: 0.01,
   decay: 0.236,
   sustain: 0.0,
   release: 0.034,
 
-  attackNoise: 700,
+  attackNoise: 500,
   attackNoiseDuration: 0.003,
 });
+
+hammeredDulcimer.oscillators.push(
+  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, 1, 1),
+);
+hammeredDulcimer.oscillators.push(
+  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, 2, 5),
+);
+hammeredDulcimer.oscillators.push(
+  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, 6, 10),
+);
+hammeredDulcimer.oscillators.push(
+  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, 11, 13),
+);
+hammeredDulcimer.oscillators.push(addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, 14));
 
 const getDrumNoiseOscillator = ({
   attackDetune = 2400,

@@ -252,6 +252,7 @@ export const createInstrument = (
             periodicWave: new PeriodicWave(audioContext, {
               imag: imag || undefined,
               real: real || imag?.map((v) => v * randomisedPhase),
+              disableNormalization: true,
             }),
           })
         : type === "noise"
