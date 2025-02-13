@@ -918,7 +918,7 @@ export const piano = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 700,
-  attackNoiseDuration: 0.008,
+  attackNoiseDuration: 0.003,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -987,7 +987,7 @@ export const hammeredDulcimer = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 700,
-  attackNoiseDuration: 0.013,
+  attackNoiseDuration: 0.003,
 });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -1096,7 +1096,7 @@ export const marimba = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 500,
-  attackNoiseDuration: 0.008,
+  attackNoiseDuration: 0.003,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -1175,7 +1175,7 @@ export const glockenspiel = new InstrumentPreset({
   ],
 
   attackNoise: 700,
-  attackNoiseDuration: 0.008,
+  attackNoiseDuration: 0.003,
 
   decay: 0.236,
 });
@@ -1214,7 +1214,7 @@ export const bell = new InstrumentPreset({
   decay: 0.382,
 
   attackNoise: 700,
-  attackNoiseDuration: 0.008,
+  attackNoiseDuration: 0.003,
 });
 
 // Plucked string transients
@@ -1234,8 +1234,6 @@ const plucked = {
   vibratoEffectOnVolume: 0.0,
   vibratoEffectOnStage: 0.0,
 
-  attackNoise: 700,
-  attackNoiseDuration: 0.005,
   attackDetune: 100,
   attackDetuneDuration: 0.008,
 };
