@@ -160,29 +160,6 @@ const getWindNoiseOscillator = ({
     velocityImpactOnGain: 0.618,
   });
 
-const getDrumNoiseOscillator = ({
-  attackDetune = 2400,
-  decay = 0.09,
-  pitchMultiplier = 2.0,
-  noiseQ = 2.618,
-  attack = 0.008,
-  gain = 1.618,
-} = {}) =>
-  new OscillatorPreset({
-    type: "noise",
-    noiseType: "lowpass",
-    noiseQ,
-    gain: gain / noiseQ,
-    attack,
-    decay,
-    sustain: 0.0,
-    release: attack * 0.618,
-    attackDetune,
-    attackDetuneDuration: attack + decay,
-    getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
-    velocityImpactOnGain: 0.618,
-  });
-
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://www.youtube.com/watch?v=hfS7mDvrZ7g
@@ -990,6 +967,30 @@ export const hammeredDulcimer = new InstrumentPreset({
   attackNoiseDuration: 0.003,
 });
 
+const getDrumNoiseOscillator = ({
+  attackDetune = 2400,
+  decay = 0.05,
+  pitchMultiplier = 2.0,
+  noiseQ = 2.618,
+  attack = 0.008,
+  gain = 1.618,
+} = {}) =>
+  new OscillatorPreset({
+    type: "noise",
+    noiseType: "lowpass",
+    noiseQ,
+    gain: gain / noiseQ,
+    attack,
+    decay,
+    sustain: 0.0,
+    release: attack * 0.618,
+    attackDetune,
+    attackDetuneDuration: attack + decay,
+    getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
+    velocityImpactOnGain: 0.618,
+    velocitySensitivity: -0.618,
+  });
+
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
 const taikoImag = new Float32Array(20 * 9.3 + 1);
 taikoImag[20 * 1] = 0.618;
@@ -1013,7 +1014,7 @@ export const taikoDrum = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.146,
+  decay: 0.1,
   sustain: 0.0,
   release: 0.056,
 

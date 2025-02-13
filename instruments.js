@@ -502,6 +502,8 @@ export const attackInstrument = (
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 
+    console.log(dynamicDecay, dynamicDecay * 4.0);
+
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
 
