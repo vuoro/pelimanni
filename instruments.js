@@ -484,7 +484,7 @@ export const attackInstrument = (
       const attackInstabilityGainDecay = attackInstabilityStopsAt - attackInstabilityDecaysAt;
 
       attackInstabilityGain?.gain.setTargetAtTime(
-        attackInstability * (1.0 - highPitchness),
+        attackInstability * (1.0 - highPitchness) * velocity,
         dynamicStartAt,
         attackInstabilityAttack,
       );

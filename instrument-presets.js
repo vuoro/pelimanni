@@ -693,6 +693,8 @@ export const piano = new InstrumentPreset({
 
   attackNoise: 700,
   attackNoiseDuration: 0.003,
+  attackDetune: 100,
+  attackDetuneDuration: 0.003,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
@@ -738,7 +740,6 @@ export const hammeredDulcimer = new InstrumentPreset({
   release: 0.034,
 
   attackNoise: 500,
-  attackNoiseDuration: 0.003,
 });
 
 hammeredDulcimer.oscillators.push(
@@ -759,7 +760,7 @@ hammeredDulcimer.oscillators.push(
 
 const getDrumNoiseOscillator = ({
   attackDetune = 2400,
-  decay = 0.05,
+  decay = 0.0766,
   pitchMultiplier = 2.0,
   noiseQ = 2.618,
   attack = 0.008,
@@ -804,7 +805,7 @@ export const taikoDrum = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.1,
+  decay: 0.124,
   sustain: 0.0,
   release: 0.056,
 
@@ -874,7 +875,7 @@ export const marimba = new InstrumentPreset({
       imag: marimbaHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attack: 0.018,
-      decay: 0.146,
+      decay: 0.056,
       release: 0.056,
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.764,
@@ -882,7 +883,7 @@ export const marimba = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.236,
+  decay: 0.146,
   sustain: 0.0,
   release: 0.034,
 
@@ -1025,7 +1026,7 @@ const plucked = {
   vibratoEffectOnStage: 0.0,
 
   attackDetune: 200,
-  attackDetuneDuration: 0.003,
+  attackDetuneDuration: 0.005,
 };
 
 export const pluckedViolin = new InstrumentPreset({
