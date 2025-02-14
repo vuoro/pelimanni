@@ -1,4 +1,4 @@
-import { getNoiseOscillator } from "./sources.js";
+import { getConstantMinusSource, getNoiseOscillator } from "./sources.js";
 
 export class InstrumentPreset {
   group = "Miscellaneous";
@@ -273,14 +273,14 @@ export const createInstrument = (
 
     // Percussion-style attack noise
     let attackNoiseGain = null;
-    if (attackNoise > 0.0) {
+    if (attackNoise) {
       attackNoiseGain = new GainNode(audioContext, { gain: 0.0 });
       getNoiseOscillator(audioContext).connect(attackNoiseGain).connect(oscillatorNode.detune);
     }
 
     // Brass-style attack instability
     let attackInstabilityGain = null;
-    if (attackInstability > 0.0) {
+    if (attackInstability) {
       canVibrato = true;
       attackInstabilityGain = new GainNode(audioContext, { gain: 0.0 });
       vibratoMain.connect(attackInstabilityGain).connect(gainNode.gain);
@@ -288,15 +288,16 @@ export const createInstrument = (
 
     // Tremolo and/or brightness vibrato
     let vibratoVolumeGain = null;
-    if (vibratoEffectOnVolume > 0.0) {
+    if (vibratoEffectOnVolume) {
       canVibrato = true;
       vibratoVolumeGain = new GainNode(audioContext, { gain: 0.0 });
       vibratoMain.connect(vibratoVolumeGain).connect(gainNode.gain);
+      getConstantMinusSource(audioContext).connect(vibratoVolumeGain);
     }
 
     // Regular pitch vibrato
     let vibratoPitchGain = null;
-    if (vibratoEffectOnPitch > 0.0) {
+    if (vibratoEffectOnPitch) {
       canVibrato = true;
       vibratoPitchGain = new GainNode(audioContext, { gain: 0.0 });
       vibratoMain.connect(vibratoPitchGain).connect(oscillatorNode.detune);
@@ -469,7 +470,7 @@ export const attackInstrument = (
     }
 
     // Brass-style attack instability
-    if (attackInstability > 0.0) {
+    if (attackInstability) {
       attackInstabilityStopsAt = Math.max(
         attackInstabilityStopsAt,
         attackInstabilityStopsAt + dynamicAttack * 5.0,
@@ -517,7 +518,7 @@ export const attackInstrument = (
   }
 
   // Fire up vibrato
-  if (canVibrato && vibratoAmount > 0.0) {
+  if (canVibrato && vibratoAmount) {
     const attack = firstAttack * 0.013;
     const gainAttack = firstAttack * 0.056;
     const vibratoAt = attackInstabilityStopsAt + attack;
@@ -536,7 +537,7 @@ export const attackInstrument = (
         gainAttack,
       );
       vibratoVolumeGain?.gain.setTargetAtTime(
-        vibratoAmount * -vibratoEffectOnVolume * volume,
+        vibratoAmount * -vibratoEffectOnVolume * volume * 0.5, // halved because it should range from -2 to 0
         vibratoAt,
         gainAttack,
       );

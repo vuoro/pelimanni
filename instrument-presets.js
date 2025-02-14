@@ -2,27 +2,6 @@ import { InstrumentPreset, OscillatorPreset } from "./instruments";
 import { getPianoPitch, getPluckedStringPitch } from "./stretched-pitches";
 import { addSympatheticStringsToImag, getSympatheticStringPitch } from "./sympathetic-strings";
 
-const getWindNoiseOscillator = ({
-  attackDetune = 200,
-  attack = 0.021,
-  decay = 0.056,
-  noiseQ = 32,
-  gain = 0.236,
-} = {}) =>
-  new OscillatorPreset({
-    type: "noise",
-    noiseQ,
-    noiseType: "highpass",
-    gain: gain / noiseQ,
-    attack,
-    decay,
-    sustain: 0.0,
-    release: attack * 0.618,
-    attackDetune,
-    attackDetuneDuration: attack + decay,
-    velocityImpactOnGain: 0.618,
-  });
-
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://www.youtube.com/watch?v=hfS7mDvrZ7g
@@ -53,10 +32,9 @@ export const flute = new InstrumentPreset({
       decay: 0.146,
       release: 0.021,
       velocitySensitivity: -1,
-      vibratoEffectOnVolume: 0.382,
+      vibratoEffectOnVolume: 1,
       velocityImpactOnGain: 0.764,
     },
-    getWindNoiseOscillator(),
   ],
 
   attack: 0.056,
@@ -66,6 +44,13 @@ export const flute = new InstrumentPreset({
 
   highPassFrequency: 261.624,
   lowPassFrequency: 4185.984,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.034,
+  attackNoise: 100,
+  attackNoiseDuration: 0.034,
+
+  vibratoEffectOnVolume: -0.382,
 
   formants: [{ frequency: 880 }],
 });
@@ -82,12 +67,10 @@ export const ocarina = new InstrumentPreset({
       ...flute.oscillators[1],
       imag: Float32Array.of(0.0, 0.0, 0.0, 0.034, 0.0, 0.021, 0.0, 0.013, 0.0, 0.008),
     },
-    getWindNoiseOscillator(),
   ],
 
   highPassFrequency: 261.6,
   lowPassFrequency: 2793.826,
-  vibratoEffectOnPitch: 30,
 });
 
 // // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -123,7 +106,6 @@ export const oboe = new InstrumentPreset({
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.764,
     },
-    getWindNoiseOscillator({ attackDetune: 100 }),
   ],
 
   attack: 0.056,
@@ -133,6 +115,11 @@ export const oboe = new InstrumentPreset({
 
   highPassFrequency: 233.08,
   lowPassFrequency: 2793.83,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.034,
+  attackNoise: 30,
+  attackNoiseDuration: 0.034,
 
   vibratoEffectOnPitch: 30,
   formants: [{ frequency: 1396.91 }, { frequency: 2793.83 }],
@@ -167,7 +154,6 @@ export const bassoon = new InstrumentPreset({
         0.005,
       ),
     },
-    getWindNoiseOscillator({ attackDetune: 100 }),
   ],
   highPassFrequency: 58.27,
   lowPassFrequency: 1108.73,
@@ -221,13 +207,17 @@ export const clarinet = new InstrumentPreset({
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.764,
     },
-    getWindNoiseOscillator({ attackDetune: 0 }),
   ],
 
   attack: 0.056,
   decay: 0.236,
   sustain: 0.91,
   release: 0.034,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.034,
+  attackNoise: 30,
+  attackNoiseDuration: 0.034,
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2349.32,
@@ -281,13 +271,13 @@ export const saxophone = new InstrumentPreset({
     },
   ],
 
-  attackDetune: 30, // FIXME: is this a thing?
-  attackDetuneDuration: 0.382,
-
-  attack: 0.056,
+  attack: 0.09,
   decay: 0.236,
   sustain: 0.764,
   release: 0.056,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.056,
 
   highPassFrequency: 69.3,
   lowPassFrequency: 1975.53,
@@ -341,6 +331,9 @@ export const trumpet = new InstrumentPreset({
   decay: 0.236,
   sustain: 0.854,
   release: 0.09,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.034,
 
   highPassFrequency: 184.996,
   lowPassFrequency: 2349.32,
