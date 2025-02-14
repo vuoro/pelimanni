@@ -472,7 +472,7 @@ const attackWithController = (
   // TODO: add Pointer Event `pressure` support: <0.5 pulls towards 0.0 and >0.5 pulls towards 1.0.
   // NOTE: Can't use `pressure` for velocity for now, since iPhone always sets it to 0.0 instead of 0.5. -_-
   const velocityTarget =
-    velocity * (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random());
+    velocity * (1.0 + 0.146 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random());
 
   attackInstrument(
     instrument,

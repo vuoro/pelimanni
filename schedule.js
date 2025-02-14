@@ -333,7 +333,7 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
     at,
     finalDuration,
     (velocity ?? 0.618) *
-      (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random()),
+      (1.0 + 0.146 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random()),
     attackMultiplier,
     releaseMultiplier,
     volume,
