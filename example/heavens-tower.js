@@ -2,7 +2,7 @@
 // Original by Naoshi Mizuta / Square Enix
 // This is an adaptation based on https://musescore.com/user/31948143/scores/6465415
 
-import { cello, contrabass, viola, violin } from "../instrumentPresets";
+import { bell, contrabass, flute, oboe, ocarina, pluckedViola } from "../instrument-presets.js";
 
 export const heavensTower = () => {
   const cycle = (60.0 / 70.0 / 2.0) * 8.0;
@@ -14,7 +14,7 @@ export const heavensTower = () => {
 
   const rhythm = [9, 14, 16, 14, 21, 14, 16, 14];
 
-  const a7_14 = [7, 14, { alternate, vibrato: 0.5 }];
+  const a7_14 = [7, 14, { alternate }];
   const plinkingMelody = [
     [2, 7, 9, e, 2, 7, 9, e],
     [9, 12, 14, 16, 9, 12, a7_14, [e, e, x]],
@@ -89,12 +89,12 @@ export const heavensTower = () => {
     // [pluckedCello, [...midHarmony, { transpose: 12 * 4, volume: 0.034 }]],
     // [pluckedContrabass, [...lowHarmony, { transpose: 12 * 4, volume: 0.034 }]],
 
-    [viola, [...rhythm, { transpose: 12 * 5, volume: 0.09 }]],
-    [cello, [...plinkingMelody, { transpose: 12 * 4, volume: 0.146 }]],
-    [violin, [...melody, { transpose: 12 * 6, volume: 0.236 }]],
-    [viola, [...highHarmony, { transpose: 12 * 5, volume: 0.09 }]],
-    [cello, [...midHarmony, { transpose: 12 * 4, volume: 0.034 }]],
-    [contrabass, [...lowHarmony, { transpose: 12 * 4, volume: 0.034 }]],
+    [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.056, velocity: 0.618 }]],
+    [bell, [...plinkingMelody, { transpose: 12 * 4, volume: 0.09, velocity: 0.764 }]],
+    [ocarina, [...melody, { transpose: 12 * 6, volume: 0.236, velocity: 0.854 }]],
+    [flute, [...highHarmony, { transpose: 12 * 5, volume: 0.09, velocity: 0.382 }]],
+    [oboe, [...midHarmony, { transpose: 12 * 4, volume: 0.021 }]],
+    [contrabass, [...lowHarmony, { transpose: 12 * 4, volume: 0.056 }]],
 
     // [pluckedViola, [...rhythm, { transpose: 12 * 5, volume: 0.09 }]],
     // [glockenspiel, [...plinkingMelody, { transpose: 12 * 6, volume: 0.146 }]],

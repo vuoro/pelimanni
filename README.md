@@ -33,12 +33,12 @@ The following are all the instrument presets currently implemented.
     piano, hammeredDulcimer // hammered strings
     taikoDrum, timpani, bassDrum // drums
     marimba, xylophone, glockenspiel, bell // idiophones
-  } from "@vuoro/pelimanni/instrumentPresets.js";
+  } from "@vuoro/pelimanni/instrument-presets.js";
 ```
 
 The presets define the instrument's timbre. They also combine at runtime with various simple heuristics to make each instrument play a little differently, depending on the surrounding context: the exact note being played, the preceding note and when it was played, velocity, duration etc. This makes them sound less artificial.
 
-You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola, attack: viola.attack * 2.0}`. See `genericInstrument` in instrumentPresets.js for all the available options.
+You can tweak them or create new ones simply by creating a new object based on one of them: `{...viola, attack: viola.attack * 2.0}`. See `genericInstrument` in instrument-presets.js for all the available options.
 
 To play the instruments, you must create an `AudioContext`, resume it, create the instrument, connect it to your audio system, and call `playInstrument` with it.
 
@@ -242,4 +242,4 @@ I try to avoid object allocation in the scheduler and instrument playback, to mi
 - https://strudel.cc
 - https://www.soundonsound.com/series/synth-secrets-sound-sound
 - https://en.xen.wiki
-- various blog posts and research papers, mentioned in the comments of `instrumentPresets.js`
+- various blog posts and research papers, mentioned in the comments of `instrument-presets.js`

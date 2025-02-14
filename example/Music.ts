@@ -1,5 +1,5 @@
 import { html, render, type TemplateResult } from "lit-html";
-import * as allInstruments from "../instrumentPresets.js";
+import * as allInstruments from "../instrument-presets.js";
 import type { InstrumentPreset, Playable } from "../schedule.js";
 import { AudioSystem } from "./AudioSystem.js";
 import { heavensTower } from "./heavens-tower.js";

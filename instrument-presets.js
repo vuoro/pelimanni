@@ -1,37 +1,6 @@
 import { InstrumentPreset, OscillatorPreset } from "./instruments";
-
-const requiredSympatheticStringElements = 4 * 3 * 2;
-
-/** @param {Float32Array} imag */
-const addSympatheticStringsToImag = (imag, loudness = 0.056) => {
-  const newImag = new Float32Array((imag.length - 1) * requiredSympatheticStringElements * 4 + 1);
-
-  if (newImag.length >= 1024)
-    throw new Error(
-      `Imag too long (${imag.length} -> ${newImag.length}) for adding sympathetic strings. Would cause aliasing.`,
-    );
-
-  for (let index = 1; index < imag.length; index++) {
-    const value = imag[index];
-
-    newImag[index * requiredSympatheticStringElements * 4] += value * loudness;
-    newImag[index * requiredSympatheticStringElements * 3] += value * loudness * 0.666666;
-    newImag[index * requiredSympatheticStringElements * 2] += value * loudness; // higher strings
-    newImag[index * requiredSympatheticStringElements] += value; // real string
-    newImag[index * requiredSympatheticStringElements * (1 / 2)] += value * loudness * 0.5; // lower strings
-    newImag[index * requiredSympatheticStringElements * (1 / 3)] += value * loudness * 0.333333;
-    newImag[index * requiredSympatheticStringElements * (1 / 4)] += value * loudness * 0.5;
-
-    // console.log(
-    //   index * requiredSympatheticStringElements * 4,
-    //   index * requiredSympatheticStringElements * (1 / 4),
-    // );
-  }
-
-  return newImag;
-};
-
-const getSympatheticStringPitch = (pitch = 440.0) => pitch / requiredSympatheticStringElements;
+import { getPianoPitch, getPluckedStringPitch } from "./stretched-pitches";
+import { addSympatheticStringsToImag, getSympatheticStringPitch } from "./sympathetic-strings";
 
 const getWindNoiseOscillator = ({
   attackDetune = 200,
@@ -465,7 +434,7 @@ export const tuba = new InstrumentPreset({
   formants: [{ frequency: 233.08 }, { frequency: 349.23 }],
 });
 
-const addStringOscillator = (
+const getStringOscillator = (
   imag = pianoImag,
   preset = piano,
   getPitch = (pitch = 440.0, _partialIndex = 0) => pitch,
@@ -549,9 +518,9 @@ export const violin = new InstrumentPreset({
   ],
 });
 
-violin.oscillators.push(addStringOscillator(violinImag, violin, undefined, 1, 1));
-violin.oscillators.push(addStringOscillator(violinImag, violin, undefined, 2, 7));
-violin.oscillators.push(addStringOscillator(violinImag, violin, undefined, 8));
+violin.oscillators.push(getStringOscillator(violinImag, violin, undefined, 1, 1));
+violin.oscillators.push(getStringOscillator(violinImag, violin, undefined, 2, 7));
+violin.oscillators.push(getStringOscillator(violinImag, violin, undefined, 8));
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
@@ -594,9 +563,9 @@ export const viola = new InstrumentPreset({
   ],
 });
 
-viola.oscillators.push(addStringOscillator(violaImag, viola, undefined, 1, 1));
-viola.oscillators.push(addStringOscillator(violaImag, viola, undefined, 2, 7));
-viola.oscillators.push(addStringOscillator(violaImag, viola, undefined, 8));
+viola.oscillators.push(getStringOscillator(violaImag, viola, undefined, 1, 1));
+viola.oscillators.push(getStringOscillator(violaImag, viola, undefined, 2, 7));
+viola.oscillators.push(getStringOscillator(violaImag, viola, undefined, 8));
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
@@ -638,9 +607,9 @@ export const cello = new InstrumentPreset({
   ],
 });
 
-cello.oscillators.push(addStringOscillator(celloImag, cello, undefined, 1, 1));
-cello.oscillators.push(addStringOscillator(celloImag, cello, undefined, 2, 7));
-cello.oscillators.push(addStringOscillator(celloImag, cello, undefined, 8));
+cello.oscillators.push(getStringOscillator(celloImag, cello, undefined, 1, 1));
+cello.oscillators.push(getStringOscillator(celloImag, cello, undefined, 2, 7));
+cello.oscillators.push(getStringOscillator(celloImag, cello, undefined, 8));
 
 // Guessed based on cello
 const contrabassImag = Float32Array.of(
@@ -677,9 +646,9 @@ export const contrabass = new InstrumentPreset({
   ],
 });
 
-contrabass.oscillators.push(addStringOscillator(contrabassImag, contrabass, undefined, 1, 1));
-contrabass.oscillators.push(addStringOscillator(contrabassImag, contrabass, undefined, 2, 7));
-contrabass.oscillators.push(addStringOscillator(contrabassImag, contrabass, undefined, 8));
+contrabass.oscillators.push(getStringOscillator(contrabassImag, contrabass, undefined, 1, 1));
+contrabass.oscillators.push(getStringOscillator(contrabassImag, contrabass, undefined, 2, 7));
+contrabass.oscillators.push(getStringOscillator(contrabassImag, contrabass, undefined, 8));
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
@@ -720,35 +689,6 @@ const pianoImag = Float32Array.of(
   0.001,
 );
 
-const getPianoPitch = (pitch = 440.0, partialIndex = 1, inharmonicity = 1.0) => {
-  // https://forum.pianoworld.com/ubbthreads.php/topics/2438314/Inharmonicity_Math.html
-  // Fn = n * F (1 + 0.5(n^2 - 1) * B) (Fletcher, Blackham & Stratton 1962)
-  // Fn = frequency of partial (n) in Hertz
-  // n = partial number
-  // B = inharmonicity coefficient
-  // B values vary with note and fundamental frequency.
-
-  // According to http://daffy.uah.edu/piano/page4/page3/index.html, the B curve can be approximated by
-  // B = a + bx + cx^2 + d/x + e/x^2
-  // where x = frequency of note, and
-  // a = 5.22964 x 10^-6
-  // b = 1.21012 x 10^-6
-  // c = 8.3666 x 10^-10
-  // d = -0.007927
-  // e = 0.429601
-  // produces an acceptable fit for a Steinway B.
-
-  const a = 5.22964 * 10 ** -6;
-  const b = 1.21012 * 10 ** -6;
-  const c = 8.3666 * 10 ** -10;
-  const d = -0.007927;
-  const e = 0.429601;
-
-  const inharmonicityCoefficient = a + b * pitch + c * pitch ** 2 + d / pitch + e / pitch ** 2;
-
-  return pitch * (1.0 + 0.5 * (partialIndex ** 2.0 - 1) * inharmonicityCoefficient * inharmonicity);
-};
-
 export const piano = new InstrumentPreset({
   group: "Strings (hammered)",
   oscillators: [],
@@ -764,11 +704,11 @@ export const piano = new InstrumentPreset({
   vibratoEffectOnPitch: 30.0, // Fake vibrato
 });
 
-piano.oscillators.push(addStringOscillator(pianoImag, piano, getPianoPitch, 1, 1));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, getPianoPitch, 2, 6));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, getPianoPitch, 7, 10));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, getPianoPitch, 11, 13));
-piano.oscillators.push(addStringOscillator(pianoImag, piano, getPianoPitch, 14));
+piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 1, 1));
+piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 2, 6));
+piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 7, 10));
+piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 11, 13));
+piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 14));
 
 const hammeredDulcimerImag = Float32Array.of(
   0.0,
@@ -809,19 +749,19 @@ export const hammeredDulcimer = new InstrumentPreset({
 });
 
 hammeredDulcimer.oscillators.push(
-  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 1, 1),
+  getStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 1, 1),
 );
 hammeredDulcimer.oscillators.push(
-  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 2, 6),
+  getStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 2, 6),
 );
 hammeredDulcimer.oscillators.push(
-  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 7, 10),
+  getStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 7, 10),
 );
 hammeredDulcimer.oscillators.push(
-  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 11, 13),
+  getStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 11, 13),
 );
 hammeredDulcimer.oscillators.push(
-  addStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 14),
+  getStringOscillator(hammeredDulcimerImag, hammeredDulcimer, getPianoPitch, 14),
 );
 
 const getDrumNoiseOscillator = ({
@@ -1095,14 +1035,6 @@ const plucked = {
   attackDetuneDuration: 0.003,
 };
 
-const getPluckedPitch = (pitch = 440.0, partialIndex = 1, inharmonicity = 1.0) => {
-  // Guesstimated based on getPianoPitch
-  // NOTE: in reality all odd partials should apparently be more inharmonic.
-  // Just don't have enough oscillator budget to split them out AND do this kind of ramping inharmonicity.
-  const inharmonicityCoefficient = pitch * 0.000001;
-  return pitch * (1.0 + 0.5 * (partialIndex ** 2.0 - 1) * inharmonicityCoefficient * inharmonicity);
-};
-
 export const pluckedViolin = new InstrumentPreset({
   ...violin,
   ...plucked,
@@ -1110,15 +1042,17 @@ export const pluckedViolin = new InstrumentPreset({
 });
 
 pluckedViolin.oscillators.push(
-  addStringOscillator(violinImag, pluckedViolin, getPluckedPitch, 1, 1),
+  getStringOscillator(violinImag, pluckedViolin, getPluckedStringPitch, 1, 1),
 );
 pluckedViolin.oscillators.push(
-  addStringOscillator(violinImag, pluckedViolin, getPluckedPitch, 2, 5),
+  getStringOscillator(violinImag, pluckedViolin, getPluckedStringPitch, 2, 5),
 );
 pluckedViolin.oscillators.push(
-  addStringOscillator(violinImag, pluckedViolin, getPluckedPitch, 6, 10),
+  getStringOscillator(violinImag, pluckedViolin, getPluckedStringPitch, 6, 10),
 );
-pluckedViolin.oscillators.push(addStringOscillator(violinImag, pluckedViolin, getPluckedPitch, 11));
+pluckedViolin.oscillators.push(
+  getStringOscillator(violinImag, pluckedViolin, getPluckedStringPitch, 11),
+);
 
 export const pluckedViola = new InstrumentPreset({
   ...viola,
@@ -1126,10 +1060,18 @@ export const pluckedViola = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedViola.oscillators.push(addStringOscillator(violaImag, pluckedViola, getPluckedPitch, 1, 1));
-pluckedViola.oscillators.push(addStringOscillator(violaImag, pluckedViola, getPluckedPitch, 2, 5));
-pluckedViola.oscillators.push(addStringOscillator(violaImag, pluckedViola, getPluckedPitch, 6, 10));
-pluckedViola.oscillators.push(addStringOscillator(violaImag, pluckedViola, getPluckedPitch, 11));
+pluckedViola.oscillators.push(
+  getStringOscillator(violaImag, pluckedViola, getPluckedStringPitch, 1, 1),
+);
+pluckedViola.oscillators.push(
+  getStringOscillator(violaImag, pluckedViola, getPluckedStringPitch, 2, 5),
+);
+pluckedViola.oscillators.push(
+  getStringOscillator(violaImag, pluckedViola, getPluckedStringPitch, 6, 10),
+);
+pluckedViola.oscillators.push(
+  getStringOscillator(violaImag, pluckedViola, getPluckedStringPitch, 11),
+);
 
 export const pluckedCello = new InstrumentPreset({
   ...cello,
@@ -1137,10 +1079,18 @@ export const pluckedCello = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedCello.oscillators.push(addStringOscillator(celloImag, pluckedCello, getPluckedPitch, 1, 1));
-pluckedCello.oscillators.push(addStringOscillator(celloImag, pluckedCello, getPluckedPitch, 2, 5));
-pluckedCello.oscillators.push(addStringOscillator(celloImag, pluckedCello, getPluckedPitch, 6, 10));
-pluckedCello.oscillators.push(addStringOscillator(celloImag, pluckedCello, getPluckedPitch, 11));
+pluckedCello.oscillators.push(
+  getStringOscillator(celloImag, pluckedCello, getPluckedStringPitch, 1, 1),
+);
+pluckedCello.oscillators.push(
+  getStringOscillator(celloImag, pluckedCello, getPluckedStringPitch, 2, 5),
+);
+pluckedCello.oscillators.push(
+  getStringOscillator(celloImag, pluckedCello, getPluckedStringPitch, 6, 10),
+);
+pluckedCello.oscillators.push(
+  getStringOscillator(celloImag, pluckedCello, getPluckedStringPitch, 11),
+);
 
 export const pluckedContrabass = new InstrumentPreset({
   ...contrabass,
@@ -1149,14 +1099,14 @@ export const pluckedContrabass = new InstrumentPreset({
 });
 
 pluckedContrabass.oscillators.push(
-  addStringOscillator(contrabassImag, pluckedContrabass, getPluckedPitch, 1, 1),
+  getStringOscillator(contrabassImag, pluckedContrabass, getPluckedStringPitch, 1, 1),
 );
 pluckedContrabass.oscillators.push(
-  addStringOscillator(contrabassImag, pluckedContrabass, getPluckedPitch, 2, 5),
+  getStringOscillator(contrabassImag, pluckedContrabass, getPluckedStringPitch, 2, 5),
 );
 pluckedContrabass.oscillators.push(
-  addStringOscillator(contrabassImag, pluckedContrabass, getPluckedPitch, 6, 10),
+  getStringOscillator(contrabassImag, pluckedContrabass, getPluckedStringPitch, 6, 10),
 );
 pluckedContrabass.oscillators.push(
-  addStringOscillator(contrabassImag, pluckedContrabass, getPluckedPitch, 11),
+  getStringOscillator(contrabassImag, pluckedContrabass, getPluckedStringPitch, 11),
 );

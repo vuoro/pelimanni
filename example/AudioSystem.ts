@@ -1,4 +1,4 @@
-import * as instrumentPresets from "../instrumentPresets.js";
+import * as instrumentPresets from "../instrument-presets.js";
 import type { createInstrument } from "../instruments.js";
 import dattorroReverb from "./dattorro-reverb.js?url";
 import { Magic } from "./magic";
@@ -120,7 +120,7 @@ export const AudioSystem = new Magic(
     const connectInstrument = (instrument: ReturnType<typeof createInstrument>) => {
       const panningCycle = 17;
       const panningPositions = 29;
-      const panningSpread = 0.146;
+      const panningSpread = 0.2;
 
       const panningPosition = (panningCycle * panningIndex++) % panningPositions;
       const pan = panningSpread * ((panningPosition / panningPositions) * 2.0 - 1.0);

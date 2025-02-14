@@ -1,5 +1,5 @@
 import { html, nothing, render } from "lit-html";
-import * as allInstrumentPresets from "../instrumentPresets.js";
+import * as allInstrumentPresets from "../instrument-presets.js";
 import {
   attackInstrument,
   createInstrument,

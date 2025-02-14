@@ -4,7 +4,7 @@ import { midiToFrequency } from "./notes.js";
 const defaultOptions = { playAhead: 0.2 };
 
 /**
- * @typedef {typeof import("./instrumentPresets.js").genericInstrument} InstrumentPreset
+ * @typedef {typeof import("./instrument-presets.js").genericInstrument} InstrumentPreset
  * @typedef {object} PlayableOptions
  * @property {number=} velocity - how strongly the note is played (does not affect volume)
  * @property {number=} volume - how loud the note is
@@ -322,15 +322,18 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
   }
 
   // Play the note
-  const attackMultiplier = 3.0 - 2.0 * ((1.0 - instrument.preset.attack) ** 2.0) ** duration;
+  const { attack, decay } = instrument.preset;
+  const attackMultiplier = 4.0 - 3.0 * ((1.0 - attack * 2.0) ** 2.0) ** duration;
   const releaseMultiplier = 1.0; // TODO: would be nice to determine this by the next note
+  const finalDuration = Math.max(duration, (decay - attack * 5.0) * 4.0);
 
   playInstrument(
     instrument,
     midiToFrequency(note, undefined),
     at,
-    duration,
-    velocity ?? 0.854 + 0.146 * Math.sin(at * 0.236) * (1.0 + 0.236 * Math.random() * 2.0 - 1.0),
+    finalDuration,
+    (velocity ?? 0.618) *
+      (1.0 + 0.09 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random()),
     attackMultiplier,
     releaseMultiplier,
     volume,

@@ -1,12 +1,12 @@
 {
   "name": "@vuoro/pelimanni",
-  "version": "0.16.6",
+  "version": "0.17.0",
   "type": "module",
   "main": "./instruments.js",
   "exports": {
     "./schedule.js": "./schedule.js",
     "./instruments.js": "./instruments.js",
-    "./instrumentPresets.js": "./instrumentPresets.js",
+    "./instrument-presets.js": "./instrument-presets.js",
     "./notes.js": "./notes.js"
   },
   "scripts": {
