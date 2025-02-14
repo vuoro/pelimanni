@@ -169,7 +169,7 @@ export const defaultReverbParameters = {
   decayDiffusion2: 0.618,
   damping: 0.09,
   excursionRate: 0.146,
-  excursionDepth: 0.382,
+  excursionDepth: 0.146,
   dry: 0.618,
   wet: 0.382,
 };

@@ -252,6 +252,7 @@ export const createInstrument = (
             periodicWave: new PeriodicWave(audioContext, {
               imag: imag || undefined,
               real: real || imag?.map((v) => v * randomisedPhase),
+              disableNormalization: true,
             }),
           })
         : type === "noise"
@@ -501,8 +502,6 @@ export const attackInstrument = (
       (2.618 - 2.0 * relativePitchness) * (1.0 + 0.236 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
-
-    console.log(dynamicDecay, dynamicDecay * 4.0);
 
     gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
   }
