@@ -122,6 +122,8 @@ export const oboe = new InstrumentPreset({
   attackNoiseDuration: 0.034,
 
   vibratoEffectOnPitch: 30,
+  vibratoEffectOnVolume: 0.146,
+
   formants: [{ frequency: 1396.91 }, { frequency: 2793.83 }],
 });
 
@@ -221,7 +223,10 @@ export const clarinet = new InstrumentPreset({
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2349.32,
+
   vibratoEffectOnPitch: 30,
+  vibratoEffectOnVolume: 0.146,
+
   formants: [{ frequency: 1174.66 }, { frequency: 2349.32 }],
 });
 
@@ -281,7 +286,10 @@ export const saxophone = new InstrumentPreset({
 
   highPassFrequency: 69.3,
   lowPassFrequency: 1975.53,
+
   vibratoEffectOnPitch: 30,
+  vibratoEffectOnVolume: 0.146,
+
   formants: [{ frequency: 659.25 }, { frequency: 1975.53 }],
 });
 
@@ -339,6 +347,8 @@ export const trumpet = new InstrumentPreset({
   lowPassFrequency: 2349.32,
 
   vibratoEffectOnPitch: 30,
+  vibratoEffectOnVolume: 0.146,
+
   formants: [{ frequency: 1174.66 }, { frequency: 2349.32 }],
 });
 
@@ -503,6 +513,8 @@ export const violin = new InstrumentPreset({
   lowPassFrequency: 4186.01,
 
   vibratoEffectOnPitch: 30,
+  vibratoEffectOnVolume: 0.146,
+
   formants: [
     { frequency: 349.23, Q: 3.450463, gain: 1 + 3 / 6 }, // half wood resonance
     { frequency: 698.46, Q: 3.450463, gain: 1 + 4 / 6 }, // wood resonance
@@ -697,6 +709,7 @@ export const piano = new InstrumentPreset({
   attackDetuneDuration: 0.003,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
+  vibratoEffectOnVolume: 0.146,
 });
 
 piano.oscillators.push(getStringOscillator(pianoImag, piano, getPianoPitch, 1, 1));
@@ -813,7 +826,9 @@ export const taikoDrum = new InstrumentPreset({
 
   highPassFrequency: 38.89,
   lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
+
   vibratoEffectOnPitch: 30.0, // Fake vibrato
+  vibratoEffectOnVolume: 0.146,
 });
 
 const timpaniImag = new Float32Array(20 * 3.15 + 1);
@@ -891,6 +906,7 @@ export const marimba = new InstrumentPreset({
   attackNoiseDuration: 0.003,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
+  vibratoEffectOnVolume: 0.146,
 });
 
 // https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
@@ -1022,7 +1038,7 @@ const plucked = {
   release: 0.034,
 
   vibratoEffectOnPitch: 30.0,
-  vibratoEffectOnVolume: 0.0,
+  vibratoEffectOnVolume: 0.146,
   vibratoEffectOnStage: 0.0,
 
   attackDetune: 200,

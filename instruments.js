@@ -1,4 +1,4 @@
-import { getConstantMinusSource, getNoiseOscillator } from "./sources.js";
+import { getNoiseOscillator } from "./sources.js";
 
 export class InstrumentPreset {
   group = "Miscellaneous";
@@ -292,7 +292,6 @@ export const createInstrument = (
       canVibrato = true;
       vibratoVolumeGain = new GainNode(audioContext, { gain: 0.0 });
       vibratoMain.connect(vibratoVolumeGain).connect(gainNode.gain);
-      getConstantMinusSource(audioContext).connect(vibratoVolumeGain);
     }
 
     // Regular pitch vibrato
@@ -519,8 +518,8 @@ export const attackInstrument = (
 
   // Fire up vibrato
   if (canVibrato && vibratoAmount) {
-    const attack = firstAttack * 0.013;
-    const gainAttack = firstAttack * 0.056;
+    const attack = firstAttack * 0.236;
+    const gainAttack = firstAttack * 0.146;
     const vibratoAt = attackInstabilityStopsAt + attack;
 
     vibratoMain.frequency.setTargetAtTime(vibratoFrequency, vibratoAt, attack);
@@ -537,7 +536,7 @@ export const attackInstrument = (
         gainAttack,
       );
       vibratoVolumeGain?.gain.setTargetAtTime(
-        vibratoAmount * -vibratoEffectOnVolume * volume * 0.5, // halved because it should range from -2 to 0
+        vibratoAmount * vibratoEffectOnVolume * volume,
         vibratoAt,
         gainAttack,
       );
