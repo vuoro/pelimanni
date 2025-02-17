@@ -1,4 +1,4 @@
-import { getNoiseOscillator } from "./sources.js";
+import { getAttackInstabilityOscillator, getNoiseOscillator } from "./sources.js";
 
 export class InstrumentPreset {
   group = "Miscellaneous";
@@ -209,8 +209,6 @@ export const createInstrument = (
   output = highPassFilter;
 
   // Vibrato effects
-  let canVibrato = false;
-
   const vibratoMain = new OscillatorNode(audioContext, {
     type: vibratoType,
     frequency: 0,
@@ -221,6 +219,7 @@ export const createInstrument = (
   // Oscillators
   const oscillators = [];
   const randomisedPhase = Math.random() * 2.0 - 1.0;
+  let canVibrato = false;
 
   for (const {
     type,
@@ -281,9 +280,10 @@ export const createInstrument = (
     // Brass-style attack instability
     let attackInstabilityGain = null;
     if (attackInstability) {
-      canVibrato = true;
       attackInstabilityGain = new GainNode(audioContext, { gain: 0.0 });
-      vibratoMain.connect(attackInstabilityGain).connect(gainNode.gain);
+      getAttackInstabilityOscillator(audioContext)
+        .connect(attackInstabilityGain)
+        .connect(gainNode.gain);
     }
 
     // Tremolo and/or brightness vibrato
@@ -401,8 +401,6 @@ export const attackInstrument = (
   cancelPendingInstrumentEvents(instrument, dynamicStartAt);
 
   // Tell the oscillators what to do
-  const attackInstabilityAttack = 0.001;
-  let attackInstabilityStopsAt = dynamicStartAt;
   let firstAttack = undefined;
   let firstDecay = undefined;
 
@@ -470,17 +468,10 @@ export const attackInstrument = (
 
     // Brass-style attack instability
     if (attackInstability) {
-      attackInstabilityStopsAt = Math.max(
-        attackInstabilityStopsAt,
-        attackInstabilityStopsAt + dynamicAttack * 5.0,
-      );
-
-      const attackInstabilityDecaysAt = Math.min(
-        dynamicStartAt + attackInstabilityAttack * 5.0,
-        attackInstabilityStopsAt,
-      );
-
-      const attackInstabilityGainDecay = attackInstabilityStopsAt - attackInstabilityDecaysAt;
+      const attackInstabilityAttack = dynamicAttack * 0.001;
+      const attackInstabilityDecaysAt = dynamicStartAt + attackInstabilityAttack * 5.0;
+      const attackInstabilityGainDecay =
+        dynamicAttack * 5.0 - (attackInstabilityDecaysAt - dynamicStartAt);
 
       attackInstabilityGain?.gain.setTargetAtTime(
         attackInstability * ((1.0 - highPitchness) * velocity) ** Math.SQRT1_2,
@@ -509,20 +500,12 @@ export const attackInstrument = (
   firstAttack = firstAttack ?? 0.0;
   firstDecay = firstDecay ?? 0.0;
 
-  // Fire up vibrato oscillator for attack instability
-  if (attackInstabilityStopsAt !== dynamicStartAt) {
-    const frequency = 79 + 2 * highPitchness;
-    vibratoMain.frequency.setTargetAtTime(frequency, dynamicStartAt, attackInstabilityAttack);
-    vibratoMain.frequency.setTargetAtTime(0.0, attackInstabilityStopsAt, attackInstabilityAttack);
-  }
-
   // Fire up vibrato
   if (canVibrato && vibratoAmount) {
     const gainAttack = firstAttack * 0.382;
     const attack = gainAttack * 0.09;
-    const vibratoAt = attackInstabilityStopsAt;
 
-    vibratoMain.frequency.setTargetAtTime(vibratoFrequency, vibratoAt, attack);
+    vibratoMain.frequency.setTargetAtTime(vibratoFrequency, dynamicStartAt, attack);
 
     for (const {
       vibratoPitchGain,
@@ -532,12 +515,12 @@ export const attackInstrument = (
     } of oscillators) {
       vibratoPitchGain?.gain.setTargetAtTime(
         vibratoAmount * vibratoEffectOnPitch,
-        vibratoAt,
+        dynamicStartAt,
         gainAttack,
       );
       vibratoVolumeGain?.gain.setTargetAtTime(
         vibratoAmount * vibratoEffectOnVolume * volume,
-        vibratoAt,
+        dynamicStartAt,
         gainAttack,
       );
     }
@@ -663,7 +646,6 @@ export const destroyInstrument = (instrument) => {
       for (const child of value) {
         child.stop?.();
         child.disconnect?.();
-        console.log(child.stop, child.disconnect);
       }
     } else {
       value.stop?.();

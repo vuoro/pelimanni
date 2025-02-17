@@ -1,6 +1,7 @@
 const constantSources = new WeakMap();
 const constantMinusSources = new WeakMap();
 const noiseOscillators = new WeakMap();
+const attackInstabilityOscillators = new WeakMap();
 
 export const getConstantSource = (/** @type {AudioContext} */ audioContext) => {
   /** @type {ConstantSourceNode} */
@@ -53,4 +54,20 @@ export const getNoiseOscillator = (/** @type {AudioContext} */ audioContext) => 
   }
 
   return noiseOscillator;
+};
+
+export const getAttackInstabilityOscillator = (/** @type {AudioContext} */ audioContext) => {
+  /** @type {OscillatorNode} */
+  let attackInstabilityOscillator = attackInstabilityOscillators.get(audioContext);
+  if (!attackInstabilityOscillator) {
+    attackInstabilityOscillator = new OscillatorNode(audioContext, {
+      type: "triangle",
+      frequency: 80,
+    });
+
+    attackInstabilityOscillator.start();
+    attackInstabilityOscillators.set(audioContext, attackInstabilityOscillator);
+  }
+
+  return attackInstabilityOscillator;
 };
