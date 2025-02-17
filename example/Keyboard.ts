@@ -288,14 +288,14 @@ const pointerdown = (event: PointerEvent) => {
 
 const pointerup = (event: PointerEvent) => {
   pointersDown.delete(event.pointerId);
-  releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+  releaseWithController(event.pointerId, true, event.shiftKey, event.altKey);
 
   event.stopPropagation();
   event.preventDefault();
 };
 
 const pointerout = (event: PointerEvent) => {
-  releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+  releaseWithController(event.pointerId, false, event.shiftKey, event.altKey);
 
   event.stopPropagation();
 };
@@ -389,7 +389,7 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 document.addEventListener("keyup", (event: KeyboardEvent) => {
   const { code, repeat } = event;
   if (repeat) return;
-  releaseWithController(code, event.shiftKey, event.altKey);
+  releaseWithController(code, true, event.shiftKey, event.altKey);
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -438,7 +438,9 @@ const attackWithController = (
   if (audioContext.state !== "running") audioContext.resume();
 
   const isAlreadyPlaying = playingControllers.has(controllerId);
-  let instrument = isAlreadyPlaying ? releaseWithController(controllerId, shiftKey, altKey) : null;
+  let instrument = isAlreadyPlaying
+    ? releaseWithController(controllerId, false, shiftKey, altKey)
+    : null;
 
   const preset = allInstrumentPresets[instrumentName];
 
@@ -626,7 +628,12 @@ const consonances = [
 
 const controllerKeys = new Map();
 
-const releaseWithController = (controllerId: ControllerId, shiftKey = false, _altKey = false) => {
+const releaseWithController = (
+  controllerId: ControllerId,
+  finishAttack = true,
+  shiftKey = false,
+  _altKey = false,
+) => {
   const { audioContext } = AudioSystem.get();
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
@@ -634,10 +641,9 @@ const releaseWithController = (controllerId: ControllerId, shiftKey = false, _al
   const { releaseMultiplier, sustain, coloriseIntervals } = KeyboardState.get();
   const { previousStartAt, previousAttack, previousDecay, previousPitch } = instrument;
 
-  const remainingAttack = Math.max(
-    0.0,
-    previousAttack * 5.0 - (audioContext.currentTime - previousStartAt),
-  );
+  const remainingAttack = finishAttack
+    ? Math.max(0.0, previousAttack * 5.0 - (audioContext.currentTime - previousStartAt))
+    : 0.0;
   const decayedDuration = Math.max(
     0.0,
     audioContext.currentTime - previousStartAt - previousAttack * 5.0,
