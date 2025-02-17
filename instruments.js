@@ -483,7 +483,7 @@ export const attackInstrument = (
       const attackInstabilityGainDecay = attackInstabilityStopsAt - attackInstabilityDecaysAt;
 
       attackInstabilityGain?.gain.setTargetAtTime(
-        attackInstability * (1.0 - highPitchness) * velocity,
+        attackInstability * ((1.0 - highPitchness) * velocity) ** Math.SQRT1_2,
         dynamicStartAt,
         attackInstabilityAttack,
       );
@@ -511,16 +511,16 @@ export const attackInstrument = (
 
   // Fire up vibrato oscillator for attack instability
   if (attackInstabilityStopsAt !== dynamicStartAt) {
-    const frequency = 75 + 5 * highPitchness;
+    const frequency = 79 + 2 * highPitchness;
     vibratoMain.frequency.setTargetAtTime(frequency, dynamicStartAt, attackInstabilityAttack);
     vibratoMain.frequency.setTargetAtTime(0.0, attackInstabilityStopsAt, attackInstabilityAttack);
   }
 
   // Fire up vibrato
   if (canVibrato && vibratoAmount) {
-    const attack = firstAttack * 0.236;
-    const gainAttack = firstAttack * 0.146;
-    const vibratoAt = attackInstabilityStopsAt + attack;
+    const gainAttack = firstAttack * 0.382;
+    const attack = gainAttack * 0.09;
+    const vibratoAt = attackInstabilityStopsAt;
 
     vibratoMain.frequency.setTargetAtTime(vibratoFrequency, vibratoAt, attack);
 
