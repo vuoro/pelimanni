@@ -655,17 +655,19 @@ const cancelPendingOscillatorEvents = (
 /**
   @param {ReturnType<typeof createInstrument>} instrument
 */
-export const destroyInstrument = ({ output, oscillators, vibratoMain }) => {
-  // TODO: Is this all that's needed?
-  // Or do all nodes need to be disconnected?
+export const destroyInstrument = (instrument) => {
+  for (const key in instrument) {
+    const value = instrument[key]; // FIXME: as keyof typeof instrument
 
-  output.disconnect();
-
-  for (const { oscillatorNode } of oscillators) {
-    if (oscillatorNode instanceof OscillatorNode) oscillatorNode.stop();
-    oscillatorNode.disconnect();
+    if (Array.isArray(value)) {
+      for (const child of value) {
+        child.stop?.();
+        child.disconnect?.();
+        console.log(child.stop, child.disconnect);
+      }
+    } else {
+      value.stop?.();
+      value.disconnect?.();
+    }
   }
-
-  vibratoMain?.stop();
-  vibratoMain?.disconnect();
 };
