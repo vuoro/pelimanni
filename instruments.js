@@ -35,11 +35,6 @@ export class InstrumentPreset {
   /** @type {number=} a `timeConstant` for how long `attackDetune` should occur, defaults to `attack` */
   attackDetuneDuration = undefined;
 
-  /** @type {number} detunes the oscillator with noise with a range of this many cents * velocity */
-  attackNoise = 0.0;
-  /** @type {number=} a `timeConstant` for how long `attackNoise` should occur, defaults to `attack` */
-  attackNoiseDuration = undefined;
-
   // Values mostly from these sources:
   // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/orchins.html
   // https://alexiy.nl/eq_chart/
@@ -128,15 +123,12 @@ export class OscillatorPreset {
   /** @type {InstrumentPreset["attackDetuneDuration"]=} */
   attackDetuneDuration = undefined;
 
-  /** @type {InstrumentPreset["attackNoise"]=} */
-  attackNoise = undefined;
-  /** @type {InstrumentPreset["attackNoiseDuration"]=} */
-  attackNoiseDuration = undefined;
-
   /** @type {BiquadFilterType} used when `type` is "noise": determines the type of filter used to filter the noise */
   noiseType = "lowpass";
   /** @type {number} used when `type` is "noise": sets the Q factor of the noise filter */
   noiseQ = Math.SQRT1_2;
+  /** @type {number} set when the Oscillator is created */
+  detune = 0;
 
   /** lets you modify the pitch before it gets played */
   getPitch(pitch = 440.0, _velocity = 1.0) {
@@ -235,10 +227,9 @@ export const createInstrument = (
     velocityImpactOnGain,
     attackDetune = preset.attackDetune,
     attackDetuneDuration = preset.attackDetuneDuration,
-    attackNoise = preset.attackNoise,
-    attackNoiseDuration = preset.attackNoiseDuration,
     noiseType,
     noiseQ,
+    detune,
     getPitch = passPitchThrough,
     attackInstability = defaultattackInstability,
     vibratoEffectOnPitch = defaultVibratoEffectOnPitch,
@@ -254,12 +245,14 @@ export const createInstrument = (
               disableNormalization: true,
             }),
             frequency: getPitch(440),
+            detune,
           })
         : type === "noise"
           ? new BiquadFilterNode(audioContext, {
               type: noiseType,
               frequency: getPitch(440),
               Q: noiseQ,
+              detune,
             })
           : new OscillatorNode(audioContext, { type, frequency: getPitch(440) });
 
@@ -270,13 +263,6 @@ export const createInstrument = (
     if (oscillatorNode instanceof OscillatorNode) oscillatorNode.start(audioContext.currentTime);
 
     oscillatorNode.connect(gainNode).connect(input);
-
-    // Percussion-style attack noise
-    let attackNoiseGain = null;
-    if (attackNoise) {
-      attackNoiseGain = new GainNode(audioContext, { gain: 0.0 });
-      getNoiseOscillator(audioContext).connect(attackNoiseGain).connect(oscillatorNode.detune);
-    }
 
     // Brass-style attack instability
     let attackInstabilityGain = null;
@@ -318,9 +304,6 @@ export const createInstrument = (
       attackDetune,
       attackDetuneDuration,
       attackInstabilityGain,
-      attackNoiseGain,
-      attackNoise,
-      attackNoiseDuration,
       vibratoVolumeGain,
       vibratoPitchGain,
       attackInstability,
@@ -421,9 +404,6 @@ export const attackInstrument = (
       sustain,
       attackInstabilityGain,
       attackInstability,
-      attackNoise,
-      attackNoiseDuration = attack,
-      attackNoiseGain,
     } = oscillator;
 
     cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
@@ -456,17 +436,6 @@ export const attackInstrument = (
       );
     }
 
-    // Apply attack noise
-    if (attackNoiseGain) {
-      attackNoiseGain.gain.setTargetAtTime(attackNoise * velocity ** 0.414, dynamicStartAt, glide);
-
-      attackNoiseGain.gain.setTargetAtTime(
-        0.0,
-        dynamicStartAt + glide * 5.0,
-        attackNoiseDuration * attackDynamics,
-      );
-    }
-
     // Brass-style attack instability
     if (attackInstability) {
       const attackInstabilityAttack = dynamicAttack * 0.001;
@@ -491,7 +460,7 @@ export const attackInstrument = (
 
     const decayAt = dynamicStartAt + dynamicAttack * 5.0;
     const decayDynamics =
-      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity);
+      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.236 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 

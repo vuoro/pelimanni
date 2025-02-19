@@ -47,8 +47,6 @@ export const flute = new InstrumentPreset({
 
   attackDetune: -30,
   attackDetuneDuration: 0.034,
-  attackNoise: 100,
-  attackNoiseDuration: 0.034,
 
   vibratoEffectOnVolume: -0.382,
 
@@ -118,8 +116,6 @@ export const oboe = new InstrumentPreset({
 
   attackDetune: -30,
   attackDetuneDuration: 0.034,
-  attackNoise: 30,
-  attackNoiseDuration: 0.034,
 
   vibratoEffectOnPitch: 30,
   vibratoEffectOnVolume: 0.146,
@@ -218,8 +214,6 @@ export const clarinet = new InstrumentPreset({
 
   attackDetune: -30,
   attackDetuneDuration: 0.034,
-  attackNoise: 30,
-  attackNoiseDuration: 0.034,
 
   highPassFrequency: 164.812,
   lowPassFrequency: 2349.32,
@@ -703,8 +697,6 @@ export const piano = new InstrumentPreset({
   sustain: 0.0,
   release: 0.034,
 
-  attackNoise: 700,
-  attackNoiseDuration: 0.003,
   attackDetune: 100,
   attackDetuneDuration: 0.003,
 
@@ -751,8 +743,6 @@ export const hammeredDulcimer = new InstrumentPreset({
   decay: 0.236,
   sustain: 0.0,
   release: 0.034,
-
-  attackNoise: 500,
 });
 
 hammeredDulcimer.oscillators.push(
@@ -893,6 +883,17 @@ marimbaHighImag[20 * 24] = 0.021; // 24.22
 marimbaHighImag[20 * 33.55] = 0.013; // 33.56
 marimbaHighImag[20 * 43] = 0.008; // 42.97
 
+const idiophoneNoiseOscillator = new OscillatorPreset({
+  type: "noise",
+  noiseType: "bandpass",
+  noiseQ: 16,
+  gain: 3,
+  attack: 0.003,
+  decay: 0.005,
+  attackDetuneDuration: 0.008,
+  attackDetune: 500,
+});
+
 export const marimba = new InstrumentPreset({
   group: "Percussion (idiophones)",
   oscillators: [
@@ -905,19 +906,17 @@ export const marimba = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       attack: 0.018,
       decay: 0.056,
-      release: 0.056,
+      release: 0.034,
       velocitySensitivity: -1,
       velocityImpactOnGain: 0.764,
     },
+    idiophoneNoiseOscillator,
   ],
 
   attack: 0.008,
   decay: 0.146,
   sustain: 0.0,
-  release: 0.034,
-
-  attackNoise: 500,
-  attackNoiseDuration: 0.003,
+  release: 0.056,
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
   vibratoEffectOnVolume: 0.146,
@@ -947,12 +946,11 @@ export const xylophone = new InstrumentPreset({
       ...marimba.oscillators[1],
       imag: xylophoneHighImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
-      attack: 0.013,
-      decay: 0.09,
     },
+    idiophoneNoiseOscillator,
   ],
 
-  decay: 0.146,
+  decay: 0.09,
 });
 
 // Pure idiophone overtones
@@ -994,10 +992,8 @@ export const glockenspiel = new InstrumentPreset({
       attack: 0.013,
       decay: 0.056,
     },
+    { ...idiophoneNoiseOscillator, attackDetune: 700 },
   ],
-
-  attackNoise: 700,
-  attackNoiseDuration: 0.003,
 
   decay: 0.236,
 });
@@ -1031,12 +1027,10 @@ export const bell = new InstrumentPreset({
       getPitch: (pitch = 440.0) => pitch / 20.0,
       decay: 0.236,
     },
+    { ...idiophoneNoiseOscillator, attackDetune: 700 },
   ],
 
   decay: 0.382,
-
-  attackNoise: 700,
-  attackNoiseDuration: 0.003,
 });
 
 // Plucked string transients
