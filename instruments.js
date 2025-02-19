@@ -253,6 +253,7 @@ export const createInstrument = (
               real: real || imag?.map((v) => v * randomisedPhase),
               disableNormalization: true,
             }),
+            frequency: getPitch(440),
           })
         : type === "noise"
           ? new BiquadFilterNode(audioContext, {
@@ -490,7 +491,7 @@ export const attackInstrument = (
 
     const decayAt = dynamicStartAt + dynamicAttack * 5.0;
     const decayDynamics =
-      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.236 * velocity * velocitySensitivity);
+      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 

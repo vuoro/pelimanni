@@ -772,27 +772,40 @@ hammeredDulcimer.oscillators.push(
 );
 
 const getDrumNoiseOscillator = ({
-  attackDetune = 2400,
-  decay = 0.0766,
-  pitchMultiplier = 2.0,
-  noiseQ = 2.618,
   attack = 0.008,
+  decay = 0.034,
+  attackDetune = 2400,
+  pitchTarget = 349.23,
+  noiseQ = 8,
   gain = 1.618,
 } = {}) =>
   new OscillatorPreset({
     type: "noise",
     noiseType: "lowpass",
     noiseQ,
-    gain: gain / noiseQ,
+    gain,
     attack,
     decay,
     sustain: 0.0,
     release: attack * 0.618,
     attackDetune,
-    attackDetuneDuration: attack + decay,
-    getPitch: (pitch = 440.0) => pitch * pitchMultiplier,
-    velocityImpactOnGain: 0.618,
-    velocitySensitivity: -0.618,
+    velocityImpactOnGain: 0.91,
+    velocitySensitivity: 0.618,
+    getPitch: (pitch = 440.0) => {
+      let result = pitch;
+
+      if (result < pitchTarget) {
+        while (result < pitchTarget) {
+          result *= 2.0;
+        }
+      } else {
+        while (result > pitchTarget) {
+          result /= 2.0;
+        }
+      }
+
+      return result;
+    },
   });
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
@@ -818,14 +831,15 @@ export const taikoDrum = new InstrumentPreset({
   ],
 
   attack: 0.008,
-  decay: 0.124,
+  decay: 0.09,
   sustain: 0.0,
-  release: 0.056,
+  release: 0.111,
 
-  attackDetune: 500,
+  attackDetune: 200,
+  velocitySensitivity: 2,
 
-  highPassFrequency: 38.89,
-  lowPassFrequency: 1320, // FIXME: no idea what this should be on any percussion
+  highPassFrequency: 43.65,
+  lowPassFrequency: 880.0 * 2.0, // FIXME: no idea what this should be on any percussion
 
   vibratoEffectOnPitch: 30.0, // Fake vibrato
   vibratoEffectOnVolume: 0.146,
@@ -845,7 +859,7 @@ export const timpani = new InstrumentPreset({
       imag: timpaniImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator({ pitchMultiplier: 1.5 }),
+    getDrumNoiseOscillator({ pitchTarget: 261.63 }),
   ],
 });
 
@@ -864,7 +878,7 @@ export const bassDrum = new InstrumentPreset({
       imag: bassDrumImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator({ pitchMultiplier: 1 }),
+    getDrumNoiseOscillator({ pitchTarget: 220 }),
   ],
 });
 
