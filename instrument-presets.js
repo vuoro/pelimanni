@@ -763,11 +763,11 @@ hammeredDulcimer.oscillators.push(
 
 const getDrumNoiseOscillator = ({
   attack = 0.008,
-  decay = 0.034,
+  decay = 0.111 * 0.5,
   attackDetune = 2400,
   pitchTarget = 349.23,
-  noiseQ = 8,
-  gain = 1.618,
+  noiseQ = 5,
+  gain = 2,
 } = {}) =>
   new OscillatorPreset({
     type: "noise",
@@ -779,22 +779,12 @@ const getDrumNoiseOscillator = ({
     sustain: 0.0,
     release: attack * 0.618,
     attackDetune,
-    velocityImpactOnGain: 0.91,
-    velocitySensitivity: 0.618,
-    getPitch: (pitch = 440.0) => {
-      let result = pitch;
-
-      if (result < pitchTarget) {
-        while (result < pitchTarget) {
-          result *= 2.0;
-        }
-      } else {
-        while (result > pitchTarget) {
-          result /= 2.0;
-        }
-      }
-
-      return result;
+    velocityImpactOnGain: 0.764,
+    velocitySensitivity: -0.618,
+    getPitch: (pitch = 440.0, velocity = 1.0) => {
+      const difference = Math.log2(Math.abs(pitchTarget - pitch)) * Math.sign(pitchTarget - pitch);
+      const contrast = 0.764 ** Math.abs(difference) * Math.sign(difference) * velocity;
+      return pitchTarget * (1.0 + contrast);
     },
   });
 
@@ -849,7 +839,7 @@ export const timpani = new InstrumentPreset({
       imag: timpaniImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator({ pitchTarget: 261.63 }),
+    getDrumNoiseOscillator({ pitchTarget: 293.66, attackDetune: 2400 }),
   ],
 });
 
@@ -868,7 +858,7 @@ export const bassDrum = new InstrumentPreset({
       imag: bassDrumImag,
       getPitch: (pitch = 440.0) => pitch / 20.0,
     },
-    getDrumNoiseOscillator({ pitchTarget: 220 }),
+    getDrumNoiseOscillator({ pitchTarget: 261.63, attackDetune: 2400 }),
   ],
 });
 
@@ -892,6 +882,7 @@ const idiophoneNoiseOscillator = new OscillatorPreset({
   decay: 0.005,
   attackDetuneDuration: 0.008,
   attackDetune: 500,
+  velocityImpactOnGain: 0.764,
 });
 
 export const marimba = new InstrumentPreset({

@@ -109,7 +109,7 @@ export class OscillatorPreset {
   /** @type {InstrumentPreset["velocitySensitivity"]=} */
   velocitySensitivity = undefined;
   /** @type {number} determines how much of the oscillator's gain is impacted by velocity */
-  velocityImpactOnGain = 0.0;
+  velocityImpactOnGain = 0.236;
 
   /** @type {InstrumentPreset["vibratoEffectOnPitch"]=} */
   vibratoEffectOnPitch = undefined;
