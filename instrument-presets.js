@@ -439,10 +439,11 @@ const getStringOscillator = (
   to = imag.length - 1,
 ) => {
   const partialIndex = (from + to) / 2;
-  const partialProgression = ((partialIndex - 1) / (imag.length - 1)) ** Math.SQRT1_2;
-  const shouldAddSympatheticStrings = partialIndex < 3;
+  let partialProgression = (partialIndex - 1) / (imag.length - 1);
+  partialProgression **= 1.0 - partialProgression;
 
   const newImag = imag.slice(0, to + 1).map((value, index) => (index < from ? 0.0 : value));
+  const shouldAddSympatheticStrings = newImag.length < 11;
 
   const oscillator = new OscillatorPreset({
     imag: shouldAddSympatheticStrings ? addSympatheticStringsToImag(newImag) : newImag,
@@ -1040,7 +1041,7 @@ const plucked = {
   vibratoEffectOnVolume: 0.146,
   vibratoEffectOnStage: 0.0,
 
-  attackDetune: 200,
+  attackDetune: 100,
   attackDetuneDuration: 0.005,
 };
 
