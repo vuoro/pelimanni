@@ -438,7 +438,7 @@ const getStringOscillator = (
   from = 0,
   to = imag.length - 1,
 ) => {
-  const partialIndex = (from + to) / 2;
+  const partialIndex = from === 0 ? from : (from + to) / 2;
   let partialProgression = (partialIndex - 1) / (imag.length - 1);
   partialProgression **= 1.0 - partialProgression;
 
@@ -451,15 +451,11 @@ const getStringOscillator = (
       const finalPitch = getPitch(pitch, partialIndex);
       return shouldAddSympatheticStrings ? getSympatheticStringPitch(finalPitch) : finalPitch;
     },
-    attack: preset.attack * (1.0 + 0.5 * partialProgression),
-    decay: preset.decay * (1.0 - 0.764 * partialProgression),
-    release: preset.release * (1.0 - 0.764 * partialProgression),
+    attack: preset.attack * (1.0 + 0.382 * partialProgression),
+    decay: preset.decay * (1.0 - 0.618 * partialProgression),
+    release: preset.release * (1.0 - 0.618 * partialProgression),
     velocitySensitivity: 1 - 2 * partialProgression,
     velocityImpactOnGain: partialProgression,
-    attackDetuneDuration:
-      preset.attackDetuneDuration === undefined
-        ? undefined
-        : preset.attackDetuneDuration * (1.0 + 0.618 * partialProgression),
   });
 
   return oscillator;
