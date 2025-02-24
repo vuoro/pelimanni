@@ -263,7 +263,7 @@ export const saxophone = new InstrumentPreset({
       ),
       attack: 0.09,
       decay: 0.146,
-      release: 0.09,
+      release: 0.056,
       velocitySensitivity: -1,
       attackInstability: 0.09,
       velocityImpactOnGain: 0.764,
@@ -273,7 +273,7 @@ export const saxophone = new InstrumentPreset({
   attack: 0.09,
   decay: 0.236,
   sustain: 0.764,
-  release: 0.056,
+  release: 0.034,
 
   attackDetune: -30,
   attackDetuneDuration: 0.056,
@@ -322,7 +322,7 @@ export const trumpet = new InstrumentPreset({
       attack: 0.146,
       decay: 0.146,
       sustain: 0.764,
-      release: 0.056,
+      release: 0.034,
       velocitySensitivity: -1,
       attackInstability: 0.09,
       velocityImpactOnGain: 0.764,
@@ -332,7 +332,7 @@ export const trumpet = new InstrumentPreset({
   attack: 0.056,
   decay: 0.236,
   sustain: 0.854,
-  release: 0.09,
+  release: 0.056,
 
   attackDetune: -30,
   attackDetuneDuration: 0.034,
@@ -692,7 +692,7 @@ export const piano = new InstrumentPreset({
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,
-  release: 0.034,
+  release: 0.056,
 
   attackDetune: 100,
   attackDetuneDuration: 0.003,
@@ -737,9 +737,11 @@ export const hammeredDulcimer = new InstrumentPreset({
   group: "Strings (hammered)",
 
   attack: 0.01,
-  decay: 0.236,
+  decay: 0.25,
   sustain: 0.0,
-  release: 0.034,
+  release: 0.05,
+
+  attackDetuneDuration: 0.004,
 });
 
 hammeredDulcimer.oscillators.push(
@@ -810,7 +812,7 @@ export const taikoDrum = new InstrumentPreset({
   attack: 0.008,
   decay: 0.09,
   sustain: 0.0,
-  release: 0.111,
+  release: 0.09,
 
   attackDetune: 200,
   velocitySensitivity: 2,
@@ -1031,7 +1033,7 @@ const plucked = {
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,
-  release: 0.034,
+  release: 0.056,
 
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.146,
