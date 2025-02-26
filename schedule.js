@@ -329,7 +329,7 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
 
   playInstrument(
     instrument,
-    midiToFrequency(note, undefined),
+    midiToFrequency(note),
     at,
     finalDuration,
     (velocity ?? 0.618) *
@@ -339,5 +339,7 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
     volume,
     vibrato,
     vibratoFrequency,
+    undefined, // TODO: support bendToPitch
+    undefined, // TODO: support pitchBendDelay
   );
 };

@@ -14,8 +14,6 @@ export class InstrumentPreset {
   sustain = 0.0;
   /** a `timeConstant` for how long the note takes to "fade out" */
   release = 0.0;
-  /** a `timeConstant` for how slowly the oscillator moves to new frequencies */
-  glide = 0.0001;
 
   /** @type {number} determines how strongly the oscillator's dynamics respond to different velocities */
   velocitySensitivity = 1.0;
@@ -103,8 +101,6 @@ export class OscillatorPreset {
   sustain = undefined;
   /** @type {InstrumentPreset["release"]=} */
   release = undefined;
-  /** @type {InstrumentPreset["glide"]=} */
-  glide = undefined;
 
   /** @type {InstrumentPreset["velocitySensitivity"]=} */
   velocitySensitivity = undefined;
@@ -218,7 +214,6 @@ export const createInstrument = (
     imag,
     real,
     gain,
-    glide = preset.glide,
     attack = preset.attack,
     decay = preset.decay,
     sustain = preset.sustain,
@@ -282,11 +277,11 @@ export const createInstrument = (
     }
 
     // Regular pitch vibrato
-    let vibratoPitchGain = null;
+    let vibrabendToPitchGain = null;
     if (vibratoEffectOnPitch) {
       canVibrato = true;
-      vibratoPitchGain = new GainNode(audioContext, { gain: 0.0 });
-      vibratoMain.connect(vibratoPitchGain).connect(oscillatorNode.detune);
+      vibrabendToPitchGain = new GainNode(audioContext, { gain: 0.0 });
+      vibratoMain.connect(vibrabendToPitchGain).connect(oscillatorNode.detune);
     }
 
     oscillators.push({
@@ -294,7 +289,6 @@ export const createInstrument = (
       gainNode,
       gainTarget,
       getPitch,
-      glide,
       attack,
       decay,
       sustain,
@@ -305,7 +299,7 @@ export const createInstrument = (
       attackDetuneDuration,
       attackInstabilityGain,
       vibratoVolumeGain,
-      vibratoPitchGain,
+      vibrabendToPitchGain,
       attackInstability,
       vibratoEffectOnPitch,
       vibratoEffectOnVolume,
@@ -342,12 +336,14 @@ export const playInstrument = (
   /** @type {number} */ pitch,
   /** @type {number} */ at,
   /** @type {number} */ duration,
-  velocity = 0.5,
-  attackMultiplier = 1.0,
-  releaseMultiplier = 1.0,
-  volume = 1.0,
-  vibratoAmount = 0.0,
-  vibratoFrequency = 5.0,
+  /** @type {number=} */ velocity = undefined,
+  /** @type {number=} */ attackMultiplier = undefined,
+  /** @type {number=} */ releaseMultiplier = undefined,
+  /** @type {number=} */ volume = undefined,
+  /** @type {number=} */ vibratoAmount = undefined,
+  /** @type {number=} */ vibratoFrequency = undefined,
+  /** @type {number=} */ bendToPitch = undefined,
+  /** @type {number=} */ pitchBendDelay = undefined,
 ) => {
   attackInstrument(
     instrument,
@@ -358,6 +354,9 @@ export const playInstrument = (
     volume,
     vibratoAmount,
     vibratoFrequency,
+    bendToPitch,
+    pitchBendDelay,
+    duration,
   );
   releaseInstrument(instrument, at + duration, releaseMultiplier, true);
 };
@@ -371,6 +370,9 @@ export const attackInstrument = (
   volume = 1.0,
   vibratoAmount = 0.0,
   vibratoFrequency = 5.0,
+  /** @type {number | undefined} */ bendToPitch = undefined,
+  /** @type {number | undefined} */ pitchBendDelay = undefined,
+  /** @type {number | undefined} */ pitchBendDuration = undefined,
 ) => {
   const { oscillators, vibratoMain, canVibrato, epsilon } = instrument;
 
@@ -394,7 +396,6 @@ export const attackInstrument = (
       gainNode,
       gainTarget,
       attack,
-      glide,
       velocitySensitivity,
       velocityImpactOnGain,
       attackDetune,
@@ -408,8 +409,7 @@ export const attackInstrument = (
 
     cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
 
-    // Glide and attack
-    const pitchTarget = getPitch(pitch, velocity);
+    // Attack
     const attackDynamics =
       (1.0 - 0.236 * relativePitchness) * (1.0 - 0.09 * relativeVelocity) * attackMultiplier;
 
@@ -418,7 +418,8 @@ export const attackInstrument = (
 
     const gainWithVelocity = gainTarget * (1.0 - velocityImpactOnGain * (1.0 - velocity)) * volume;
 
-    oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, glide);
+    const pitchTarget = getPitch(pitch, velocity);
+    oscillatorNode.frequency.setTargetAtTime(pitchTarget, dynamicStartAt, epsilon);
     gainNode.gain.setTargetAtTime(gainWithVelocity, dynamicStartAt, dynamicAttack);
 
     // Detune attack
@@ -426,12 +427,12 @@ export const attackInstrument = (
       oscillatorNode.detune.setTargetAtTime(
         attackDetune * velocity ** 0.414,
         dynamicStartAt,
-        glide,
+        epsilon,
       );
 
       oscillatorNode.detune.setTargetAtTime(
         0.0,
-        dynamicStartAt + glide * 5.0,
+        dynamicStartAt + epsilon * 7.0,
         attackDetuneDuration * attackDynamics,
       );
     }
@@ -470,6 +471,21 @@ export const attackInstrument = (
   firstAttack = firstAttack ?? 0.0;
   firstDecay = firstDecay ?? 0.0;
 
+  // Pitch bend
+  if (bendToPitch !== undefined && bendToPitch !== pitch) {
+    for (const { getPitch, oscillatorNode } of oscillators) {
+      const bendToPitchTarget = getPitch(bendToPitch, velocity);
+      const delay = epsilon * 7.0 + firstAttack * 5.0 * (pitchBendDelay ?? 1.0);
+      const duration = pitchBendDuration ?? firstAttack + firstDecay;
+
+      oscillatorNode.frequency.setTargetAtTime(
+        bendToPitchTarget,
+        dynamicStartAt + delay,
+        duration - delay / 5.0,
+      );
+    }
+  }
+
   // Fire up vibrato
   if (canVibrato && vibratoAmount) {
     const gainAttack = firstAttack * 0.382;
@@ -478,12 +494,12 @@ export const attackInstrument = (
     vibratoMain.frequency.setTargetAtTime(vibratoFrequency, dynamicStartAt, attack);
 
     for (const {
-      vibratoPitchGain,
+      vibrabendToPitchGain,
       vibratoVolumeGain,
       vibratoEffectOnVolume,
       vibratoEffectOnPitch,
     } of oscillators) {
-      vibratoPitchGain?.gain.setTargetAtTime(
+      vibrabendToPitchGain?.gain.setTargetAtTime(
         vibratoAmount * vibratoEffectOnPitch,
         dynamicStartAt,
         gainAttack,
@@ -554,7 +570,7 @@ export const releaseInstrument = (
       gainNode,
       release,
       attackInstabilityGain,
-      vibratoPitchGain,
+      vibrabendToPitchGain,
       vibratoVolumeGain,
       velocitySensitivity,
     } = oscillator;
@@ -571,7 +587,7 @@ export const releaseInstrument = (
     gainNode.gain.setTargetAtTime(0.0, firstEndAt, dynamicRelease);
 
     attackInstabilityGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
-    vibratoPitchGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
+    vibrabendToPitchGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
     vibratoVolumeGain?.gain.setTargetAtTime(0.0, firstEndAt, vibratoGainRelease);
   }
 
@@ -593,15 +609,20 @@ const cancelPendingOscillatorEvents = (
   /** @type {ReturnType<typeof createInstrument>["oscillators"][0]} */ oscillator,
   /** @type {number} */ at,
 ) => {
-  const { oscillatorNode, gainNode, attackInstabilityGain, vibratoPitchGain, vibratoVolumeGain } =
-    oscillator;
+  const {
+    oscillatorNode,
+    gainNode,
+    attackInstabilityGain,
+    vibrabendToPitchGain,
+    vibratoVolumeGain,
+  } = oscillator;
 
   oscillatorNode.frequency.cancelScheduledValues(at);
   oscillatorNode.detune.cancelScheduledValues(at);
   gainNode.gain.cancelScheduledValues(at);
 
   attackInstabilityGain?.gain.cancelScheduledValues(at);
-  vibratoPitchGain?.gain.cancelScheduledValues(at);
+  vibrabendToPitchGain?.gain.cancelScheduledValues(at);
   vibratoVolumeGain?.gain.cancelScheduledValues(at);
 };
 

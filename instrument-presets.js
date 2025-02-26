@@ -1029,7 +1029,6 @@ export const bell = new InstrumentPreset({
 const plucked = {
   group: "Strings (plucked)",
 
-  glide: 0.0,
   attack: 0.008,
   decay: 0.236,
   sustain: 0.0,

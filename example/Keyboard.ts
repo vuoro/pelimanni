@@ -19,6 +19,8 @@ const KeyboardState = new MagicState({
   duration: JSON.parse(localStorage.getItem("duration") ?? "0.5") as number,
   vibratoAmount: JSON.parse(localStorage.getItem("vibratoAmount") ?? "0.0") as number,
   vibratoFrequency: JSON.parse(localStorage.getItem("vibratoFrequency") ?? "5.0") as number,
+  pitchBend: JSON.parse(localStorage.getItem("pitchBend") ?? "0") as number,
+  pitchBendDelay: JSON.parse(localStorage.getItem("pitchBendDelay") ?? "1.0") as number,
   sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0") as number,
   keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48") as number,
   blackKeys: JSON.parse(
@@ -37,6 +39,8 @@ export const KeyboardSettings = new Magic(() => {
     const releaseMultiplier = data.get("releaseMultiplier") as string;
     const vibratoAmount = data.get("vibratoAmount") as string;
     const vibratoFrequency = data.get("vibratoFrequency") as string;
+    const pitchBend = data.get("pitchBend") as string;
+    const pitchBendDelay = data.get("pitchBendDelay") as string;
     const sustain = data.get("sustain") as string;
     const keyboardOffset = data.get("keyboardOffset") as string;
     const blackKeys = data.getAll("blackKeys") as string[];
@@ -49,6 +53,8 @@ export const KeyboardSettings = new Magic(() => {
     localStorage.setItem("releaseMultiplier", releaseMultiplier);
     localStorage.setItem("vibratoAmount", vibratoAmount);
     localStorage.setItem("vibratoFrequency", vibratoFrequency);
+    localStorage.setItem("pitchBend", pitchBend);
+    localStorage.setItem("pitchBendDelay", pitchBendDelay);
     localStorage.setItem("sustain", sustain);
     localStorage.setItem("keyboardOffset", keyboardOffset);
     localStorage.setItem("blackKeys", JSON.stringify(blackKeys));
@@ -63,6 +69,8 @@ export const KeyboardSettings = new Magic(() => {
       releaseMultiplier: +releaseMultiplier,
       vibratoAmount: +vibratoAmount,
       vibratoFrequency: +vibratoFrequency,
+      pitchBend: +pitchBend,
+      pitchBendDelay: +pitchBendDelay,
       sustain: +sustain,
       keyboardOffset: +keyboardOffset,
       blackKeys,
@@ -79,6 +87,8 @@ export const KeyboardSettings = new Magic(() => {
     releaseMultiplier,
     vibratoAmount,
     vibratoFrequency,
+    pitchBend,
+    pitchBendDelay,
     keyboardOffset,
     coloriseIntervals,
     octaveStartsFrom,
@@ -118,6 +128,14 @@ export const KeyboardSettings = new Magic(() => {
           <label>
             <span>Vibrato frequency: ${vibratoFrequency} hz</span>
             <input name="vibratoFrequency" type="range" min="0.0" max="10" step="0.5" .value=${vibratoFrequency}/>
+          </label>
+          <label>
+            <span>Pitch bend: ${pitchBend} ${pitchBend === 1.0 ? "semitone" : "semitones"}</span>
+            <input name="pitchBend" type="range" min="-24" max="24" step="1" .value=${pitchBend}/>
+          </label>
+          <label>
+            <span>Pitch bend delay: ${pitchBendDelay * 100}%</span>
+            <input name="pitchBendDelay" type="range" min="0.0" max="2.0" step="0.1" .value=${pitchBendDelay}/>
           </label>
         </fieldset>
         <fieldset>
@@ -431,6 +449,8 @@ const attackWithController = (
     attackMultiplier,
     vibratoAmount,
     vibratoFrequency,
+    pitchBend,
+    pitchBendDelay,
     coloriseIntervals,
   } = KeyboardState.get();
   const { audioContext, connectInstrument } = AudioSystem.get();
@@ -485,6 +505,8 @@ const attackWithController = (
     0.7,
     altKey ? 1.0 : vibratoAmount,
     vibratoFrequency,
+    pitchBend ? midiToFrequency(midiNumber + pitchBend) : undefined,
+    pitchBendDelay,
   );
 
   const key = document.querySelector(`[data-midi-number="${midiNumber}"]`) as HTMLButtonElement;

@@ -69,8 +69,10 @@ Each instrument is monophonic (it can only play 1 sound at a time). If you need 
   const velocity = 1.0; // optional
   const volume = 0.5; // optional
   const vibratoAmount = 0.0; // optional
+  const pitchBend = undefined; // optional: will glide from `frequency` to this frequency during the `duration`
+  const pitchBendDelay = 1.0; // optional: delay the pitchBend for `attack * pitchBendDelay`
 
-  playInstrument(violaInstrument, frequency, at, duration, velocity, volume, vibratoAmount);
+  playInstrument(violaInstrument, frequency, at, duration, velocity, volume, vibratoAmount, pitchBend, pitchBendDelay);
 ```
 
 When you don't need an instrument anymore you can destroy it, to stop and disconnect its OscillatorNodes. (I'm not sure how necessary this actually is. The Web Audio API is confusing on this front.)
@@ -89,7 +91,7 @@ import { midiToFrequency } from "@vuoro/pelimanni/notes.js";
 const tuning = 440.0; // optional
 
 const frequency = midiToFrequency(60, tuning);
-playInstrument(violaInstrument, frequency, at, duration);
+playInstrument(violaInstrument, frequency, undefined, at, duration);
 ```
 
 ## Sequencing notes into music
