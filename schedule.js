@@ -20,13 +20,7 @@ const defaultOptions = { playAhead: 0.2 };
  * @param {AudioContext} audioContext
  * @param {ConnectInstrument} connectInstrument
  */
-export const scheduleMusic = (
-  tracks,
-  cycle,
-  audioContext,
-  connectInstrument,
-  options = defaultOptions,
-) => {
+export const scheduleMusic = (tracks, cycle, audioContext, connectInstrument, options = defaultOptions) => {
   const playAhead = options.playAhead ?? defaultOptions.playAhead;
 
   const { currentTime } = audioContext;
@@ -34,8 +28,7 @@ export const scheduleMusic = (
 
   /** @type {Schedule} */
   const schedule =
-    schedules.get(audioContext) ||
-    schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
+    schedules.get(audioContext) || schedules.set(audioContext, createSchedule(audioContext)).get(audioContext);
 
   schedule.connectInstrument = connectInstrument;
 
@@ -297,15 +290,13 @@ const schedulePart = (
  @param {Schedule} schedule
  */
 const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instruments }) => {
-  const { instrumentPreset, note, at, duration, velocity, volume, vibrato, vibratoFrequency } =
-    pendingNote;
+  const { instrumentPreset, note, at, duration, velocity, volume, vibrato, vibratoFrequency } = pendingNote;
   pendingNote.pending = false;
 
   // Find a free instrument
   let instrument = null;
   const instrumentSet =
-    instruments.get(instrumentPreset) ||
-    instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
+    instruments.get(instrumentPreset) || instruments.set(instrumentPreset, new Set()).get(instrumentPreset);
 
   for (const potentialInstrument of instrumentSet) {
     if (potentialInstrument.previousEndAt <= at) {
@@ -327,13 +318,15 @@ const playPendingNote = ({ connectInstrument, pendingNote, audioContext, instrum
   const releaseMultiplier = 1.0; // TODO: would be nice to determine this by the next note
   const finalDuration = Math.max(duration, (decay - attack * 5.0) * 4.0);
 
+  const velocityTarget =
+    (velocity ?? 0.618) + 0.056 * (Math.sin(audioContext.currentTime * 0.382) * 0.5 + 0.5) + 0.056 * Math.random();
+
   playInstrument(
     instrument,
     midiToFrequency(note),
     at,
     finalDuration,
-    (velocity ?? 0.618) *
-      (1.0 + 0.146 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random()),
+    velocityTarget,
     attackMultiplier,
     releaseMultiplier,
     volume,

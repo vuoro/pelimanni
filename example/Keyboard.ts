@@ -1,18 +1,12 @@
 import { html, nothing, render } from "lit-html";
 import * as allInstrumentPresets from "../instrument-presets.js";
-import {
-  attackInstrument,
-  createInstrument,
-  destroyInstrument,
-  releaseInstrument,
-} from "../instruments";
+import { attackInstrument, createInstrument, destroyInstrument, releaseInstrument } from "../instruments";
 import { frequencyToMidi, midiToFrequency } from "../notes";
 import { AudioSystem } from "./AudioSystem";
 import { Magic, MagicState } from "./magic";
 
 const KeyboardState = new MagicState({
-  instrumentName: (localStorage.getItem("instrumentName") ??
-    "cello") as keyof typeof allInstrumentPresets,
+  instrumentName: (localStorage.getItem("instrumentName") ?? "cello") as keyof typeof allInstrumentPresets,
   velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.5") as number,
   attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0") as number,
   releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0") as number,
@@ -23,9 +17,7 @@ const KeyboardState = new MagicState({
   pitchBendDelay: JSON.parse(localStorage.getItem("pitchBendDelay") ?? "1.0") as number,
   sustain: JSON.parse(localStorage.getItem("sustain") ?? "0.0") as number,
   keyboardOffset: JSON.parse(localStorage.getItem("keyboardOffset") ?? "48") as number,
-  blackKeys: JSON.parse(
-    localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]',
-  ) as string[],
+  blackKeys: JSON.parse(localStorage.getItem("blackKeys") ?? '["1", "3", "6", "8", "10"]') as string[],
   coloriseIntervals: JSON.parse(localStorage.getItem("coloriseIntervals") ?? "false") as boolean,
   octaveStartsFrom: JSON.parse(localStorage.getItem("octaveStartsFrom") ?? "0") as number,
 });
@@ -200,9 +192,7 @@ export const instrumentSelect = (selected: string, name: string, label?: string)
 
   const options = [];
 
-  for (const [group, groupArray] of [...groupArrays.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
+  for (const [group, groupArray] of [...groupArrays.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     options.push(html`<optgroup label=${group}>${groupArray}</optgroup>`);
   }
 
@@ -218,8 +208,7 @@ export const Keyboard = new Magic(() => {
   const { blackKeys, instrumentName, octaveStartsFrom } = KeyboardState.get();
 
   const blackKeysSet = new Set(blackKeys.map((v) => +v));
-  const instrumentPreset =
-    allInstrumentPresets[instrumentName as keyof typeof allInstrumentPresets];
+  const instrumentPreset = allInstrumentPresets[instrumentName as keyof typeof allInstrumentPresets];
 
   const keys = [];
   const fromNote = frequencyToMidi(instrumentPreset?.highPassFrequency ?? 27.5);
@@ -231,17 +220,12 @@ export const Keyboard = new Magic(() => {
   let isFirstOctave = true;
 
   for (let octave = fromOctave; octave < toOctave; octave++) {
-    for (
-      let note = octave * 12 + octaveStartsFrom;
-      note < (octave + 1) * 12 + octaveStartsFrom;
-      note++
-    ) {
+    for (let note = octave * 12 + octaveStartsFrom; note < (octave + 1) * 12 + octaveStartsFrom; note++) {
       const isBlack = blackKeysSet.has(note % 12);
       const nextIsBlack = blackKeysSet.has((note + 1) % 12);
       keys.push(key(note, isBlack));
 
-      if (isFirstOctave)
-        octaveGridTrack += nextIsBlack === isBlack ? "var(--slot) var(--slot) " : "var(--slot) ";
+      if (isFirstOctave) octaveGridTrack += nextIsBlack === isBlack ? "var(--slot) var(--slot) " : "var(--slot) ";
     }
 
     isFirstOctave = false;
@@ -296,12 +280,7 @@ const pointerdown = (event: PointerEvent) => {
   pointersDown.add(event.pointerId);
 
   if (!target.dataset.midiNumber) return;
-  attackWithController(
-    event.pointerId,
-    +(target.dataset.midiNumber ?? 0),
-    event.shiftKey,
-    event.altKey,
-  );
+  attackWithController(event.pointerId, +(target.dataset.midiNumber ?? 0), event.shiftKey, event.altKey);
 };
 
 const pointerup = (event: PointerEvent) => {
@@ -329,12 +308,7 @@ const pointerover = (event: PointerEvent) => {
   if (!target || target === event.currentTarget) return;
 
   if (pointersDown.has(event.pointerId))
-    attackWithController(
-      event.pointerId,
-      +(target.dataset.midiNumber ?? 0),
-      event.shiftKey,
-      event.altKey,
-    );
+    attackWithController(event.pointerId, +(target.dataset.midiNumber ?? 0), event.shiftKey, event.altKey);
 };
 
 const pointersDown = new Set();
@@ -420,16 +394,14 @@ document.addEventListener("visibilitychange", () => {
 
 document.body.addEventListener("pointerup", (event: PointerEvent) => {
   pointersDown.delete(event.pointerId);
-  if (playingControllers.has(event.pointerId))
-    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 });
 
 document.body.addEventListener("pointerout", (event: PointerEvent) => {
   if (event.target !== event.currentTarget) return;
 
   pointersDown.delete(event.pointerId);
-  if (playingControllers.has(event.pointerId))
-    releaseWithController(event.pointerId, event.shiftKey, event.altKey);
+  if (playingControllers.has(event.pointerId)) releaseWithController(event.pointerId, event.shiftKey, event.altKey);
 });
 
 type Instrument = ReturnType<typeof createInstrument>;
@@ -437,12 +409,7 @@ type ControllerId = PointerEvent["pointerId"] | KeyboardEvent["code"];
 const freeInstruments = new Set<Instrument>();
 const playingControllers = new Map<ControllerId, Instrument>();
 
-const attackWithController = (
-  controllerId: ControllerId,
-  midiNumber = 0,
-  shiftKey = false,
-  altKey = false,
-) => {
+const attackWithController = (controllerId: ControllerId, midiNumber = 0, shiftKey = false, altKey = false) => {
   const {
     instrumentName,
     velocity,
@@ -458,18 +425,12 @@ const attackWithController = (
   if (audioContext.state !== "running") audioContext.resume();
 
   const isAlreadyPlaying = playingControllers.has(controllerId);
-  let instrument = isAlreadyPlaying
-    ? releaseWithController(controllerId, false, shiftKey, altKey)
-    : null;
+  let instrument = isAlreadyPlaying ? releaseWithController(controllerId, false, shiftKey, altKey) : null;
 
   const preset = allInstrumentPresets[instrumentName];
 
   for (const freeInstrument of freeInstruments) {
-    if (
-      !instrument &&
-      freeInstrument.preset === preset &&
-      freeInstrument.previousEndAt <= audioContext.currentTime
-    ) {
+    if (!instrument && freeInstrument.preset === preset && freeInstrument.previousEndAt <= audioContext.currentTime) {
       // Use instrument
       console.log("adopting", controllerId);
       instrument = freeInstrument;
@@ -494,7 +455,7 @@ const attackWithController = (
   // TODO: add Pointer Event `pressure` support: <0.5 pulls towards 0.0 and >0.5 pulls towards 1.0.
   // NOTE: Can't use `pressure` for velocity for now, since iPhone always sets it to 0.0 instead of 0.5. -_-
   const velocityTarget =
-    velocity * (1.0 + 0.146 * Math.sin(audioContext.currentTime * 0.382) + 0.056 * Math.random());
+    velocity + 0.056 * (Math.sin(audioContext.currentTime * 0.382) * 0.5 + 0.5) + 0.056 * Math.random();
 
   attackInstrument(
     instrument,
@@ -530,19 +491,14 @@ const updateConsonances = (midiNumber = 0, sign = 1.0) => {
 
   for (let index = 0; index < consonances.length; index++) {
     for (const offset of consonances[index]) {
-      const key = document.querySelector(
-        `[data-midi-number="${midiNumber + offset}"]`,
-      ) as HTMLButtonElement;
+      const key = document.querySelector(`[data-midi-number="${midiNumber + offset}"]`) as HTMLButtonElement;
 
       if (key) {
         const consonance = ((index / (consonances.length - 1)) * 2.0 - 1.0) * sign;
         // const consonance =
         //   (1 - getRoughness(frequency, midiToFrequency(midiNumber + offset)) / 0.091) * sign;
 
-        ongoingConsonances.set(
-          key,
-          Math.round(((ongoingConsonances.get(key) || 0) + consonance) * 1000) * 0.001,
-        );
+        ongoingConsonances.set(key, Math.round(((ongoingConsonances.get(key) || 0) + consonance) * 1000) * 0.001);
         updatedConsonanceKeys.add(key);
       }
     }
@@ -650,12 +606,7 @@ const consonances = [
 
 const controllerKeys = new Map();
 
-const releaseWithController = (
-  controllerId: ControllerId,
-  finishAttack = true,
-  shiftKey = false,
-  _altKey = false,
-) => {
+const releaseWithController = (controllerId: ControllerId, finishAttack = true, shiftKey = false, _altKey = false) => {
   const { audioContext } = AudioSystem.get();
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
@@ -666,15 +617,10 @@ const releaseWithController = (
   const remainingAttack = finishAttack
     ? Math.max(0.0, previousAttack * 5.0 - (audioContext.currentTime - previousStartAt))
     : 0.0;
-  const decayedDuration = Math.max(
-    0.0,
-    audioContext.currentTime - previousStartAt - previousAttack * 5.0,
-  );
+  const decayedDuration = Math.max(0.0, audioContext.currentTime - previousStartAt - previousAttack * 5.0);
   const remainingDecay = Math.max(0.0, previousDecay * 5.0 - decayedDuration);
 
-  const releaseAt =
-    audioContext.currentTime +
-    Math.max(remainingAttack, remainingDecay * (shiftKey ? 1.0 : sustain));
+  const releaseAt = audioContext.currentTime + Math.max(remainingAttack, remainingDecay * (shiftKey ? 1.0 : sustain));
   releaseInstrument(instrument, releaseAt, releaseMultiplier, false);
 
   playingControllers.delete(controllerId);

@@ -405,7 +405,7 @@ export const attackInstrument = (
     cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
 
     // Attack
-    const attackDynamics = (1.0 - 0.236 * relativePitchness) * (1.0 - 0.09 * relativeVelocity) * attackMultiplier;
+    const attackDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 - 0.382 * relativeVelocity) * attackMultiplier;
 
     const dynamicAttack = attack * attackDynamics;
     firstAttack = firstAttack ?? dynamicAttack;
@@ -518,7 +518,7 @@ export const releaseInstrument = (
   for (const oscillator of oscillators) {
     const { release } = oscillator;
 
-    const releaseDynamics = (1.0 - 0.236 * relativePitchness) * (1.0 + 0.236 * relativeVelocity) * releaseMultiplier;
+    const releaseDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 + 0.382 * relativeVelocity) * releaseMultiplier;
     const dynamicRelease = release * releaseDynamics;
 
     const dynamicEndAt = releaseEarly
