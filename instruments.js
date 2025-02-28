@@ -441,7 +441,7 @@ export const attackInstrument = (
     if (sustain === 1.0 && decay === 0) continue;
 
     const decayAt = dynamicStartAt + dynamicAttack * 5.0;
-    const decayDynamics = (2.618 - 2.0 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity);
+    const decayDynamics = (2.618 - 2.0 * relativePitchness) * (1.0 + 0.618 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 
