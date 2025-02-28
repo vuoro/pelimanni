@@ -137,10 +137,7 @@ export class OscillatorPreset {
   }
 }
 
-export const createInstrument = (
-  /** @type {InstrumentPreset} */ preset,
-  /** @type {AudioContext}*/ audioContext,
-) => {
+export const createInstrument = (/** @type {InstrumentPreset} */ preset, /** @type {AudioContext}*/ audioContext) => {
   const {
     oscillators: oscillatorsInPreset,
     vibratoType,
@@ -263,9 +260,7 @@ export const createInstrument = (
     let attackInstabilityGain = null;
     if (attackInstability) {
       attackInstabilityGain = new GainNode(audioContext, { gain: 0.0 });
-      getAttackInstabilityOscillator(audioContext)
-        .connect(attackInstabilityGain)
-        .connect(gainNode.gain);
+      getAttackInstabilityOscillator(audioContext).connect(attackInstabilityGain).connect(gainNode.gain);
     }
 
     // Tremolo and/or brightness vibrato
@@ -410,8 +405,7 @@ export const attackInstrument = (
     cancelPendingOscillatorEvents(oscillator, dynamicStartAt);
 
     // Attack
-    const attackDynamics =
-      (1.0 - 0.236 * relativePitchness) * (1.0 - 0.09 * relativeVelocity) * attackMultiplier;
+    const attackDynamics = (1.0 - 0.236 * relativePitchness) * (1.0 - 0.09 * relativeVelocity) * attackMultiplier;
 
     const dynamicAttack = attack * attackDynamics;
     firstAttack = firstAttack ?? dynamicAttack;
@@ -424,44 +418,30 @@ export const attackInstrument = (
 
     // Detune attack
     if (attackDetune !== 0.0) {
-      oscillatorNode.detune.setTargetAtTime(
-        attackDetune * velocity ** 0.414,
-        dynamicStartAt,
-        epsilon,
-      );
+      oscillatorNode.detune.setTargetAtTime(attackDetune * velocity ** 0.414, dynamicStartAt, epsilon);
 
-      oscillatorNode.detune.setTargetAtTime(
-        0.0,
-        dynamicStartAt + epsilon * 7.0,
-        attackDetuneDuration * attackDynamics,
-      );
+      oscillatorNode.detune.setTargetAtTime(0.0, dynamicStartAt + epsilon * 7.0, attackDetuneDuration * attackDynamics);
     }
 
     // Brass-style attack instability
     if (attackInstability) {
       const attackInstabilityAttack = dynamicAttack * 0.001;
       const attackInstabilityDecaysAt = dynamicStartAt + attackInstabilityAttack * 5.0;
-      const attackInstabilityGainDecay =
-        dynamicAttack * 5.0 - (attackInstabilityDecaysAt - dynamicStartAt);
+      const attackInstabilityGainDecay = dynamicAttack * 5.0 - (attackInstabilityDecaysAt - dynamicStartAt);
 
       attackInstabilityGain?.gain.setTargetAtTime(
         attackInstability * ((1.0 - highPitchness) * velocity) ** Math.SQRT1_2,
         dynamicStartAt,
         attackInstabilityAttack,
       );
-      attackInstabilityGain?.gain.setTargetAtTime(
-        0.0,
-        attackInstabilityDecaysAt,
-        attackInstabilityGainDecay,
-      );
+      attackInstabilityGain?.gain.setTargetAtTime(0.0, attackInstabilityDecaysAt, attackInstabilityGainDecay);
     }
 
     // Decay and sustain
     if (sustain === 1.0 && decay === 0) continue;
 
     const decayAt = dynamicStartAt + dynamicAttack * 5.0;
-    const decayDynamics =
-      (2.618 - 2.0 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity);
+    const decayDynamics = (2.618 - 2.0 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity);
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 
@@ -478,11 +458,7 @@ export const attackInstrument = (
       const delay = epsilon * 7.0 + firstAttack * 5.0 * (pitchBendDelay ?? 1.0);
       const duration = pitchBendDuration ?? firstAttack + firstDecay;
 
-      oscillatorNode.frequency.setTargetAtTime(
-        bendToPitchTarget,
-        dynamicStartAt + delay,
-        duration - delay / 5.0,
-      );
+      oscillatorNode.frequency.setTargetAtTime(bendToPitchTarget, dynamicStartAt + delay, duration - delay / 5.0);
     }
   }
 
@@ -499,11 +475,7 @@ export const attackInstrument = (
       vibratoEffectOnVolume,
       vibratoEffectOnPitch,
     } of oscillators) {
-      vibrabendToPitchGain?.gain.setTargetAtTime(
-        vibratoAmount * vibratoEffectOnPitch,
-        dynamicStartAt,
-        gainAttack,
-      );
+      vibrabendToPitchGain?.gain.setTargetAtTime(vibratoAmount * vibratoEffectOnPitch, dynamicStartAt, gainAttack);
       vibratoVolumeGain?.gain.setTargetAtTime(
         vibratoAmount * vibratoEffectOnVolume * volume,
         dynamicStartAt,
@@ -546,8 +518,7 @@ export const releaseInstrument = (
   for (const oscillator of oscillators) {
     const { release } = oscillator;
 
-    const releaseDynamics =
-      (1.0 - 0.236 * relativePitchness) * (1.0 + 0.236 * relativeVelocity) * releaseMultiplier;
+    const releaseDynamics = (1.0 - 0.236 * relativePitchness) * (1.0 + 0.236 * relativeVelocity) * releaseMultiplier;
     const dynamicRelease = release * releaseDynamics;
 
     const dynamicEndAt = releaseEarly
@@ -566,19 +537,11 @@ export const releaseInstrument = (
   firstRelease = firstRelease ?? 0.0;
 
   for (const oscillator of oscillators) {
-    const {
-      gainNode,
-      release,
-      attackInstabilityGain,
-      vibrabendToPitchGain,
-      vibratoVolumeGain,
-      velocitySensitivity,
-    } = oscillator;
+    const { gainNode, release, attackInstabilityGain, vibrabendToPitchGain, vibratoVolumeGain, velocitySensitivity } =
+      oscillator;
 
     const releaseDynamics =
-      (1.0 - 0.236 * relativePitchness) *
-      (1.0 + 0.382 * velocity * velocitySensitivity) *
-      releaseMultiplier;
+      (1.0 - 0.236 * relativePitchness) * (1.0 + 0.382 * velocity * velocitySensitivity) * releaseMultiplier;
     const dynamicRelease = release * releaseDynamics;
     const vibratoGainRelease = dynamicRelease * 0.09;
 
@@ -609,13 +572,7 @@ const cancelPendingOscillatorEvents = (
   /** @type {ReturnType<typeof createInstrument>["oscillators"][0]} */ oscillator,
   /** @type {number} */ at,
 ) => {
-  const {
-    oscillatorNode,
-    gainNode,
-    attackInstabilityGain,
-    vibrabendToPitchGain,
-    vibratoVolumeGain,
-  } = oscillator;
+  const { oscillatorNode, gainNode, attackInstabilityGain, vibrabendToPitchGain, vibratoVolumeGain } = oscillator;
 
   oscillatorNode.frequency.cancelScheduledValues(at);
   oscillatorNode.detune.cancelScheduledValues(at);
