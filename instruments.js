@@ -445,7 +445,7 @@ export const attackInstrument = (
     const dynamicDecay = decay * decayDynamics;
     firstDecay = firstDecay ?? dynamicDecay;
 
-    gainNode.gain.setTargetAtTime(gainTarget * volume * sustain, decayAt, dynamicDecay);
+    gainNode.gain.setTargetAtTime(gainWithVelocity * sustain, decayAt, dynamicDecay);
   }
 
   firstAttack = firstAttack ?? 0.0;
