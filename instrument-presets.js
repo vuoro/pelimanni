@@ -33,7 +33,7 @@ export const flute = new InstrumentPreset({
       release: 0.021,
       velocitySensitivity: -1,
       vibratoEffectOnVolume: 1,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -102,7 +102,7 @@ export const oboe = new InstrumentPreset({
       sustain: 0.854,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -203,7 +203,7 @@ export const clarinet = new InstrumentPreset({
       sustain: 0.764,
       release: 0.021,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -266,7 +266,7 @@ export const saxophone = new InstrumentPreset({
       release: 0.056,
       velocitySensitivity: -1,
       attackInstability: 0.09,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -325,7 +325,7 @@ export const trumpet = new InstrumentPreset({
       release: 0.034,
       velocitySensitivity: -1,
       attackInstability: 0.09,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
   ],
 
@@ -455,9 +455,10 @@ const splitOscillator = (
       },
       attack: preset.attack * (1.0 + 0.382 * partialProgression),
       decay: preset.decay * (1.0 - 0.618 * partialProgression),
+      sustain: preset.sustain * (0.854 + 0.146 * Math.cos(partialProgression * Math.PI * 2.0)),
       release: preset.release * (1.0 - 0.618 * partialProgression),
       velocitySensitivity: 1.0 - 2.0 * partialProgression,
-      velocityImpactOnGain: partialProgression,
+      velocityImpactOnGain: partialProgression ** 0.414,
     });
 
     oscillators.push(oscillator);
@@ -757,7 +758,7 @@ const getDrumNoiseOscillator = ({
     sustain: 0.0,
     release: attack * 0.618,
     attackDetune,
-    velocityImpactOnGain: 0.764,
+    velocityImpactOnGain: 0.91,
     velocitySensitivity: -0.618,
     getPitch: (pitch = 440.0, velocity = 1.0) => {
       const difference = Math.log2(Math.abs(pitchTarget - pitch)) * Math.sign(pitchTarget - pitch);
@@ -860,7 +861,7 @@ const idiophoneNoiseOscillator = new OscillatorPreset({
   decay: 0.005,
   attackDetuneDuration: 0.008,
   attackDetune: 500,
-  velocityImpactOnGain: 0.764,
+  velocityImpactOnGain: 0.91,
 });
 
 export const marimba = new InstrumentPreset({
@@ -877,7 +878,7 @@ export const marimba = new InstrumentPreset({
       decay: 0.056,
       release: 0.034,
       velocitySensitivity: -1,
-      velocityImpactOnGain: 0.764,
+      velocityImpactOnGain: 0.91,
     },
     idiophoneNoiseOscillator,
   ],
