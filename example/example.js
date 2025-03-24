@@ -36,15 +36,9 @@ const tryToScheduleMusic = () => {
   const music = Music.get();
   const { audioSystem } = Tools.get();
   if (music?.shouldPlay) {
-    scheduleMusic(
-      music.tracks,
-      music.cycle,
-      audioSystem.audioContext,
-      audioSystem.connectInstrument,
-      {
-        playAhead,
-      },
-    );
+    scheduleMusic(music.tracks, music.cycle, audioSystem.audioContext, audioSystem.connectInstrument, {
+      playAhead,
+    });
   }
 };
 

@@ -32,7 +32,7 @@ export const flute = new InstrumentPreset({
       decay: 0.146,
       release: 0.021,
       velocitySensitivity: -1,
-      vibratoEffectOnVolume: 1,
+      vibratoEffectOnVolume: -0.618,
       velocityImpactOnGain: 0.91,
     },
   ],
@@ -45,10 +45,10 @@ export const flute = new InstrumentPreset({
   highPassFrequency: 261.624,
   lowPassFrequency: 4185.984,
 
+  pitchVariance: 5,
+
   attackDetune: -30,
   attackDetuneDuration: 0.034,
-
-  vibratoEffectOnVolume: -0.382,
 
   formants: [{ frequency: 880 }],
 });
@@ -113,6 +113,8 @@ export const oboe = new InstrumentPreset({
 
   highPassFrequency: 233.08,
   lowPassFrequency: 2793.83,
+
+  pitchVariance: 5,
 
   attackDetune: -30,
   attackDetuneDuration: 0.034,
@@ -212,11 +214,13 @@ export const clarinet = new InstrumentPreset({
   sustain: 0.91,
   release: 0.034,
 
+  highPassFrequency: 164.812,
+  lowPassFrequency: 2349.32,
+
   attackDetune: -30,
   attackDetuneDuration: 0.034,
 
-  highPassFrequency: 164.812,
-  lowPassFrequency: 2349.32,
+  pitchVariance: 5,
 
   vibratoEffectOnPitch: 30,
   vibratoEffectOnVolume: 0.146,
@@ -275,11 +279,13 @@ export const saxophone = new InstrumentPreset({
   sustain: 0.764,
   release: 0.034,
 
-  attackDetune: -30,
-  attackDetuneDuration: 0.056,
-
   highPassFrequency: 69.3,
   lowPassFrequency: 1975.53,
+
+  pitchVariance: 5,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.056,
 
   vibratoEffectOnPitch: 30,
   vibratoEffectOnVolume: 0.146,
@@ -334,11 +340,13 @@ export const trumpet = new InstrumentPreset({
   sustain: 0.854,
   release: 0.056,
 
-  attackDetune: -30,
-  attackDetuneDuration: 0.034,
-
   highPassFrequency: 184.996,
   lowPassFrequency: 2349.32,
+
+  pitchVariance: 5,
+
+  attackDetune: -30,
+  attackDetuneDuration: 0.034,
 
   vibratoEffectOnPitch: 30,
   vibratoEffectOnVolume: 0.146,
@@ -419,7 +427,7 @@ export const tuba = new InstrumentPreset({
 
 const mix = (from = 0, to = 1, amount = 0.5) => from * (1.0 - amount) + to * amount;
 
-const splitOscillator = (
+const splitStringOscillator = (
   splits = 4,
   imag = pianoImag,
   preset = piano,
@@ -438,7 +446,8 @@ const splitOscillator = (
     to = isFirst ? 1 : from + Math.round((imag.length - from - 1) / (isLast ? 1 : Math.max(2, splits - 2)));
 
     const partialIndex = mix(from, to, 0.5 + 0.5 * (split / (splits - 1)));
-    const partialProgression = ((partialIndex - 1) / (imag.length - 2)) ** 0.414;
+    const partialProgression = (partialIndex - 1) / (imag.length - 2);
+    const fastPartialProgression = partialProgression ** 0.414;
 
     const newImag = new Float32Array(to + 1);
     const shouldAddSympatheticStrings = newImag.length < 11;
@@ -453,12 +462,11 @@ const splitOscillator = (
         const finalPitch = getPitch(pitch, partialIndex);
         return shouldAddSympatheticStrings ? getSympatheticStringPitch(finalPitch) : finalPitch;
       },
-      attack: preset.attack * (1.0 + 0.382 * partialProgression),
-      decay: preset.decay * (1.0 - 0.618 * partialProgression),
-      sustain: preset.sustain * (0.854 + 0.146 * Math.cos(partialProgression * Math.PI * 2.0)),
-      release: preset.release * (1.0 - 0.618 * partialProgression),
-      velocitySensitivity: 1.0 - 2.0 * partialProgression,
-      velocityImpactOnGain: partialProgression ** 0.414,
+      attack: preset.attack * (1.0 + 0.618 * (1.0 - fastPartialProgression)),
+      decay: preset.decay * (1.0 - 0.618 * fastPartialProgression),
+      release: preset.release * (1.0 - 0.618 * fastPartialProgression),
+      velocitySensitivity: 1.0 - 2.0 * fastPartialProgression,
+      velocityImpactOnGain: fastPartialProgression ** 0.414,
     });
 
     oscillators.push(oscillator);
@@ -504,10 +512,12 @@ export const violin = new InstrumentPreset({
   attack: 0.09,
   decay: 0.146,
   sustain: 1.0,
-  release: 0.236,
+  release: 0.382,
 
   highPassFrequency: 174.61,
   lowPassFrequency: 4186.01,
+
+  pitchVariance: 5,
 
   vibratoEffectOnPitch: 30,
   vibratoEffectOnVolume: 0.146,
@@ -520,7 +530,7 @@ export const violin = new InstrumentPreset({
   ],
 });
 
-violin.oscillators.push(...splitOscillator(3, violinImag, violin));
+violin.oscillators.push(...splitStringOscillator(3, violinImag, violin));
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
@@ -563,7 +573,7 @@ export const viola = new InstrumentPreset({
   ],
 });
 
-viola.oscillators.push(...splitOscillator(3, violaImag, viola));
+viola.oscillators.push(...splitStringOscillator(3, violaImag, viola));
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
@@ -605,7 +615,7 @@ export const cello = new InstrumentPreset({
   ],
 });
 
-cello.oscillators.push(...splitOscillator(3, celloImag, cello));
+cello.oscillators.push(...splitStringOscillator(3, celloImag, cello));
 
 // Guessed based on cello
 const contrabassImag = Float32Array.of(
@@ -642,7 +652,7 @@ export const contrabass = new InstrumentPreset({
   ],
 });
 
-contrabass.oscillators.push(...splitOscillator(3, contrabassImag, contrabass));
+contrabass.oscillators.push(...splitStringOscillator(3, contrabassImag, contrabass));
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
@@ -699,7 +709,7 @@ export const piano = new InstrumentPreset({
   vibratoEffectOnVolume: 0.146,
 });
 
-piano.oscillators.push(...splitOscillator(5, pianoImag, piano, getPianoPitch));
+piano.oscillators.push(...splitStringOscillator(5, pianoImag, piano, getPianoPitch));
 
 const hammeredDulcimerImag = Float32Array.of(
   0.0,
@@ -738,7 +748,7 @@ export const hammeredDulcimer = new InstrumentPreset({
   attackDetuneDuration: 0.004,
 });
 
-hammeredDulcimer.oscillators.push(...splitOscillator(5, hammeredDulcimerImag, hammeredDulcimer, getPianoPitch));
+hammeredDulcimer.oscillators.push(...splitStringOscillator(5, hammeredDulcimerImag, hammeredDulcimer, getPianoPitch));
 
 const getDrumNoiseOscillator = ({
   attack = 0.008,
@@ -1014,6 +1024,8 @@ const plucked = {
   sustain: 0.0,
   release: 0.056,
 
+  pitchVariance: 0,
+
   vibratoEffectOnPitch: 30.0,
   vibratoEffectOnVolume: 0.146,
   vibratoEffectOnStage: 0.0,
@@ -1028,7 +1040,7 @@ export const pluckedViolin = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedViolin.oscillators.push(...splitOscillator(4, violinImag, pluckedViolin, getPluckedStringPitch));
+pluckedViolin.oscillators.push(...splitStringOscillator(4, violinImag, pluckedViolin, getPluckedStringPitch));
 
 export const pluckedViola = new InstrumentPreset({
   ...viola,
@@ -1036,7 +1048,7 @@ export const pluckedViola = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedViola.oscillators.push(...splitOscillator(4, violaImag, pluckedViola, getPluckedStringPitch));
+pluckedViola.oscillators.push(...splitStringOscillator(4, violaImag, pluckedViola, getPluckedStringPitch));
 
 export const pluckedCello = new InstrumentPreset({
   ...cello,
@@ -1044,7 +1056,7 @@ export const pluckedCello = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedCello.oscillators.push(...splitOscillator(4, celloImag, pluckedCello, getPluckedStringPitch));
+pluckedCello.oscillators.push(...splitStringOscillator(4, celloImag, pluckedCello, getPluckedStringPitch));
 
 export const pluckedContrabass = new InstrumentPreset({
   ...contrabass,
@@ -1052,4 +1064,6 @@ export const pluckedContrabass = new InstrumentPreset({
   oscillators: [],
 });
 
-pluckedContrabass.oscillators.push(...splitOscillator(4, contrabassImag, pluckedContrabass, getPluckedStringPitch));
+pluckedContrabass.oscillators.push(
+  ...splitStringOscillator(4, contrabassImag, pluckedContrabass, getPluckedStringPitch),
+);

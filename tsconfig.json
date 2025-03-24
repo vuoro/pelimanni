@@ -1,29 +1,41 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-
-    "types": ["vite/client"],
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    //========== Target and module ==========
+    // Nothing is ever transpiled
+    "target": "ESNext", // sets up "lib" accordingly
+    "module": "NodeNext", // sets up "moduleResolution"
+    // Don’t check .d.ts files
     "skipLibCheck": true,
+    // Emptily imported modules must exist
+    "noUncheckedSideEffectImports": true,
+    // Allow importing JSON
+    "resolveJsonModule": true,
+
+    //========== Type checking ==========
+    // Essential: activates several useful options
+    "strict": true,
+    // Beyond "strict": less important
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    // "noUncheckedIndexedAccess": true, // this would be good to use, but it's too bad at inferring array lengths
+
+    //========== Only JS at non-type level (enables type stripping) ==========
+    // Enforce keyword `type` for type imports etc.
+    "verbatimModuleSyntax": true, // implies "isolatedModules"
+    // Forbid non-JavaScript language constructs such as:
+    // JSX, enums, constructor parameter properties, namespaces
     "erasableSyntaxOnly": true,
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
+    //========== Use filename extension .ts in imports ==========
     "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
+    // Only needed if compiling to JavaScript
+    "rewriteRelativeImportExtensions": true, // from .ts to .js
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "checkJs": true,
-    "allowJs": true,
-    "maxNodeModuleJsDepth": 1
+    //========== Emitted files ==========
+    // tsc only type-checks, doesn’t emit any files
+    "noEmit": true
   }
 }

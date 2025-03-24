@@ -2,6 +2,7 @@ const constantSources = new WeakMap();
 const constantMinusSources = new WeakMap();
 const noiseOscillators = new WeakMap();
 const attackInstabilityOscillators = new WeakMap();
+const varianceOscillators = new WeakMap();
 
 export const getConstantSource = (/** @type {AudioContext} */ audioContext) => {
   /** @type {ConstantSourceNode} */
@@ -70,4 +71,27 @@ export const getAttackInstabilityOscillator = (/** @type {AudioContext} */ audio
   }
 
   return attackInstabilityOscillator;
+};
+
+export const getVarianceOscillator = (/** @type {AudioContext} */ audioContext) => {
+  /** @type {OscillatorNode} */
+  let varianceOscillator = varianceOscillators.get(audioContext);
+  if (!varianceOscillator) {
+    const imag = new Float32Array(2049);
+
+    for (let index = 1.0; index < imag.length; index *= 2.0) {
+      imag[index] = 1.0 / index;
+    }
+
+    varianceOscillator = new OscillatorNode(audioContext, {
+      type: "custom",
+      periodicWave: new PeriodicWave(audioContext, { imag }),
+      frequency: 0.021,
+    });
+
+    varianceOscillator.start();
+    varianceOscillators.set(audioContext, varianceOscillator);
+  }
+
+  return varianceOscillator;
 };
