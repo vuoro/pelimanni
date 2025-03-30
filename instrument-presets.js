@@ -433,6 +433,7 @@ const splitStringOscillator = (
   imag = pianoImag,
   preset = piano,
   getPitch = (pitch = 440.0, _partialIndex = 0) => pitch,
+  splitDivisor = 2.0,
 ) => {
   const oscillators = [];
 
@@ -444,7 +445,9 @@ const splitStringOscillator = (
     const isLast = split === splits - 1;
 
     from = isFirst ? 1 : to + 1;
-    to = isFirst ? 1 : from + Math.round((imag.length - from - 1) / (isLast ? 1 : Math.max(2, splits - 2)));
+    to = isFirst
+      ? 1
+      : from + Math.round((imag.length - from - 1) / (isLast ? 1 : Math.max(splitDivisor, splits - splitDivisor)));
 
     const partialIndex = mix(from, to, 0.5 + 0.5 * (split / (splits - 1)));
     const partialProgression = (partialIndex - 1) / (imag.length - 2);
@@ -1081,7 +1084,7 @@ export const fractalPiano = new InstrumentPreset({
   oscillators: [],
 });
 
-fractalPiano.oscillators.push(...splitStringOscillator(2, fractalImag, fractalPiano));
+fractalPiano.oscillators.push(...splitStringOscillator(3, fractalImag, fractalPiano, undefined, 64.0));
 
 const primes = [
   2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
@@ -1113,7 +1116,7 @@ export const primeCello = new InstrumentPreset({
   lowPassFrequency: cello.lowPassFrequency,
 });
 
-primeCello.oscillators.push(...splitStringOscillator(3, primelessImag, primeCello));
+primeCello.oscillators.push(...splitStringOscillator(3, primelessImag, primeCello, undefined, 64.0));
 
 const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
 const PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
@@ -1137,7 +1140,7 @@ export const fibonacciHarp = new InstrumentPreset({
   lowPassFrequency: piano.lowPassFrequency,
 });
 
-fibonacciHarp.oscillators.push(...splitStringOscillator(4, fibonacciImag, fibonacciHarp));
+fibonacciHarp.oscillators.push(...splitStringOscillator(3, fibonacciImag, fibonacciHarp, undefined, 64.0));
 
 const fibonaccilessHornImag = fibonaccilessImag.slice(3);
 fibonaccilessHornImag[1] = 0.0;
