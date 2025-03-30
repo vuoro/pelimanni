@@ -1105,7 +1105,7 @@ for (let index = 0; index < primes.length; index++) {
 export const primeBell = new InstrumentPreset({
   ...bell,
   group: "Experimental",
-  oscillators: [new OscillatorPreset({ imag: primeImag }), idiophoneNoiseOscillator],
+  oscillators: [{ imag: primeImag }, idiophoneNoiseOscillator],
 });
 
 export const primeCello = new InstrumentPreset({
@@ -1150,7 +1150,7 @@ export const fibonacciHorn = new InstrumentPreset({
   group: "Experimental",
   oscillators: [
     { type: "sine" },
-    { imag: fibonaccilessHornImag, ...trumpet.oscillators[1], getPitch: (pitch) => pitch / 4.0 },
+    { ...trumpet.oscillators[1], imag: fibonaccilessHornImag, getPitch: (pitch) => pitch / 4.0 },
   ],
   highPassFrequency: tuba.highPassFrequency,
   lowPassFrequency: trumpet.lowPassFrequency,
