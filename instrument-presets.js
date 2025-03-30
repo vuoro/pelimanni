@@ -1090,8 +1090,8 @@ const primes = [
   2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
   113, 127,
 ];
-const primeImag = new Float32Array(primes.at(-1) + 1);
-const primelessImag = new Float32Array(primes.at(-1) + 2);
+const primeImag = new Float32Array(127 + 1);
+const primelessImag = new Float32Array(127 + 2);
 
 for (let index = 1; index < primelessImag.length; index++) {
   primelessImag[index] = Math.SQRT2 ** -(index - 1);
@@ -1120,8 +1120,8 @@ primeCello.oscillators.push(...splitStringOscillator(3, primelessImag, primeCell
 
 const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
 const PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
-const fibonacciImag = new Float32Array(fibonacciSeries.at(-1) + 1);
-const fibonaccilessImag = new Float32Array(fibonacciSeries.at(-1) + 2);
+const fibonacciImag = new Float32Array(377 + 1);
+const fibonaccilessImag = new Float32Array(377 + 2);
 
 for (let index = 1; index < fibonaccilessImag.length; index++) {
   fibonaccilessImag[index] = PHI ** -(index - 4);
