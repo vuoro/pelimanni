@@ -1142,13 +1142,16 @@ export const fibonacciHarp = new InstrumentPreset({
 
 fibonacciHarp.oscillators.push(...splitStringOscillator(3, fibonacciImag, fibonacciHarp, undefined, 64.0));
 
-const fibonaccilessHornImag = fibonaccilessImag.slice(3);
-fibonaccilessHornImag[1] = 0.0;
+const fibonaccilessHornImag = fibonaccilessImag;
+fibonaccilessHornImag[4] = 0.0;
 
 export const fibonacciHorn = new InstrumentPreset({
   ...trumpet,
   group: "Experimental",
-  oscillators: [{ type: "sine" }, { imag: fibonaccilessHornImag, ...trumpet.oscillators[1] }],
+  oscillators: [
+    { type: "sine" },
+    { imag: fibonaccilessHornImag, ...trumpet.oscillators[1], getPitch: (pitch) => pitch / 4.0 },
+  ],
   highPassFrequency: tuba.highPassFrequency,
   lowPassFrequency: trumpet.lowPassFrequency,
 });
