@@ -6,7 +6,9 @@ import { AudioSystem } from "./AudioSystem";
 import { Magic, MagicState } from "./magic";
 
 const KeyboardState = new MagicState({
-  instrumentName: (localStorage.getItem("instrumentName") ?? "cello") as keyof typeof allInstrumentPresets,
+  instrumentName: ((localStorage.getItem("instrumentName") ?? "") in allInstrumentPresets
+    ? localStorage.getItem("instrumentName")
+    : "cello") as keyof typeof allInstrumentPresets,
   velocity: JSON.parse(localStorage.getItem("velocity") ?? "0.5") as number,
   attackMultiplier: JSON.parse(localStorage.getItem("attackMultiplier") ?? "1.0") as number,
   releaseMultiplier: JSON.parse(localStorage.getItem("releaseMultiplier") ?? "1.0") as number,
