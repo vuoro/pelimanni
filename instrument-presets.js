@@ -1,3 +1,4 @@
+import { getTsBuildInfoEmitOutputFilePath } from "typescript";
 import { InstrumentPreset, OscillatorPreset } from "./instruments";
 import { getPianoPitch, getPluckedStringPitch } from "./stretched-pitches";
 import { addSympatheticStringsToImag, getSympatheticStringPitch } from "./sympathetic-strings";
@@ -1067,3 +1068,84 @@ export const pluckedContrabass = new InstrumentPreset({
 pluckedContrabass.oscillators.push(
   ...splitStringOscillator(4, contrabassImag, pluckedContrabass, getPluckedStringPitch),
 );
+
+const fractalImag = new Float32Array(512 + 1);
+
+for (let index = 1, gain = 1; index < fractalImag.length; index *= 2.0, gain /= 2.0) {
+  fractalImag[index] = gain;
+}
+
+export const fractalPiano = new InstrumentPreset({
+  ...piano,
+  group: "Experimental",
+  oscillators: [],
+});
+
+fractalPiano.oscillators.push(...splitStringOscillator(2, fractalImag, fractalPiano));
+
+const primes = [
+  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
+  113, 127,
+];
+const primeImag = new Float32Array(primes.at(-1) + 1);
+const primelessImag = new Float32Array(primes.at(-1) + 2);
+
+for (let index = 1; index < primelessImag.length; index++) {
+  primelessImag[index] = Math.SQRT2 ** -(index - 1);
+}
+
+for (let index = 0; index < primes.length; index++) {
+  primeImag[primes[index]] = Math.exp(-index);
+  primelessImag[primes[index]] = 0.0;
+}
+
+export const primeBell = new InstrumentPreset({
+  ...bell,
+  group: "Experimental",
+  oscillators: [new OscillatorPreset({ imag: primeImag }), idiophoneNoiseOscillator],
+});
+
+export const primeCello = new InstrumentPreset({
+  ...cello,
+  group: "Experimental",
+  oscillators: [],
+  highPassFrequency: contrabass.highPassFrequency,
+  lowPassFrequency: cello.lowPassFrequency,
+});
+
+primeCello.oscillators.push(...splitStringOscillator(3, primelessImag, primeCello));
+
+const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
+const PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
+const fibonacciImag = new Float32Array(fibonacciSeries.at(-1) + 1);
+const fibonaccilessImag = new Float32Array(fibonacciSeries.at(-1) + 2);
+
+for (let index = 1; index < fibonaccilessImag.length; index++) {
+  fibonaccilessImag[index] = PHI ** -(index - 4);
+}
+
+for (let index = 0; index < fibonacciSeries.length; index++) {
+  fibonacciImag[fibonacciSeries[index]] = (1.0 / PHI) ** (index * 2);
+  fibonaccilessImag[fibonacciSeries[index]] = 0.0;
+}
+
+export const fibonacciHarp = new InstrumentPreset({
+  ...plucked,
+  group: "Experimental",
+  oscillators: [],
+  highPassFrequency: piano.highPassFrequency,
+  lowPassFrequency: piano.lowPassFrequency,
+});
+
+fibonacciHarp.oscillators.push(...splitStringOscillator(4, fibonacciImag, fibonacciHarp));
+
+const fibonaccilessHornImag = fibonaccilessImag.slice(3);
+fibonaccilessHornImag[1] = 0.0;
+
+export const fibonacciHorn = new InstrumentPreset({
+  ...trumpet,
+  group: "Experimental",
+  oscillators: [{ type: "sine" }, { imag: fibonaccilessHornImag, ...trumpet.oscillators[1] }],
+  highPassFrequency: tuba.highPassFrequency,
+  lowPassFrequency: trumpet.lowPassFrequency,
+});
