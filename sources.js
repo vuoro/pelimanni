@@ -3,6 +3,7 @@ const constantMinusSources = new WeakMap();
 const noiseOscillators = new WeakMap();
 const attackInstabilityOscillators = new WeakMap();
 const varianceOscillators = new WeakMap();
+const vibratoVarianceGains = new WeakMap();
 
 export const getConstantSource = (/** @type {AudioContext} */ audioContext) => {
   /** @type {ConstantSourceNode} */
@@ -94,4 +95,21 @@ export const getVarianceOscillator = (/** @type {AudioContext} */ audioContext) 
   }
 
   return varianceOscillator;
+};
+
+export const getVibratoVarianceGain = (/** @type {AudioContext} */ audioContext) => {
+  /** @type {GainNode} */
+  let vibratoVarianceGain = vibratoVarianceGains.get(audioContext);
+  if (!vibratoVarianceGain) {
+    vibratoVarianceGain = new GainNode(audioContext, {
+      gain: 236.0,
+    });
+
+    const varianceOscillator = getVarianceOscillator(audioContext);
+    varianceOscillator.connect(vibratoVarianceGain);
+
+    vibratoVarianceGains.set(audioContext, vibratoVarianceGain);
+  }
+
+  return vibratoVarianceGain;
 };

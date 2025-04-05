@@ -1,4 +1,9 @@
-import { getAttackInstabilityOscillator, getNoiseOscillator, getVarianceOscillator } from "./sources.js";
+import {
+  getAttackInstabilityOscillator,
+  getNoiseOscillator,
+  getVarianceOscillator,
+  getVibratoVarianceGain,
+} from "./sources.js";
 
 export class InstrumentPreset {
   group = "Miscellaneous";
@@ -206,7 +211,9 @@ export const createInstrument = (/** @type {InstrumentPreset} */ preset, /** @ty
   const hasPitchVariance = pitchVariance !== 0.0;
   const varianceOscillator = getVarianceOscillator(audioContext);
   const pitchVarianceGain = hasPitchVariance ? new GainNode(audioContext, { gain: pitchVariance }) : null;
-  if (hasPitchVariance) varianceOscillator.connect(pitchVarianceGain);
+  if (pitchVarianceGain) varianceOscillator.connect(pitchVarianceGain);
+
+  getVibratoVarianceGain(audioContext).connect(vibratoMain.detune);
 
   // Oscillators
   const oscillators = [];
@@ -474,7 +481,8 @@ export const attackInstrument = (
 
   // Fire up vibrato
   if (canVibrato && vibratoAmount) {
-    vibratoMain.frequency.setTargetAtTime(vibratoFrequency, dynamicStartAt, firstAttack * 0.236);
+    const vibratoDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 - 0.382 * relativeVelocity);
+    vibratoMain.frequency.setTargetAtTime(vibratoFrequency, dynamicStartAt, 0.09 * vibratoDynamics);
   }
 
   instrument.previousStartAt = dynamicStartAt;
@@ -504,15 +512,15 @@ export const releaseInstrument = (
   const relativePitchness = highPitchness * 2.0 - 1.0;
   const relativeVelocity = velocity * 2.0 - 1.0;
 
-  let firstEndAt = undefined;
-  let firstRelease = undefined;
+  let firstEndAt;
+  let firstRelease;
 
   // FIXME: duplicate work here, ugh
   for (const oscillator of oscillators) {
     const { release } = oscillator;
 
-    const releaseDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 + 0.382 * relativeVelocity) * releaseMultiplier;
-    const dynamicRelease = release * releaseDynamics;
+    const releaseDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 + 0.382 * relativeVelocity);
+    const dynamicRelease = release * releaseDynamics * releaseMultiplier;
 
     const dynamicEndAt = releaseEarly
       ? Math.max(
@@ -525,9 +533,6 @@ export const releaseInstrument = (
     firstEndAt = firstEndAt ?? dynamicEndAt;
     firstRelease = firstRelease ?? dynamicRelease;
   }
-
-  firstEndAt = firstEndAt ?? 0.0;
-  firstRelease = firstRelease ?? 0.0;
 
   for (const oscillator of oscillators) {
     const { gainNode, release, attackInstabilityGain, velocitySensitivity } = oscillator;
@@ -544,7 +549,9 @@ export const releaseInstrument = (
   }
 
   cancelPendingInstrumentEvents(instrument, firstEndAt);
-  vibratoMain.frequency.setTargetAtTime(0.0, firstEndAt, firstRelease * 0.236);
+
+  const vibratoDynamics = (1.0 - 0.382 * relativePitchness) * (1.0 - 0.382 * relativeVelocity);
+  vibratoMain.frequency.setTargetAtTime(0.0, firstEndAt, 0.013 * vibratoDynamics);
 
   instrument.previousEndAt = releaseEarly ? firstEndAt : endAt + firstRelease * 0.236;
 };

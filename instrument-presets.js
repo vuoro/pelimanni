@@ -1,7 +1,6 @@
-import { getTsBuildInfoEmitOutputFilePath } from "typescript";
-import { InstrumentPreset, OscillatorPreset } from "./instruments";
-import { getPianoPitch, getPluckedStringPitch } from "./stretched-pitches";
-import { addSympatheticStringsToImag, getSympatheticStringPitch } from "./sympathetic-strings";
+import { InstrumentPreset, OscillatorPreset } from "./instruments.js";
+import { getPianoPitch, getPluckedStringPitch } from "./stretched-pitches.js";
+import { addSympatheticStringsToImag, getSympatheticStringPitch } from "./sympathetic-strings.js";
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html

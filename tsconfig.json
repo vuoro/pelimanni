@@ -36,6 +36,10 @@
 
     //========== Emitted files ==========
     // tsc only type-checks, doesn’t emit any files
-    "noEmit": true
+    "noEmit": true,
+
+    // Use with JS
+    "allowJs": true,
+    "checkJs": true
   }
 }

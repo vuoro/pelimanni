@@ -1,9 +1,9 @@
 import { html, nothing, render } from "lit-html";
 import * as allInstrumentPresets from "../instrument-presets.js";
-import { attackInstrument, createInstrument, destroyInstrument, releaseInstrument } from "../instruments";
-import { frequencyToMidi, midiToFrequency } from "../notes";
-import { AudioSystem } from "./AudioSystem";
-import { Magic, MagicState } from "./magic";
+import { attackInstrument, createInstrument, destroyInstrument, releaseInstrument } from "../instruments.js";
+import { frequencyToMidi, midiToFrequency } from "../notes.js";
+import { AudioSystem } from "./AudioSystem.ts";
+import { Magic, MagicState } from "./magic.ts";
 
 const KeyboardState = new MagicState({
   instrumentName: ((localStorage.getItem("instrumentName") ?? "") in allInstrumentPresets
