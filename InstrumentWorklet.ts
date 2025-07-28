@@ -1,5 +1,4 @@
 // FIXME: remove these types once TypeScript adds them, or when there's a nice package that contains them.
-
 interface AudioWorkletProcessor {
   readonly port: MessagePort;
 }
@@ -27,40 +26,101 @@ interface AudioWorkletProcessorConstructor {
 }
 
 declare function registerProcessor(name: string, processorCtor: AudioWorkletProcessorConstructor): void;
+declare const sampleRate: number;
 
 if (!self.SharedArrayBuffer) {
   throw new Error("SharedArrayBuffer is not supported in your browser.");
 }
 
-class InstrumentWorklet extends AudioWorkletProcessor {
-  // nyquist = (globalThis.sampleRate as number) / 2.0; // handle when adding partialFrequencies
-  frameDuration = globalThis.sampleRate / 48000.0;
+export class InstrumentWorklet extends AudioWorkletProcessor {
+  // nyquist = (sampleRate as number) / 2.0; // handle when adding partialFrequencies
+  sampleRateScale = sampleRate / 48000.0;
 
-  // Parameters
-  notePartialOffsets = Int16Array.of(0, 1);
-  notePartialForces = Float32Array.of(1.0, 0.618);
+  notePartialOffsets: Uint16Array;
+  notePartialAttacks: Float32Array;
 
-  noteDecays = Float32Array.of(0.992);
-  noteSustains = Float32Array.of(0.618);
+  noteDecays: Float32Array;
+  noteSustains: Float32Array;
 
-  partialFrequencies = Float32Array.of(440.0, 880.0);
-  partialAttacks = Float32Array.of(1.0, 1.618);
-  partialDecays = Float32Array.of(0.995, 0.992);
+  partialFrequencies: Float32Array;
+  partialAttacks: Float32Array;
+  partialDecays: Float32Array;
 
-  // States
-  noteForcesBuffer = new SharedArrayBuffer(Float64Array.BYTES_PER_ELEMENT * 1);
-  noteForces = new Float64Array(this.noteForcesBuffer);
-  partialForces = Float64Array.of(0.0, 0.0);
-  partialPhases = Float64Array.of(Math.random(), Math.random());
+  noteForcesBuffer: SharedArrayBuffer;
+  noteForces: Float64Array;
+  partialForces: Float64Array;
+  partialPhases: Float64Array;
 
-  constructor(options: AudioWorkletNodeOptions) {
+  constructor(options?: AudioWorkletNodeOptions) {
     super(options);
+
+    let amountOfNotePartials = 1;
+    let amountOfNotes = 1;
+    let amountOfPartials = 1;
+
+    // Apply custom options
+    const customOptions = options?.processorOptions;
+
+    if (customOptions) {
+      const {
+        notePartialOffsets,
+        notePartialAttacks,
+        noteDecays,
+        noteSustains,
+        partialFrequencies,
+        partialAttacks,
+        partialDecays,
+      } = options?.processorOptions as Partial<InstrumentWorklet>;
+
+      amountOfNotePartials = Math.max(
+        amountOfNotePartials,
+        notePartialOffsets?.length || 0,
+        notePartialAttacks?.length || 0,
+      );
+
+      amountOfNotes = Math.max(amountOfNotes, noteDecays?.length || 0, noteSustains?.length || 0);
+
+      amountOfPartials = Math.max(
+        amountOfPartials,
+        partialFrequencies?.length || 0,
+        partialAttacks?.length || 0,
+        partialDecays?.length || 0,
+      );
+    }
+
+    // Create buffers
+    this.notePartialOffsets = new Uint16Array(amountOfNotePartials);
+    this.notePartialAttacks = new Float32Array(amountOfNotePartials);
+
+    this.noteDecays = new Float32Array(amountOfNotes);
+    this.noteSustains = new Float32Array(amountOfNotes);
+
+    this.partialFrequencies = new Float32Array(amountOfPartials);
+    this.partialAttacks = new Float32Array(amountOfPartials);
+    this.partialDecays = new Float32Array(amountOfPartials);
+
+    this.noteForcesBuffer = new SharedArrayBuffer(amountOfNotes * Float64Array.BYTES_PER_ELEMENT);
+    this.noteForces = new Float64Array(this.noteForcesBuffer);
+    this.partialForces = new Float64Array(amountOfPartials);
+    this.partialPhases = new Float64Array(amountOfPartials);
+
+    // Populate buffers with data from custom options
+    if (customOptions.notePartialOffsets) this.notePartialOffsets.set(customOptions.notePartialOffsets);
+    if (customOptions.notePartialAttacks) this.notePartialAttacks.set(customOptions.notePartialAttacks);
+
+    if (customOptions.noteDecays) this.noteDecays.set(customOptions.noteDecays);
+    if (customOptions.noteSustains) this.noteSustains.set(customOptions.noteSustains);
+
+    if (customOptions.partialFrequencies) this.partialFrequencies.set(customOptions.partialFrequencies);
+    if (customOptions.partialAttacks) this.partialAttacks.set(customOptions.partialAttacks);
+    if (customOptions.partialDecays) this.partialDecays.set(customOptions.partialDecays);
+
     // Send the shared forces buffer to the main thread, so it can "play" the instrument using it
     // FIXME: can this get posted and arrive before the main thread starts listening for it?
     this.port.postMessage({ noteForcesBuffer: this.noteForcesBuffer }, [this.noteForcesBuffer]);
   }
 
-  process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>) {
+  process(_inputs: Float32Array[][], outputs: Float32Array[][], _parameters: Record<string, Float32Array>) {
     // TODO: figure out if this should support multiple outputs and/or channels
     const output = outputs[0];
     const channel = output[0];
@@ -82,7 +142,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const sustain = this.noteSustains[noteIndex];
 
           // TODO: if velocity is bundled into force, this will sustain at the wrong level
-          this.noteForces[noteIndex] -= (this.noteForces[noteIndex] - sustain) * (1.0 - decay) * this.frameDuration;
+          this.noteForces[noteIndex] -= (this.noteForces[noteIndex] - sustain) * (1.0 - decay) * this.sampleRateScale;
         }
 
         // Impact partials with this note
@@ -90,10 +150,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const partialIndex = (noteIndex + notePartialIndex) * partialsPerNote;
           if (partialIndex > this.partialForces.length - 1) continue;
 
-          const attack = this.partialAttacks[partialIndex];
-
           this.partialForces[partialIndex] +=
-            this.noteForces[noteIndex] * attack * this.notePartialForces[notePartialIndex] * this.frameDuration;
+            this.noteForces[noteIndex] *
+            this.notePartialAttacks[notePartialIndex] *
+            this.partialAttacks[partialIndex] *
+            this.sampleRateScale;
         }
       }
 
@@ -109,12 +170,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         const decay = this.partialDecays[partialIndex];
 
         // Decay force
-        this.partialForces[partialIndex] -= this.partialForces[partialIndex] * (1.0 - decay) * this.frameDuration;
+        this.partialForces[partialIndex] -= this.partialForces[partialIndex] * (1.0 - decay) * this.sampleRateScale;
         const force = this.partialForces[partialIndex];
 
         // Increase phase
         this.partialPhases[partialIndex] =
-          (this.partialPhases[partialIndex] + frequency / globalThis.sampleRate) % (Math.PI * 2.0);
+          (this.partialPhases[partialIndex] + frequency / sampleRate) % (Math.PI * 2.0);
         const phase = this.partialPhases[partialIndex];
 
         // Add
@@ -122,7 +183,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         total += force;
       }
 
-      channel[index] = sum / Math.max(0.0, total);
+      channel[index] = sum / Math.max(0.0, total); // FIXME: this probably isn't a good way to normalize
     }
 
     return true;
