@@ -30,7 +30,6 @@ export const Midi = new Magic(
             state.enabled = true;
 
             for (const [key, input] of midiAccess.inputs) {
-              console.log(key, input);
               input.addEventListener("midimessage", onMIDIMessage);
             }
           },
