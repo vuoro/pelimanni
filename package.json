@@ -14,10 +14,10 @@
     "build": "vite build"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "lit-html": "^3.2.1",
-    "typescript": "^5.8.2",
-    "vite": "^6.2.0"
+    "@biomejs/biome": "^2.1.2",
+    "lit-html": "^3.3.1",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.6"
   },
   "packageManager": "pnpm@9.7.0"
 }

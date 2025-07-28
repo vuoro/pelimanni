@@ -4,6 +4,7 @@ import { AudioSystem } from "./AudioSystem.ts";
 import { AudioVisualizer } from "./AudioVisualizer.ts";
 import { Keyboard, KeyboardSettings } from "./Keyboard.ts";
 import { Magic } from "./magic.ts";
+import { Midi } from "./Midi.ts";
 import { Music } from "./Music.ts";
 
 export const Tools = new Magic(() => {
@@ -12,6 +13,7 @@ export const Tools = new Magic(() => {
   const drawVisualizer = AudioVisualizer.get();
 
   Keyboard.get();
+  Midi.get();
   KeyboardSettings.get();
 
   return { audioSystem, audioControls, drawVisualizer };
@@ -46,3 +48,5 @@ setInterval(tryToScheduleMusic, (playAhead / 4.0) * 1000.0);
 
 // Schedules music when page visibility changes, to avoid a gap
 document.addEventListener("visibilitychange", tryToScheduleMusic);
+
+Midi.update(true);

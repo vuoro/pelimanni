@@ -150,7 +150,7 @@ export const KeyboardSettings = new Magic(() => {
         </fieldset>
       </form>
 
-      <p>You can play with mouse, touch, or keyboard. MIDI support coming whenever I manage to buy a device to test it with.</p>
+      <p>You can play via mouse, touch, WASD keyboard, or MIDI devices. At the time of writing MIDI devices will only work in Chromium-based browsers.</p>
       <p>When playing with a keyboard, use 12345/QWERTY/ASDFG/ZXCVB rows (other keyboard layouts should also work… mostly). You can adjust their notes with the "WASD offset" slider above. Hold shift for full sustain and/or alt for full vibrato.</p>
     `,
     document.getElementById("keyboard-settings") as HTMLElement,
@@ -281,8 +281,18 @@ const pointerdown = (event: PointerEvent) => {
   target.releasePointerCapture(event.pointerId);
   pointersDown.add(event.pointerId);
 
-  if (!target.dataset.midiNumber) return;
-  attackWithController(event.pointerId, +(target.dataset.midiNumber ?? 0), event.shiftKey, event.altKey);
+  if (!target.dataset["midiNumber"]) return;
+  attackWithController(
+    event.pointerId,
+    +(target.dataset["midiNumber"] ?? 0),
+    // TODO: add Pointer Event `pressure` support: <0.5 pulls towards 0.0 and >0.5 pulls towards 1.0.
+    // NOTE: Can't use `pressure` for velocity for now, since iPhone always sets it to 0.0 instead of 0.5. -_-
+    KeyboardState.get().velocity +
+      0.056 * (Math.sin(AudioSystem.get().audioContext.currentTime * 0.382) * 0.5 + 0.5) +
+      0.056 * Math.random(),
+    event.shiftKey,
+    event.altKey,
+  );
 };
 
 const pointerup = (event: PointerEvent) => {
@@ -310,7 +320,17 @@ const pointerover = (event: PointerEvent) => {
   if (!target || target === event.currentTarget) return;
 
   if (pointersDown.has(event.pointerId))
-    attackWithController(event.pointerId, +(target.dataset.midiNumber ?? 0), event.shiftKey, event.altKey);
+    attackWithController(
+      event.pointerId,
+      +(target.dataset.midiNumber ?? 0),
+      // TODO: add Pointer Event `pressure` support: <0.5 pulls towards 0.0 and >0.5 pulls towards 1.0.
+      // NOTE: Can't use `pressure` for velocity for now, since iPhone always sets it to 0.0 instead of 0.5. -_-
+      KeyboardState.get().velocity +
+        0.056 * (Math.sin(AudioSystem.get().audioContext.currentTime * 0.382) * 0.5 + 0.5) +
+        0.056 * Math.random(),
+      event.shiftKey,
+      event.altKey,
+    );
 };
 
 const pointersDown = new Set();
@@ -377,7 +397,15 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   const keyOffset = keyOffsets[code as keyof typeof keyOffsets];
   if (keyOffset === undefined) return;
 
-  attackWithController(code, keyOffset + keyboardOffset, event.shiftKey, event.altKey);
+  attackWithController(
+    code,
+    keyOffset + keyboardOffset,
+    KeyboardState.get().velocity +
+      0.056 * (Math.sin(AudioSystem.get().audioContext.currentTime * 0.382) * 0.5 + 0.5) +
+      0.056 * Math.random(),
+    event.shiftKey,
+    event.altKey,
+  );
 });
 
 document.addEventListener("keyup", (event: KeyboardEvent) => {
@@ -407,14 +435,19 @@ document.body.addEventListener("pointerout", (event: PointerEvent) => {
 });
 
 type Instrument = ReturnType<typeof createInstrument>;
-type ControllerId = PointerEvent["pointerId"] | KeyboardEvent["code"];
+type ControllerId = `midi-${number}` | PointerEvent["pointerId"] | KeyboardEvent["code"];
 const freeInstruments = new Set<Instrument>();
 const playingControllers = new Map<ControllerId, Instrument>();
 
-const attackWithController = (controllerId: ControllerId, midiNumber = 0, shiftKey = false, altKey = false) => {
+export const attackWithController = (
+  controllerId: ControllerId,
+  midiNumber = 0,
+  velocity = 0.0,
+  shiftKey = false,
+  altKey = false,
+) => {
   const {
     instrumentName,
-    velocity,
     attackMultiplier,
     vibratoAmount,
     vibratoFrequency,
@@ -454,16 +487,11 @@ const attackWithController = (controllerId: ControllerId, midiNumber = 0, shiftK
 
   playingControllers.set(controllerId, instrument);
 
-  // TODO: add Pointer Event `pressure` support: <0.5 pulls towards 0.0 and >0.5 pulls towards 1.0.
-  // NOTE: Can't use `pressure` for velocity for now, since iPhone always sets it to 0.0 instead of 0.5. -_-
-  const velocityTarget =
-    velocity + 0.056 * (Math.sin(audioContext.currentTime * 0.382) * 0.5 + 0.5) + 0.056 * Math.random();
-
   attackInstrument(
     instrument,
     midiToFrequency(midiNumber),
     audioContext.currentTime,
-    velocityTarget,
+    velocity,
     attackMultiplier,
     0.7,
     altKey ? 1.0 : vibratoAmount,
@@ -608,7 +636,12 @@ const consonances = [
 
 const controllerKeys = new Map();
 
-const releaseWithController = (controllerId: ControllerId, finishAttack = true, shiftKey = false, _altKey = false) => {
+export const releaseWithController = (
+  controllerId: ControllerId,
+  finishAttack = true,
+  shiftKey = false,
+  _altKey = false,
+) => {
   const { audioContext } = AudioSystem.get();
   const instrument = playingControllers.get(controllerId);
   if (!instrument) return;
