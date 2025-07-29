@@ -10,7 +10,7 @@
     "./notes.js": "./notes.js"
   },
   "scripts": {
-    "dev": "vite dev --port 3000 --host",
+    "dev": "vite dev",
     "build": "vite build"
   },
   "devDependencies": {
