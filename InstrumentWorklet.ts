@@ -104,11 +104,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     if (customOptions.partialAttacks) this.partialAttacks.set(customOptions.partialAttacks);
     if (customOptions.partialDecays) this.partialDecays.set(customOptions.partialDecays);
 
+    // Misc
+
     // Handle messages
     this.port.addEventListener("message", ({ data }) => {
       const [type, note, velocity = 1.0, sustain = 0.0] = data;
 
-      console.log({ type, note, velocity, sustain, frequency: this.partialFrequencies[note * 10] });
+      console.log({ type, note, velocity, sustain, frequency: this.partialFrequencies[(note - 21) * 10] });
 
       switch (type) {
         case 0: {
@@ -149,30 +151,25 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       for (let noteIndex = 0; noteIndex < this.noteForces.length; noteIndex++) {
         if (this.noteForces[noteIndex] <= Number.EPSILON) continue;
 
-        // Decay the force to sustain level
-        // FIXME: is there a concurrency problem here?
-        if (this.noteForces[noteIndex] > Number.EPSILON) {
-          const decay = this.noteDecays[noteIndex];
-          const sustain = this.noteSustains[noteIndex];
-          const force = this.noteForces[noteIndex];
-
-          // TODO: if velocity is bundled into force, this will sustain at the wrong level
-          this.noteForces[noteIndex] -= Math.max(0.0, force - sustain) * (1.0 - decay);
-        }
-
         // Impact partials with this note
         for (let notePartialIndex = 0; notePartialIndex < this.notePartialOffsets.length; notePartialIndex++) {
-          const partialIndex = noteIndex * 10 + this.notePartialOffsets[notePartialIndex];
+          const partialIndex = (noteIndex + 11) * 10 + this.notePartialOffsets[notePartialIndex];
           if (partialIndex > this.partialForces.length - 1) continue;
 
           this.partialForces[partialIndex] +=
             this.noteForces[noteIndex] * this.notePartialAttacks[notePartialIndex] * this.partialAttacks[partialIndex];
         }
+
+        // Decay the force to sustain level
+        const decay = this.noteDecays[noteIndex];
+        const sustain = this.noteSustains[noteIndex];
+        const force = this.noteForces[noteIndex];
+
+        this.noteForces[noteIndex] -= Math.max(0.0, force - sustain) * (1.0 - decay);
       }
 
       // Partials play sine waves
       let amplitude = 0.0;
-      let totalForce = 0.0;
 
       for (let partialIndex = 0; partialIndex < this.partialForces.length; partialIndex++) {
         if (this.partialForces[partialIndex] < Number.EPSILON) continue;
@@ -180,11 +177,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         // TODO: would be a bit faster to concatenate these arrays
         const frequency = this.partialFrequencies[partialIndex];
         const decay = this.partialDecays[partialIndex];
-
-        // Decay force
-        this.partialForces[partialIndex] *= decay;
         const force = this.partialForces[partialIndex];
-        if (force < Number.EPSILON) continue;
 
         // Increase phase
         this.partialPhases[partialIndex] =
@@ -193,10 +186,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
         // Add
         amplitude += Math.sin(phase) * force;
-        totalForce += force;
+
+        // Decay force
+        this.partialForces[partialIndex] *= decay;
       }
 
-      channel[index] = amplitude / sampleRate;
+      channel[index] = amplitude;
     }
 
     // FIXME: according to the spec this should return false.

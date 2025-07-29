@@ -487,6 +487,8 @@ export const attackWithController = (
 
   playingControllers.set(controllerId, instrument);
 
+  console.log(midiToFrequency(midiNumber));
+
   attackInstrument(
     instrument,
     midiToFrequency(midiNumber),
