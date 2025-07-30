@@ -62,7 +62,15 @@ class Instrument {
 
   constructor(
     audioContext: AudioContext,
-    { partials, notes = createNotes(), frequencies = createFrequencies(audioContext) }: InstrumentPreset,
+    {
+      partials,
+      notes = createNotes(),
+      frequencies = createFrequencies(audioContext),
+      decay = 0.618,
+      release = 0.618,
+      pitchEffectOnDecay = 0.003,
+      pitchEffectOnRelease = 0.003,
+    }: InstrumentPreset,
   ) {
     const notesStartAt = notes[0];
     const notePartialOffsets = new Int16Array(partials.length);
@@ -79,15 +87,14 @@ class Instrument {
       notePartialForces,
 
       noteDecays: Float64Array.from(notes).map(
-        (note) => (0.5 * Math.exp(-0.002 * midiToFrequency(note))) ** (1.0 / audioContext.sampleRate),
+        (note) => (decay * Math.exp(-pitchEffectOnDecay * midiToFrequency(note))) ** (1.0 / audioContext.sampleRate),
       ),
       partialDecays: Float64Array.from(frequencies).map(
-        (frequency) => (0.618 * Math.exp(-0.002 * frequency)) ** (1.0 / audioContext.sampleRate),
+        (frequency) => (release * Math.exp(-pitchEffectOnRelease * frequency)) ** (1.0 / audioContext.sampleRate),
       ),
 
-      partialAttacks: Float64Array.from(frequencies).map(
-        (frequency) => (Math.log2(frequency) / 10.0) * (1.0 / audioContext.sampleRate),
-      ),
+      // TODO: how does this map to frequency and what should it exactly do? Shorten attack, but also decrease force?
+      partialAttacks: Float64Array.from(frequencies).map((frequency) => 1.0 * (1.0 / audioContext.sampleRate)),
       partialFrequencies: Float64Array.from(frequencies),
     };
 
@@ -130,7 +137,7 @@ class Instrument {
 const createNotes = (notesStartAt = 21, notesEndAt = 108) => {
   const notes = [];
 
-  for (let index = 21; index <= 108; index++) {
+  for (let index = notesStartAt; index <= notesEndAt; index++) {
     notes.push(index);
   }
 
@@ -160,6 +167,10 @@ type InstrumentPreset = {
   partials: number[][];
   notes?: number[];
   frequencies?: number[];
+  decay?: number;
+  release?: number;
+  pitchEffectOnDecay?: number;
+  pitchEffectOnRelease?: number;
 };
 
 const cello: InstrumentPreset = {
@@ -181,7 +192,7 @@ const cello: InstrumentPreset = {
     [15, 0.005],
     [16, 0.003],
   ],
-  frequencies: createFrequencies(AudioSystem.get().audioContext, 0.005, 440.0),
+  frequencies: createFrequencies(AudioSystem.get().audioContext, 0.001, 440.0),
 
   // TODO: add equivalents for or discard these
   // /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
