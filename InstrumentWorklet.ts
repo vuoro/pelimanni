@@ -96,7 +96,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
     this.noteForces = new Float64Array(amountOfNotes);
     this.partialForces = new Float64Array(amountOfPartials);
-    this.partialPhases = new Float64Array(amountOfPartials);
+    this.partialPhases = new Float64Array(amountOfPartials).map((_) => Math.random());
 
     // Populate buffers with data from custom options
     if (customOptions.notePartialOffsets) this.notePartialOffsets.set(customOptions.notePartialOffsets);

@@ -64,15 +64,20 @@ class Instrument {
     audioContext: AudioContext,
     {
       partials,
-      notes = createNotes(),
-      frequencies = createFrequencies(audioContext),
+      getNotes = defaultGetNotes,
+      getFrequencies = defaultGetFrequencies,
       decay = 0.618,
       release = 0.618,
       pitchEffectOnDecay = 0.003,
       pitchEffectOnRelease = 0.003,
+      inharmonicity = 0.0,
+      notesStartAt = 21,
+      notesEndAt = 108,
     }: InstrumentPreset,
   ) {
-    const notesStartAt = notes[0];
+    const notes = getNotes(notesStartAt, notesEndAt);
+    const frequencies = getFrequencies(audioContext.sampleRate, inharmonicity, notesStartAt);
+
     const notePartialOffsets = new Int16Array(partials.length);
     const notePartialForces = new Float64Array(partials.length);
 
@@ -134,7 +139,7 @@ class Instrument {
   // }
 }
 
-const createNotes = (notesStartAt = 21, notesEndAt = 108) => {
+const defaultGetNotes = (notesStartAt = 21, notesEndAt = 108) => {
   const notes = [];
 
   for (let index = notesStartAt; index <= notesEndAt; index++) {
@@ -144,19 +149,14 @@ const createNotes = (notesStartAt = 21, notesEndAt = 108) => {
   return notes;
 };
 
-const createFrequencies = (
-  audioContext: AudioContext,
-  inharmonicity = 0.0,
-  inharmonicityRoot = 440.0,
-  notesStartAt = 21,
-) => {
+const defaultGetFrequencies = (sampleRate: number, inharmonicity = 0.0, notesStartAt = 21) => {
   const frequencies = [];
 
-  // There are 10 frequencies for every note, up to half the sampling rate.
+  // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
-    frequency = frequency * (1.0 + inharmonicity * Math.log2(frequency / inharmonicityRoot));
-    if (frequency > audioContext.sampleRate / 2.0) break;
+    frequency = frequency * (1.0 + inharmonicity * Math.log2(frequency / midiToFrequency(65)));
+    if (frequency > sampleRate / 2.0) break;
     frequencies.push(frequency);
   }
 
@@ -165,12 +165,15 @@ const createFrequencies = (
 
 type InstrumentPreset = {
   partials: number[][];
-  notes?: number[];
-  frequencies?: number[];
+  notesStartAt?: number;
+  notesEndAt?: number;
+  getNotes?: typeof defaultGetNotes;
+  getFrequencies?: typeof defaultGetFrequencies;
   decay?: number;
   release?: number;
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;
+  inharmonicity?: number;
 };
 
 const cello: InstrumentPreset = {
@@ -192,7 +195,7 @@ const cello: InstrumentPreset = {
     [15, 0.005],
     [16, 0.003],
   ],
-  frequencies: createFrequencies(AudioSystem.get().audioContext, 0.001, 440.0),
+  inharmonicity: 0.001,
 
   // TODO: add equivalents for or discard these
   // /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
