@@ -48,6 +48,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   partialDecays: Float64Array;
 
   noteForces: Float64Array;
+  noteForceTargets: Float64Array;
   partialForces: Float64Array;
   partialPhases: Float64Array;
 
@@ -95,6 +96,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.partialDecays = new Float64Array(amountOfPartials);
 
     this.noteForces = new Float64Array(amountOfNotes);
+    this.noteForceTargets = new Float64Array(amountOfNotes);
     this.partialForces = new Float64Array(amountOfPartials);
     this.partialPhases = new Float64Array(amountOfPartials).map((_) => Math.random());
 
@@ -125,13 +127,14 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       switch (type) {
         case 0: {
           // attack
-          this.noteForces[note] = velocity;
+          this.noteForceTargets[note] = velocity;
           this.noteVelocities[note] = velocity;
           this.noteSustains[note] = sustain * velocity;
           break;
         }
         case 1: {
           // release
+          this.noteForceTargets[note] = 0.0;
           this.noteForces[note] = 0.0;
           this.noteSustains[note] = 0.0;
           break;
@@ -161,6 +164,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     for (let index = 0; index < channel.length; index++) {
       // Notes add force to partials
       for (let noteIndex = 0; noteIndex < this.noteForces.length; noteIndex++) {
+        // Note forces head towards their targets
+        this.noteForces[noteIndex] =
+          this.noteForces[noteIndex] + (this.noteForceTargets[noteIndex] - this.noteForces[noteIndex]) * 0.00001;
+
+        // Skip if dormant
         if (this.noteForces[noteIndex] <= Number.EPSILON) continue;
 
         // Decay the force to sustain level
@@ -177,10 +185,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             continue;
           }
 
-          this.partialForces[partialIndex] +=
-            this.noteForces[noteIndex] *
-            this.notePartialForces[notePartialIndex] ** (1.618 - this.noteVelocities[noteIndex]) *
-            this.partialAttacks[partialIndex];
+          this.partialForces[partialIndex] += this.noteForces[noteIndex] * this.notePartialForces[notePartialIndex];
         }
       }
 

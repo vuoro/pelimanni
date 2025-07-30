@@ -83,7 +83,7 @@ class Instrument {
 
     for (const [index, [partialRatio, amplitude]] of partials.entries()) {
       notePartialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      notePartialForces[index] = amplitude;
+      notePartialForces[index] = amplitude / audioContext.sampleRate;
     }
 
     const processorOptions = {
@@ -99,7 +99,7 @@ class Instrument {
       ),
 
       // TODO: how does this map to frequency and what should it exactly do? Shorten attack, but also decrease force?
-      partialAttacks: Float64Array.from(frequencies).map((frequency) => 1.0 * (1.0 / audioContext.sampleRate)),
+      partialAttacks: Float64Array.from(frequencies).map((frequency) => Math.exp(-0.001 * frequency)),
       partialFrequencies: Float64Array.from(frequencies),
     };
 
