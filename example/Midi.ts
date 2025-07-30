@@ -1,5 +1,5 @@
 import InstrumentWorklet from "../InstrumentWorklet.ts?url";
-import { frequencyToMidi10, midiToFrequency10 } from "../notes.js";
+import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "../notes.js";
 import { AudioSystem } from "./AudioSystem.ts";
 import { releaseWithController } from "./Keyboard.ts";
 import { Magic } from "./magic.ts";
@@ -15,7 +15,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
         releaseWithController(`midi-${midiNumber}`, false);
         postMessageToInstrument(1, midiNumber, velocity / 127.0, 0.0);
       } else {
-        postMessageToInstrument(0, midiNumber, velocity / 127.0, 0.618);
+        postMessageToInstrument(0, midiNumber, velocity / 127.0, 0.382);
       }
     }
   }
@@ -32,6 +32,7 @@ export const Midi = new Magic(
           (midiAccess) => {
             state.midiAccess = midiAccess;
             state.enabled = true;
+            console.log(midiAccess);
 
             for (const [key, input] of midiAccess.inputs) {
               input.addEventListener("midimessage", onMIDIMessage);
@@ -63,17 +64,23 @@ audioContext.audioWorklet
     const frequencies = [];
     const partials = [];
 
-    const noteStart = 21;
-    const noteEnd = 109;
+    const notesStartAt = 21;
+    const notesEndAt = 108;
 
-    for (let index = 21; index < noteEnd; index++) {
+    for (let index = 21; index <= notesEndAt; index++) {
       notes.push(index);
     }
 
-    for (let index = noteStart * 10; index < 150 * 10; index++) {
-      const frequency = midiToFrequency10(index);
+    console.log(notes);
+
+    const inharmonicity = 0.005;
+    const inharmonicityRoot = 440.0;
+
+    for (let index = notesStartAt * 10; index < 150 * 10; index++) {
+      let frequency = midiToFrequency10(index);
+      frequency = frequency * (1.0 + inharmonicity * Math.log2(frequency / inharmonicityRoot));
       if (frequency > audioContext.sampleRate / 2.0) break;
-      frequencies.push(frequency * (1.0 + 0.013 * Math.log2(frequency / 440.0)));
+      frequencies.push(frequency);
     }
 
     // const partialRatios = [0.25, 0.5, 1.2, 1.5, 2.0, 3.0, 4.0, 5.4, 6.75, 8, 16, 32];
@@ -112,14 +119,20 @@ audioContext.audioWorklet
 
     const cello = new AudioWorkletNode(audioContext, "Instrument", {
       processorOptions: {
+        notesStartAt,
         notePartialOffsets: Uint16Array.from(partials),
         notePartialAttacks: Float64Array.from(partialAmplitudes),
-        noteDecays: new Float64Array(notes.length).fill(0.00001 ** (1.0 / audioContext.sampleRate)),
 
-        partialDecays: Float64Array.from(frequencies).map(
-          (frequency) => (0.5 * Math.exp(-0.0005 * frequency)) ** (1.0 / audioContext.sampleRate),
+        noteDecays: Float64Array.from(notes).map(
+          (note) => (0.146 * Math.exp(-0.002 * midiToFrequency(note))) ** (1.0 / audioContext.sampleRate),
         ),
-        partialAttacks: new Float64Array(frequencies.length).fill(1.0 / audioContext.sampleRate),
+        partialDecays: Float64Array.from(frequencies).map(
+          (frequency) => (0.618 * Math.exp(-0.002 * frequency)) ** (1.0 / audioContext.sampleRate),
+        ),
+
+        partialAttacks: Float64Array.from(frequencies).map(
+          (frequency) => (Math.log2(frequency) / 10.0) * (1.0 / audioContext.sampleRate),
+        ),
         partialFrequencies: Float64Array.from(frequencies),
       },
     });
