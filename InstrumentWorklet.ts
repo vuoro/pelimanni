@@ -36,11 +36,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   shouldPlay = true;
   notesStartAt = 0;
 
-  notePartialOffsets: Uint16Array;
-  notePartialAttacks: Float64Array;
+  notePartialOffsets: Int16Array;
+  notePartialForces: Float64Array;
 
   noteDecays: Float64Array;
   noteSustains: Float64Array;
+  noteVelocities: Float64Array;
 
   partialFrequencies: Float64Array;
   partialAttacks: Float64Array;
@@ -61,13 +62,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     const customOptions = options?.processorOptions;
 
     if (customOptions) {
-      const { notePartialOffsets, notePartialAttacks, noteDecays, partialFrequencies, partialAttacks, partialDecays } =
+      const { notePartialOffsets, notePartialForces, noteDecays, partialFrequencies, partialAttacks, partialDecays } =
         options?.processorOptions as Partial<InstrumentWorklet>;
 
       amountOfNotePartials = Math.max(
         amountOfNotePartials,
         notePartialOffsets?.length || 0,
-        notePartialAttacks?.length || 0,
+        notePartialForces?.length || 0,
       );
 
       this.notesStartAt = customOptions.notesStartAt || this.notesStartAt;
@@ -82,11 +83,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     }
 
     // Create buffers
-    this.notePartialOffsets = new Uint16Array(amountOfNotePartials);
-    this.notePartialAttacks = new Float64Array(amountOfNotePartials);
+    this.notePartialOffsets = new Int16Array(amountOfNotePartials);
+    this.notePartialForces = new Float64Array(amountOfNotePartials);
 
     this.noteDecays = new Float64Array(amountOfNotes);
     this.noteSustains = new Float64Array(amountOfNotes);
+    this.noteVelocities = new Float64Array(amountOfNotes);
 
     this.partialFrequencies = new Float64Array(amountOfPartials);
     this.partialAttacks = new Float64Array(amountOfPartials);
@@ -98,7 +100,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
     // Populate buffers with data from custom options
     if (customOptions.notePartialOffsets) this.notePartialOffsets.set(customOptions.notePartialOffsets);
-    if (customOptions.notePartialAttacks) this.notePartialAttacks.set(customOptions.notePartialAttacks);
+    if (customOptions.notePartialForces) this.notePartialForces.set(customOptions.notePartialForces);
 
     if (customOptions.noteDecays) this.noteDecays.set(customOptions.noteDecays);
 
@@ -124,7 +126,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         case 0: {
           // attack
           this.noteForces[note] = velocity;
-          this.noteSustains[note] = sustain;
+          this.noteVelocities[note] = velocity;
+          this.noteSustains[note] = sustain * velocity;
           break;
         }
         case 1: {
@@ -135,7 +138,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         }
         case 2: {
           // stop
-          // FIXME: this can be removed once Chrome starts supporting process returning false correctly
+          // FIXME: this whole thing can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
+          // https://issues.chromium.org/issues/41435286
           this.shouldPlay = false;
           break;
         }
@@ -174,7 +178,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           this.partialForces[partialIndex] +=
-            this.noteForces[noteIndex] * this.notePartialAttacks[notePartialIndex] * this.partialAttacks[partialIndex];
+            this.noteForces[noteIndex] *
+            this.notePartialForces[notePartialIndex] ** (1.618 - this.noteVelocities[noteIndex]) *
+            this.partialAttacks[partialIndex];
         }
       }
 
