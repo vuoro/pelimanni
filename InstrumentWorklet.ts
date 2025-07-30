@@ -191,6 +191,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Partials play sine waves
       let amplitude = 0.0;
+      let totalForce = 0.0;
 
       for (let partialIndex = 0; partialIndex < this.partialForces.length; partialIndex++) {
         if (this.partialForces[partialIndex] < Number.EPSILON) continue;
@@ -209,9 +210,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         // Add
         const force = this.partialForces[partialIndex];
         amplitude += Math.sin(phase * (Math.PI * 2.0)) * force;
+        totalForce += force;
       }
 
-      channel[index] = amplitude;
+      channel[index] = amplitude / (totalForce + Math.exp(-totalForce));
     }
 
     // FIXME: according to the spec this should return false.
