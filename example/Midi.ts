@@ -19,7 +19,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
         releaseWithController(`midi-${midiNumber}`, false);
         tempInstrument.release(midiNumber);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0, 0.5);
+        tempInstrument.attack(midiNumber, velocity / 127.0, 0.382);
       }
     }
   }
@@ -66,20 +66,20 @@ class Instrument {
       partials,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
-      attack = 1.0,
-      decay = 0.236,
-      release = 0.236,
-      velocityImpactOnAttack = 16.0,
-      pitchEffectOnAttack = 1.0,
-      pitchEffectOnDecay = 0.0,
-      pitchEffectOnRelease = 0.0,
-      inharmonicity = 0.0,
+      attack = 0.0,
+      decay = 0.00001,
+      release = 0.764,
+      velocityImpactOnAttack = 8.0,
+      pitchEffectOnAttack = 0.034,
+      pitchEffectOnDecay = 0.005,
+      pitchEffectOnRelease = 0.005,
+      stretchTuning = 0.0,
       notesStartAt = 21,
       notesEndAt = 108,
     }: InstrumentPreset,
   ) {
     const notes = getNotes(notesStartAt, notesEndAt);
-    const frequencies = getFrequencies(audioContext.sampleRate, inharmonicity, notesStartAt);
+    const frequencies = getFrequencies(audioContext.sampleRate, stretchTuning, notesStartAt);
 
     const notePartialOffsets = new Int16Array(partials.length);
     const notePartialAmplitudes = new Float64Array(partials.length);
@@ -99,17 +99,21 @@ class Instrument {
       noteAttacks: Float64Array.from(notes).map((note) =>
         Math.min(
           1.0,
-          1.0 / (attack / (1.0 + pitchEffectOnAttack * Math.log2(midiToFrequency(note)))) / audioContext.sampleRate,
+          ((1.0 / attack) * (1.0 + pitchEffectOnAttack * midiToFrequency(note - notesStartAt + 1))) /
+            audioContext.sampleRate,
         ),
       ),
       noteDecays: Float64Array.from(notes).map(
         (note) =>
           1.0 -
-          (decay / (1.0 + pitchEffectOnDecay * Math.log2(midiToFrequency(note)))) ** (1.0 / audioContext.sampleRate),
+          (decay / (1.0 + pitchEffectOnDecay * midiToFrequency(note - notesStartAt + 1))) **
+            (1.0 / audioContext.sampleRate),
       ),
 
       partialReleases: Float64Array.from(frequencies).map(
-        (frequency) => (release / (1.0 + pitchEffectOnRelease * frequency)) ** (1.0 / audioContext.sampleRate),
+        (frequency) =>
+          (release / (1.0 + pitchEffectOnRelease * (frequency - midiToFrequency(notesStartAt - 1)))) **
+          (1.0 / audioContext.sampleRate),
       ),
       partialFrequencies: Float64Array.from(frequencies),
     };
@@ -160,13 +164,13 @@ const defaultGetNotes = (notesStartAt = 21, notesEndAt = 108) => {
   return notes;
 };
 
-const defaultGetFrequencies = (sampleRate: number, inharmonicity = 0.0, notesStartAt = 21) => {
+const defaultGetFrequencies = (sampleRate: number, stretchTuning = 0.0, notesStartAt = 21) => {
   const frequencies = [];
 
   // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
-    frequency = frequency * (1.0 + inharmonicity * Math.log2(frequency / midiToFrequency(65)));
+    frequency = frequency * (1.0 + stretchTuning * Math.log2(frequency / midiToFrequency(65)));
     if (frequency > sampleRate / 2.0) break;
     frequencies.push(frequency);
   }
@@ -187,7 +191,7 @@ type InstrumentPreset = {
   pitchEffectOnAttack?: number;
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;
-  inharmonicity?: number;
+  stretchTuning?: number;
 };
 
 const cello: InstrumentPreset = {
@@ -209,11 +213,11 @@ const cello: InstrumentPreset = {
     [15, 0.005],
     [16, 0.003],
   ],
-  inharmonicity: 0.001,
-  // attack: 0.008,
-  // decay: 0.618,
-  // release: 0.764,
-  // velocityImpactOnAttack: 48.0,
+  stretchTuning: 0.001,
+  attack: 0.056,
+  decay: 0.236,
+  release: 0.5,
+  velocityImpactOnAttack: 8.0,
 
   // TODO: add equivalents for or discard these
   // /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
@@ -281,6 +285,9 @@ const bell: InstrumentPreset = {
     [16, 0.236],
     [32, 0.146],
   ],
+  attack: 0.0,
+  decay: 0.00001,
+  release: 0.764,
 };
 
 const tempInstrument = new Instrument(AudioSystem.get().audioContext, cello);

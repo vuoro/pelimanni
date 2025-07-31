@@ -160,7 +160,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           this.partialForces[partialIndex] += this.noteForces[noteIndex] * this.notePartialAmplitudes[notePartialIndex];
         }
 
-        // Decay the force to sustain level
+        // Decay the force towards sustain level
         this.noteForceTargets[noteIndex] -=
           Math.max(0.0, this.noteForceTargets[noteIndex] - this.noteSustains[noteIndex]) * this.noteDecays[noteIndex];
       }
@@ -173,11 +173,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         const force = this.partialForces[partialIndex];
         if (force < Number.EPSILON) continue;
 
-        // TODO: would be a bit faster to concatenate these arrays
-        const frequency = this.partialFrequencies[partialIndex];
-
         // Increase phase
-        this.partialPhases[partialIndex] = (this.partialPhases[partialIndex] + frequency / sampleRate) % 1.0;
+        this.partialPhases[partialIndex] =
+          (this.partialPhases[partialIndex] + this.partialFrequencies[partialIndex] / sampleRate) % 1.0;
         const phase = this.partialPhases[partialIndex];
 
         // Add
