@@ -36,107 +36,84 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   shouldPlay = true;
   notesStartAt = 0;
 
-  notePartialOffsets: Int16Array;
-  notePartialForces: Float64Array;
+  attack = 1.0;
+  velocityImpactOnAttack = 8.0;
 
+  notePartialOffsets: Int16Array;
+  notePartialAmplitudes: Float64Array;
+
+  noteAttacks: Float64Array;
   noteDecays: Float64Array;
-  noteSustains: Float64Array;
-  noteVelocities: Float64Array;
 
   partialFrequencies: Float64Array;
-  partialAttacks: Float64Array;
-  partialDecays: Float64Array;
+  partialReleases: Float64Array;
 
+  noteSustains: Float64Array;
+  noteVelocities: Float64Array;
   noteForces: Float64Array;
   noteForceTargets: Float64Array;
   partialForces: Float64Array;
   partialPhases: Float64Array;
 
   constructor(options?: AudioWorkletNodeOptions) {
+    if (!options) throw new Error("Missing AudioWorkletNodeOptions");
     super(options);
 
-    let amountOfNotePartials = 1;
-    let amountOfNotes = 1;
-    let amountOfPartials = 1;
-
     // Apply custom options
-    const customOptions = options?.processorOptions;
+    const customOptions: InstrumentWorklet = options.processorOptions;
 
-    if (customOptions) {
-      const { notePartialOffsets, notePartialForces, noteDecays, partialFrequencies, partialAttacks, partialDecays } =
-        options?.processorOptions as Partial<InstrumentWorklet>;
+    const { notePartialOffsets, notePartialAmplitudes, noteAttacks, noteDecays, partialFrequencies, partialReleases } =
+      customOptions;
 
-      amountOfNotePartials = Math.max(
-        amountOfNotePartials,
-        notePartialOffsets?.length || 0,
-        notePartialForces?.length || 0,
-      );
+    this.notesStartAt = customOptions.notesStartAt || this.notesStartAt;
 
-      this.notesStartAt = customOptions.notesStartAt || this.notesStartAt;
-      amountOfNotes = Math.max(amountOfNotes, noteDecays?.length || 0) + this.notesStartAt;
-
-      amountOfPartials = Math.max(
-        amountOfPartials,
-        partialFrequencies?.length || 0,
-        partialAttacks?.length || 0,
-        partialDecays?.length || 0,
-      );
-    }
+    this.attack = customOptions.attack ?? this.attack;
+    this.velocityImpactOnAttack = customOptions.velocityImpactOnAttack ?? this.velocityImpactOnAttack;
 
     // Create buffers
-    this.notePartialOffsets = new Int16Array(amountOfNotePartials);
-    this.notePartialForces = new Float64Array(amountOfNotePartials);
+    this.notePartialOffsets = Int16Array.from(notePartialOffsets);
+    this.notePartialAmplitudes = Float64Array.from(notePartialAmplitudes);
 
-    this.noteDecays = new Float64Array(amountOfNotes);
-    this.noteSustains = new Float64Array(amountOfNotes);
-    this.noteVelocities = new Float64Array(amountOfNotes);
+    this.noteAttacks = Float64Array.from(noteAttacks);
+    this.noteDecays = Float64Array.from(noteDecays);
 
-    this.partialFrequencies = new Float64Array(amountOfPartials);
-    this.partialAttacks = new Float64Array(amountOfPartials);
-    this.partialDecays = new Float64Array(amountOfPartials);
+    this.partialFrequencies = Float64Array.from(partialFrequencies);
+    this.partialReleases = Float64Array.from(partialReleases);
 
-    this.noteForces = new Float64Array(amountOfNotes);
-    this.noteForceTargets = new Float64Array(amountOfNotes);
-    this.partialForces = new Float64Array(amountOfPartials);
-    this.partialPhases = new Float64Array(amountOfPartials).map((_) => Math.random());
+    this.noteSustains = new Float64Array(noteAttacks.length);
+    this.noteVelocities = new Float64Array(noteAttacks.length);
+    this.noteForces = new Float64Array(noteAttacks.length);
+    this.noteForceTargets = new Float64Array(noteAttacks.length);
 
-    // Populate buffers with data from custom options
-    if (customOptions.notePartialOffsets) this.notePartialOffsets.set(customOptions.notePartialOffsets);
-    if (customOptions.notePartialForces) this.notePartialForces.set(customOptions.notePartialForces);
-
-    if (customOptions.noteDecays) this.noteDecays.set(customOptions.noteDecays);
-
-    if (customOptions.partialFrequencies) this.partialFrequencies.set(customOptions.partialFrequencies);
-    if (customOptions.partialAttacks) this.partialAttacks.set(customOptions.partialAttacks);
-    if (customOptions.partialDecays) this.partialDecays.set(customOptions.partialDecays);
-
-    // Misc
+    this.partialForces = new Float64Array(partialFrequencies.length);
+    this.partialPhases = new Float64Array(partialFrequencies.length).map((_) => Math.random());
 
     // Handle messages
     this.port.addEventListener("message", ({ data }) => {
       const [type, note, velocity = 1.0, sustain = 0.0] = data;
+      const noteIndex = note - this.notesStartAt;
 
       console.log({
         type,
         note,
         velocity,
         sustain,
-        frequency: this.partialFrequencies[(note - this.notesStartAt) * 10],
+        frequency: this.partialFrequencies[noteIndex * 10],
       });
 
       switch (type) {
         case 0: {
           // attack
-          this.noteForceTargets[note] = velocity;
-          this.noteVelocities[note] = velocity;
-          this.noteSustains[note] = sustain * velocity;
+          this.noteForceTargets[noteIndex] = velocity;
+          this.noteVelocities[noteIndex] = velocity;
+          this.noteSustains[noteIndex] = sustain * velocity;
           break;
         }
         case 1: {
           // release
-          this.noteForceTargets[note] = 0.0;
-          this.noteForces[note] = 0.0;
-          this.noteSustains[note] = 0.0;
+          this.noteForceTargets[noteIndex] = 0.0;
+          this.noteForces[noteIndex] = 0.0;
+          this.noteSustains[noteIndex] = 0.0;
           break;
         }
         case 2: {
@@ -164,29 +141,28 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     for (let index = 0; index < channel.length; index++) {
       // Notes add force to partials
       for (let noteIndex = 0; noteIndex < this.noteForces.length; noteIndex++) {
-        // Note forces head towards their targets
-        this.noteForces[noteIndex] =
-          this.noteForces[noteIndex] + (this.noteForceTargets[noteIndex] - this.noteForces[noteIndex]) * 0.00001;
-
         // Skip if dormant
-        if (this.noteForces[noteIndex] <= Number.EPSILON) continue;
+        if (this.noteForces[noteIndex] + this.noteForceTargets[noteIndex] <= Number.EPSILON) continue;
 
-        // Decay the force to sustain level
-        const decay = this.noteDecays[noteIndex];
-        const sustain = this.noteSustains[noteIndex];
-        const force = this.noteForces[noteIndex];
-
-        this.noteForces[noteIndex] -= Math.max(0.0, force - sustain) * (1.0 - decay);
+        // Note forces head towards their targets
+        this.noteForces[noteIndex] +=
+          (this.noteForceTargets[noteIndex] - this.noteForces[noteIndex]) *
+          (this.noteAttacks[noteIndex] /
+            (this.velocityImpactOnAttack - (this.velocityImpactOnAttack - 1.0) * this.noteVelocities[noteIndex]));
 
         // Impact partials with this note
         for (let notePartialIndex = 0; notePartialIndex < this.notePartialOffsets.length; notePartialIndex++) {
-          const partialIndex = (noteIndex - this.notesStartAt) * 10 + this.notePartialOffsets[notePartialIndex];
+          const partialIndex = noteIndex * 10 + this.notePartialOffsets[notePartialIndex];
           if (partialIndex > this.partialForces.length - 1) {
             continue;
           }
 
-          this.partialForces[partialIndex] += this.noteForces[noteIndex] * this.notePartialForces[notePartialIndex];
+          this.partialForces[partialIndex] += this.noteForces[noteIndex] * this.notePartialAmplitudes[notePartialIndex];
         }
+
+        // Decay the force to sustain level
+        this.noteForceTargets[noteIndex] -=
+          Math.max(0.0, this.noteForceTargets[noteIndex] - this.noteSustains[noteIndex]) * this.noteDecays[noteIndex];
       }
 
       // Partials play sine waves
@@ -194,23 +170,22 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       let totalForce = 0.0;
 
       for (let partialIndex = 0; partialIndex < this.partialForces.length; partialIndex++) {
-        if (this.partialForces[partialIndex] < Number.EPSILON) continue;
+        const force = this.partialForces[partialIndex];
+        if (force < Number.EPSILON) continue;
 
         // TODO: would be a bit faster to concatenate these arrays
         const frequency = this.partialFrequencies[partialIndex];
-
-        // Decay force
-        const decay = this.partialDecays[partialIndex];
-        this.partialForces[partialIndex] *= decay;
 
         // Increase phase
         this.partialPhases[partialIndex] = (this.partialPhases[partialIndex] + frequency / sampleRate) % 1.0;
         const phase = this.partialPhases[partialIndex];
 
         // Add
-        const force = this.partialForces[partialIndex];
         amplitude += Math.sin(phase * (Math.PI * 2.0)) * force;
         totalForce += force;
+
+        // Decay force
+        this.partialForces[partialIndex] *= this.partialReleases[partialIndex];
       }
 
       channel[index] = amplitude / (totalForce + Math.exp(-totalForce));

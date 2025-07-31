@@ -19,7 +19,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
         releaseWithController(`midi-${midiNumber}`, false);
         tempInstrument.release(midiNumber);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0, 0.382);
+        tempInstrument.attack(midiNumber, velocity / 127.0, 0.5);
       }
     }
   }
@@ -66,10 +66,13 @@ class Instrument {
       partials,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
-      decay = 0.618,
-      release = 0.618,
-      pitchEffectOnDecay = 0.003,
-      pitchEffectOnRelease = 0.003,
+      attack = 1.0,
+      decay = 0.236,
+      release = 0.236,
+      velocityImpactOnAttack = 16.0,
+      pitchEffectOnAttack = 1.0,
+      pitchEffectOnDecay = 0.0,
+      pitchEffectOnRelease = 0.0,
       inharmonicity = 0.0,
       notesStartAt = 21,
       notesEndAt = 108,
@@ -79,27 +82,35 @@ class Instrument {
     const frequencies = getFrequencies(audioContext.sampleRate, inharmonicity, notesStartAt);
 
     const notePartialOffsets = new Int16Array(partials.length);
-    const notePartialForces = new Float64Array(partials.length);
+    const notePartialAmplitudes = new Float64Array(partials.length);
 
     for (const [index, [partialRatio, amplitude]] of partials.entries()) {
       notePartialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      notePartialForces[index] = amplitude / audioContext.sampleRate;
+      notePartialAmplitudes[index] = amplitude / audioContext.sampleRate;
     }
 
     const processorOptions = {
       notesStartAt,
       notePartialOffsets,
-      notePartialForces,
+      notePartialAmplitudes,
 
+      velocityImpactOnAttack,
+
+      noteAttacks: Float64Array.from(notes).map((note) =>
+        Math.min(
+          1.0,
+          1.0 / (attack / (1.0 + pitchEffectOnAttack * Math.log2(midiToFrequency(note)))) / audioContext.sampleRate,
+        ),
+      ),
       noteDecays: Float64Array.from(notes).map(
-        (note) => (decay * Math.exp(-pitchEffectOnDecay * midiToFrequency(note))) ** (1.0 / audioContext.sampleRate),
-      ),
-      partialDecays: Float64Array.from(frequencies).map(
-        (frequency) => (release * Math.exp(-pitchEffectOnRelease * frequency)) ** (1.0 / audioContext.sampleRate),
+        (note) =>
+          1.0 -
+          (decay / (1.0 + pitchEffectOnDecay * Math.log2(midiToFrequency(note)))) ** (1.0 / audioContext.sampleRate),
       ),
 
-      // TODO: how does this map to frequency and what should it exactly do? Shorten attack, but also decrease force?
-      partialAttacks: Float64Array.from(frequencies).map((frequency) => Math.exp(-0.001 * frequency)),
+      partialReleases: Float64Array.from(frequencies).map(
+        (frequency) => (release / (1.0 + pitchEffectOnRelease * frequency)) ** (1.0 / audioContext.sampleRate),
+      ),
       partialFrequencies: Float64Array.from(frequencies),
     };
 
@@ -169,8 +180,11 @@ type InstrumentPreset = {
   notesEndAt?: number;
   getNotes?: typeof defaultGetNotes;
   getFrequencies?: typeof defaultGetFrequencies;
+  attack?: number;
   decay?: number;
   release?: number;
+  velocityImpactOnAttack?: number;
+  pitchEffectOnAttack?: number;
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;
   inharmonicity?: number;
@@ -196,6 +210,10 @@ const cello: InstrumentPreset = {
     [16, 0.003],
   ],
   inharmonicity: 0.001,
+  // attack: 0.008,
+  // decay: 0.618,
+  // release: 0.764,
+  // velocityImpactOnAttack: 48.0,
 
   // TODO: add equivalents for or discard these
   // /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
