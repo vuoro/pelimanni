@@ -59,6 +59,7 @@ export const Midi = new Magic(
 
 class Instrument {
   node: Promise<AudioWorkletNode>;
+  audioContext: AudioContext;
 
   constructor(
     audioContext: AudioContext,
@@ -66,6 +67,7 @@ class Instrument {
       partials,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
+      getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
       attack = 0.0,
       decay = 0.00001,
       release = 0.764,
@@ -78,21 +80,27 @@ class Instrument {
       notesEndAt = 108,
     }: InstrumentPreset,
   ) {
+    this.audioContext = audioContext;
+
     const notes = getNotes(notesStartAt, notesEndAt);
-    const frequencies = getFrequencies(audioContext.sampleRate, stretchTuning, notesStartAt);
+    const frequencies = getFrequencies(notesStartAt, audioContext.sampleRate, stretchTuning);
+    const frequencyAmplitudes = getFrequencyAmplitudes(frequencies);
 
-    const notePartialOffsets = new Int16Array(partials.length);
-    const notePartialAmplitudes = new Float64Array(partials.length);
+    const partialOffsets = new Int16Array(partials.length);
+    const partialAmplitudes = new Float64Array(partials.length);
+    const partialAttacks = new Float64Array(partials.length);
 
-    for (const [index, [partialRatio, amplitude]] of partials.entries()) {
-      notePartialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      notePartialAmplitudes[index] = amplitude / audioContext.sampleRate;
+    for (const [index, [partialRatio, amplitude = 1.0, attack = 1.0]] of partials.entries()) {
+      partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
+      partialAmplitudes[index] = amplitude / audioContext.sampleRate;
+      partialAttacks[index] = attack / audioContext.sampleRate;
     }
 
     const processorOptions = {
       notesStartAt,
-      notePartialOffsets,
-      notePartialAmplitudes,
+      partialOffsets,
+      partialAmplitudes,
+      partialAttacks,
 
       velocityImpactOnAttack,
 
@@ -110,12 +118,13 @@ class Instrument {
             (1.0 / audioContext.sampleRate),
       ),
 
-      partialReleases: Float64Array.from(frequencies).map(
+      frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
+      frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
+      frequencyReleases: Float64Array.from(frequencies).map(
         (frequency) =>
           (release / (1.0 + pitchEffectOnRelease * (frequency - midiToFrequency(notesStartAt - 1)))) **
           (1.0 / audioContext.sampleRate),
       ),
-      partialFrequencies: Float64Array.from(frequencies),
     };
 
     this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {
@@ -136,12 +145,16 @@ class Instrument {
     (await this.node).port.postMessage(Float32Array.of(1, note));
   }
 
+  async mute(amount: number) {
+    (await this.node).port.postMessage(Float32Array.of(2, amount / (this.audioContext.sampleRate / 10.0)));
+  }
+
   async destroy() {
     (await this.node).disconnect();
 
     // FIXME: this can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
     // https://issues.chromium.org/issues/41435286
-    (await this.node).port.postMessage(Float32Array.of(2));
+    (await this.node).port.postMessage(Float32Array.of(3));
   }
 
   async connect(where: AudioNode, output?: number, input?: number) {
@@ -164,18 +177,29 @@ const defaultGetNotes = (notesStartAt = 21, notesEndAt = 108) => {
   return notes;
 };
 
-const defaultGetFrequencies = (sampleRate: number, stretchTuning = 0.0, notesStartAt = 21) => {
+const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, stretchTuning = 0.0) => {
   const frequencies = [];
 
   // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
     frequency = frequency * (1.0 + stretchTuning * Math.log2(frequency / midiToFrequency(65)));
-    if (frequency > sampleRate / 2.0) break;
+    if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);
   }
 
   return frequencies;
+};
+
+const defaultGetFrequencyAmplitudes = (frequencies: number[]) => {
+  const amplitudes = [];
+
+  for (const frequency of frequencies) {
+    // amplitudes.push(Math.cos((Math.log2(frequency) - Math.log2(midiToFrequency(65))) * 4.0 * Math.PI) * 0.236 + 0.764);
+    amplitudes.push(1.0);
+  }
+
+  return amplitudes;
 };
 
 type InstrumentPreset = {
@@ -184,6 +208,7 @@ type InstrumentPreset = {
   notesEndAt?: number;
   getNotes?: typeof defaultGetNotes;
   getFrequencies?: typeof defaultGetFrequencies;
+  getFrequencyAmplitudes?: typeof defaultGetFrequencyAmplitudes;
   attack?: number;
   decay?: number;
   release?: number;
@@ -214,10 +239,10 @@ const cello: InstrumentPreset = {
     [16, 0.003],
   ],
   stretchTuning: 0.001,
-  attack: 0.056,
+  attack: 0.021,
   decay: 0.236,
   release: 0.5,
-  velocityImpactOnAttack: 8.0,
+  velocityImpactOnAttack: 16.0,
 
   // TODO: add equivalents for or discard these
   // /** a `timeConstant` for how long the note takes to "fade in"; values below ~0.008 hurt a bit */
