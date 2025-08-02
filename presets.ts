@@ -19,9 +19,9 @@ export const cello: InstrumentPreset = {
     [15, 0.005],
     [16, 0.003],
   ],
-  stretchTuning: 0.00001,
-  attack: 0.005,
-  decay: 0.382,
+  // stretchTuning: 0.01748,
+  attack: 0.09,
+  decay: 0.146,
   release: 0.382,
 };
 

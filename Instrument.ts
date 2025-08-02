@@ -14,11 +14,11 @@ export class Instrument {
       getFrequencies = defaultGetFrequencies,
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
       attack = 0.0,
-      decay = 0.00001,
+      decay = 0.0001,
       defaultSustain = 1.0,
       release = 0.764,
       velocityImpactOnAttack = 8.0,
-      pitchEffectOnAttack = 0.034,
+      pitchEffectOnAttack = 0.005,
       pitchEffectOnDecay = 0.005,
       pitchEffectOnRelease = 0.005,
       stretchTuning = 0.0,
@@ -53,23 +53,22 @@ export class Instrument {
       noteAttacks: Float64Array.from(notes).map((note) =>
         Math.min(
           1.0,
-          ((1.0 / attack) * (1.0 + pitchEffectOnAttack * midiToFrequency(note - notesStartAt + 1))) /
+          ((1.0 / attack) * (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) /
             audioContext.sampleRate,
         ),
       ),
       noteDecays: Float64Array.from(notes).map(
         (note) =>
           1.0 -
-          (decay / (1.0 + pitchEffectOnDecay * midiToFrequency(note - notesStartAt + 1))) **
-            (1.0 / audioContext.sampleRate),
+          decay ** ((1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1))) / audioContext.sampleRate),
       ),
 
       frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
       frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
       frequencyReleases: Float64Array.from(frequencies).map(
         (frequency) =>
-          (release / (1.0 + pitchEffectOnRelease * (frequency - midiToFrequency(notesStartAt - 1)))) **
-          (1.0 / audioContext.sampleRate),
+          release **
+          ((1.0 + pitchEffectOnRelease * (frequency - midiToFrequency(notesStartAt - 1))) / audioContext.sampleRate),
       ),
     };
 
@@ -144,7 +143,13 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, stretchTun
   // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
-    frequency = frequency * (1.0 + stretchTuning * Math.log2(frequency / midiToFrequency(65)));
+
+    // Trying to approxiate the the "Railsback curve" for piano inharmonicity
+    const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(60));
+    const inharmonicity = (Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle)) / 11.6;
+
+    frequency *= 1.0 + stretchTuning * inharmonicity;
+
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);
   }
