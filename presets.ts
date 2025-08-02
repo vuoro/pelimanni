@@ -42,6 +42,7 @@ export const bell: InstrumentPreset = {
     [32, 0.146],
   ],
   attack: 0.0,
-  decay: 0.00001,
-  release: 0.764,
+  decay: 0.001,
+  defaultSustain: 0.0,
+  release: 0.618,
 };

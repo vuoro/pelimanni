@@ -19,7 +19,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
         releaseWithController(`midi-${midiNumber}`, false);
         tempInstrument.release(midiNumber);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0, 0.382);
+        tempInstrument.attack(midiNumber, velocity / 127.0, undefined);
       }
     }
   }

@@ -4,6 +4,7 @@ import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.j
 export class Instrument {
   node: Promise<AudioWorkletNode>;
   audioContext: AudioContext;
+  defaultSustain: number;
 
   constructor(
     audioContext: AudioContext,
@@ -14,6 +15,7 @@ export class Instrument {
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
       attack = 0.0,
       decay = 0.00001,
+      defaultSustain = 1.0,
       release = 0.764,
       velocityImpactOnAttack = 8.0,
       pitchEffectOnAttack = 0.034,
@@ -79,9 +81,11 @@ export class Instrument {
 
       return node;
     });
+
+    this.defaultSustain = defaultSustain;
   }
 
-  async attack(note: number, velocity = 1.0, sustain = 1.0) {
+  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain) {
     // TODO:
     // // /** how much vibrato should affect the note frequency (in cents) */
     // vibratoEffectOnPitch: 0.0;
@@ -159,7 +163,7 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[]) => {
   // https://sengpielaudio.com/VowelDiagram.htm
 
   for (const frequency of frequencies) {
-    amplitudes.push(Math.cos((Math.log2(frequency) - Math.log2(midiToFrequency(65))) * 4.0 * Math.PI) * 0.236 + 0.764);
+    amplitudes.push(0.764 + 0.236 * Math.cos((Math.log2(frequency) - Math.log2(midiToFrequency(65))) * 4.0 * Math.PI));
     // amplitudes.push(1.0);
   }
 
@@ -178,6 +182,7 @@ export type InstrumentPreset = {
 
   attack?: number;
   decay?: number;
+  defaultSustain?: number;
   release?: number;
 
   velocityImpactOnAttack?: number;
