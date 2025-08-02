@@ -138,7 +138,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             const targetIndex = partialIndex + partialCount * noteIndex;
 
             this.noteForceTargets[targetIndex] = 0.0;
-            this.noteForces[targetIndex] = 0.0;
           }
 
           this.noteSustains[noteIndex] = 0.0;
