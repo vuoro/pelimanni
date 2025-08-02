@@ -137,6 +137,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           for (let partialIndex = 0; partialIndex < partialCount; partialIndex++) {
             const targetIndex = partialIndex + partialCount * noteIndex;
 
+            this.noteForces[targetIndex] = 0.0;
             this.noteForceTargets[targetIndex] = 0.0;
           }
 
@@ -189,9 +190,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           if (frequencyIndex > this.frequencyForces.length - 1) continue;
 
           // Note forces head towards their targets
-          this.noteForces[targetIndex] +=
-            (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]) *
-            (this.noteAttacks[noteIndex] * this.partialAttacks[partialIndex]);
+          const attack = this.noteAttacks[noteIndex] * this.partialAttacks[partialIndex];
+          this.noteForces[targetIndex] += (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]) * attack;
 
           // TODO: redo this for the above, isn't working
           // (this.velocityImpactOnAttack - (this.velocityImpactOnAttack - 1.0) * this.noteVelocities[noteIndex]));

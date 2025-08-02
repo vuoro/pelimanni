@@ -19,9 +19,10 @@ export class Instrument {
       release = 0.618,
       velocityImpactOnAttack = 8.0,
       pitchEffectOnAttack = 0.005,
-      pitchEffectOnDecay = 0.005,
-      pitchEffectOnRelease = 0.005,
-      stretchTuning = 0.0,
+      pitchEffectOnDecay = 0.003,
+      pitchEffectOnRelease = 0.003,
+      inharmonicity = 0.0,
+      formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
     }: InstrumentPreset,
@@ -29,17 +30,20 @@ export class Instrument {
     this.audioContext = audioContext;
 
     const notes = getNotes(notesStartAt, notesEndAt);
-    const frequencies = getFrequencies(notesStartAt, audioContext.sampleRate, stretchTuning);
-    const frequencyAmplitudes = getFrequencyAmplitudes(frequencies);
+    const frequencies = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
+    const frequencyAmplitudes = getFrequencyAmplitudes(frequencies, formantFrequency);
 
     const partialOffsets = new Int16Array(partials.length);
     const partialAmplitudes = new Float64Array(partials.length);
     const partialAttacks = new Float64Array(partials.length);
 
-    for (const [index, [partialRatio, amplitude = 1.0, attack = 1.0 / (1.0 + index)]] of partials.entries()) {
+    for (const [
+      index,
+      [amplitude = 1.0, partialRatio = index + 1, attack = partialRatio + (1.0 - amplitude)],
+    ] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
       partialAmplitudes[index] = amplitude / audioContext.sampleRate;
-      partialAttacks[index] = attack;
+      partialAttacks[index] = 1.0 / attack;
     }
 
     const processorOptions = {
@@ -53,7 +57,8 @@ export class Instrument {
       noteAttacks: Float64Array.from(notes).map((note) =>
         Math.min(
           1.0,
-          ((1.0 / attack) * (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) /
+          1.0 /
+            (attack / (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) /
             audioContext.sampleRate,
         ),
       ),
@@ -137,7 +142,7 @@ const defaultGetNotes = (notesStartAt = 21, notesEndAt = 108) => {
   return notes;
 };
 
-const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, stretchTuning = 0.0) => {
+const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonicity = 0.0) => {
   const frequencies = [];
 
   // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
@@ -146,9 +151,9 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, stretchTun
 
     // Trying to approxiate the the "Railsback curve" for piano inharmonicity
     const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(60));
-    const inharmonicity = (Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle)) / 11.6;
+    const harmonicStretch = (Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle)) / 11.6;
 
-    frequency *= 1.0 + stretchTuning * inharmonicity;
+    frequency *= 1.0 + inharmonicity * harmonicStretch;
 
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);
@@ -157,7 +162,7 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, stretchTun
   return frequencies;
 };
 
-const defaultGetFrequencyAmplitudes = (frequencies: number[]) => {
+const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency = midiToFrequency(65)) => {
   const amplitudes = [];
 
   // I get my values mostly from these sources:
@@ -168,7 +173,7 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[]) => {
   // https://sengpielaudio.com/VowelDiagram.htm
 
   for (const frequency of frequencies) {
-    amplitudes.push(0.764 + 0.236 * Math.cos((Math.log2(frequency) - Math.log2(midiToFrequency(65))) * 4.0 * Math.PI));
+    amplitudes.push(0.764 + 0.236 * Math.cos((Math.log2(frequency) - Math.log2(formantFrequency)) * 4.0 * Math.PI));
     // amplitudes.push(1.0);
   }
 
@@ -176,7 +181,14 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[]) => {
 };
 
 export type InstrumentPreset = {
-  partials: number[][];
+  partials: [
+    /** Partial amplitude */
+    (number | undefined)?,
+    /** Partial ratio to fundamental frequency: 2.0 = 2.0 * fundamentalFrequency */
+    (number | undefined)?,
+    /** Partial attack multiplier */
+    (number | undefined)?,
+  ][];
 
   notesStartAt?: number;
   notesEndAt?: number;
@@ -195,6 +207,8 @@ export type InstrumentPreset = {
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;
 
-  /** Piano style inharmonicity: frequencies stretch the further away they are from the middle. */
-  stretchTuning?: number;
+  /** Passed to getFrequencies. */
+  inharmonicity?: number;
+  /** Passed to getFrequencyAmplitudes. */
+  formantFrequency?: number;
 };
