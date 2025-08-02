@@ -23,7 +23,6 @@ export const cello: InstrumentPreset = {
   attack: 0.005,
   decay: 0.382,
   release: 0.382,
-  velocityImpactOnAttack: 64.0,
 };
 
 export const bell: InstrumentPreset = {

@@ -191,8 +191,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           // Note forces head towards their targets
           this.noteForces[targetIndex] +=
             (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]) *
-            ((this.noteAttacks[noteIndex] * this.partialAttacks[partialIndex]) /
-              (this.velocityImpactOnAttack - (this.velocityImpactOnAttack - 1.0) * this.noteVelocities[noteIndex]));
+            (this.noteAttacks[noteIndex] * this.partialAttacks[partialIndex]);
+
+          // TODO: redo this for the above, isn't working
+          // (this.velocityImpactOnAttack - (this.velocityImpactOnAttack - 1.0) * this.noteVelocities[noteIndex]));
 
           // Impact frequencies with this note
           this.frequencyForces[frequencyIndex] +=
