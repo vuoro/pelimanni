@@ -2,9 +2,6 @@ import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
 const fluteEnvelope = { attack: 0.034, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
-const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
-// TODO: initial pitch instability
-const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -28,6 +25,8 @@ export const ocarina: InstrumentPreset = {
   ],
   ...fluteEnvelope,
 };
+
+const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=a0-ysmiQTss
@@ -114,6 +113,8 @@ export const saxophone: InstrumentPreset = {
   formantFrequency: midiToFrequency(64),
 };
 
+const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
+
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trumpet: InstrumentPreset = {
@@ -196,6 +197,75 @@ export const tuba: InstrumentPreset = {
   formantFrequency: midiToFrequency(65),
 };
 
+// https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
+// http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
+const bowedStringEnvelope = {
+  attack: 0.056,
+  decay: 0.146,
+  release: 0.236,
+};
+
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
+// https://www.tremblingsandwarblings.com/2017/04/musical-sound-tone-quality-spectra/
+// https://vibrationresearch.com/resources/overtone-comparison-obserview/
+// http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
+export const violin: InstrumentPreset = {
+  partials: [
+    [1.0],
+    [0.764],
+    [0.618],
+    [0.236],
+    [0.382], // 5
+    [0.146],
+    [0.236], // 7
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+    [0.003],
+  ],
+  ...bowedStringEnvelope,
+  formantFrequency: midiToFrequency(65),
+};
+
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// http://www.mathstudio.co.uk/pitch_perception.htm
+// https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
+export const viola: InstrumentPreset = {
+  partials: [
+    [1.0],
+    [0.854],
+    [0.382],
+    [0.618], // 4
+    [0.236],
+    [0.236],
+    [0.382], // 7
+    [0.236],
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+    [0.003],
+  ],
+  ...bowedStringEnvelope,
+  formantFrequency: midiToFrequency(69),
+};
+
+// https://musiccrashcourses.com/lessons/harmonic_series.html
+// https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
+// http://www.mathstudio.co.uk/pitch_perception.htm
+// https://vobarian.com/celloanly/index.html
 export const cello: InstrumentPreset = {
   partials: [
     [1.0],
@@ -215,13 +285,128 @@ export const cello: InstrumentPreset = {
     [0.005],
     [0.003],
   ],
-  attack: 0.09,
-  decay: 0.146,
-  release: 0.236,
+  ...bowedStringEnvelope,
+  formantFrequency: midiToFrequency(71),
 };
 
+// Guessed based on cello
+export const contrabass: InstrumentPreset = {
+  partials: [
+    [1.0],
+    [0.618],
+    [0.382],
+    [0.5], // 4
+    [0.236],
+    [0.09],
+    [0.09], // 7
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+    [0.003],
+    [0.002],
+    [0.001],
+  ],
+  ...bowedStringEnvelope,
+  formantFrequency: midiToFrequency(60),
+};
+
+// Plucked string transients
+// https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
+// body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
+const pluckedStringEnvelope = {
+  attack: 0.0,
+  // FIXME: too quiet because this is kind of a hack
+  decay: 0.00001,
+  defaultSustain: 0.0,
+  release: 0.382,
+  inharmonicity: 0.008,
+  // TODO:
+  // defaultAttackDetune: 100,
+};
+
+export const pluckedViolin: InstrumentPreset = {
+  ...violin,
+  ...pluckedStringEnvelope,
+};
+
+export const pluckedViola: InstrumentPreset = {
+  ...viola,
+  ...pluckedStringEnvelope,
+};
+
+export const pluckedCello: InstrumentPreset = {
+  ...cello,
+  ...pluckedStringEnvelope,
+};
+
+export const pluckedContrabass: InstrumentPreset = {
+  ...contrabass,
+  ...pluckedStringEnvelope,
+};
+
+const hammeredStringEnvelope = { ...pluckedStringEnvelope };
+
+// Oh dear…
+// https://vibrationresearch.com/resources/overtone-comparison-obserview/
+// https://universe-review.ca/I13-17-timbre.jpg
+// https://www.acs.psu.edu/drussell/Piano/Dynamics.html
+// https://audiouniversityonline.com/why-do-instruments-sound-different/
+// https://www.lamadeguido.com/fundamentos/ecap2.htm
+// https://courses.physics.illinois.edu/phys398dlp/sp2019/documents/pianos_Quantitative%20Analysis%20on%20the%20Tonal%20Quality%20of%20Various%20Pianos.pdf
+// https://www.youtube.com/watch?v=5xjD6SRY8Pg
+// https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2013.00768/full
+// Piano transients
+// https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=624e7d25054fb6f5e9ab864e48f432d7dc5871fd
+// initial key noise, finger tap: 290 and 445 Hz, lasts 20–30ms, weak, more audible at low velocity
+// later key/hammer noise: 914 hz, 10–20ms attack, strong
+// also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
 export const piano: InstrumentPreset = {
-  stretchTuning: 0.01748,
+  partials: [
+    [1.0], // First 4 are quite high and often in a U shape
+    [0.764],
+    [0.382],
+    [0.5],
+    [0.09], // Then there's a pair arcing up
+    [0.146],
+    [0.034], // And 7th is weak
+    [0.09],
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+    [0.003],
+    [0.002],
+  ],
+  ...hammeredStringEnvelope,
+  formantFrequency: midiToFrequency(60),
+};
+
+// Guessed based on piano
+export const hammeredDulcimer: InstrumentPreset = {
+  partials: [
+    [1.0],
+    [0.5],
+    [0.382],
+    [0.618],
+    [0.09],
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+    [0.003],
+    [0.002],
+  ],
+  ...hammeredStringEnvelope,
 };
 
 export const bell: InstrumentPreset = {
