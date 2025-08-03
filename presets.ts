@@ -1,10 +1,10 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-const fluteEnvelope = { attack: 0.056, decay: 0.382, release: 0.124 };
-const reedEnvelope = { ...fluteEnvelope, attack: 0.09 };
+const fluteEnvelope = { attack: 0.056, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
+const reedEnvelope = { ...fluteEnvelope, attack: 0.09, defaultSustain: 0.854 };
 // TODO: initial pitch instability
-const brassEnvelope = { ...reedEnvelope, release: 0.146 };
+const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -82,7 +82,7 @@ export const clarinet: InstrumentPreset = {
     [0.002],
   ],
   ...reedEnvelope,
-  inharmonicity: 0.018,
+  inharmonicity: 0.013,
   formantFrequency: midiToFrequency(62),
 };
 
