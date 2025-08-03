@@ -27,53 +27,40 @@ export const AudioSystem = new Magic(
 
     // General nodes and reverb
     const audioContext = new AudioContext({ latencyHint: "interactive" });
-    const musicGain = new GainNode(audioContext, { gain: 0.5 });
-    const effectsGain = new GainNode(audioContext, { gain: 0.5 });
     const mainGain = new GainNode(audioContext, { gain: 1.0 });
-    const effectsCompressor = new DynamicsCompressorNode(audioContext, {
-      threshold: -12,
-      ratio: 12,
-    });
-    const musicCompressor = new DynamicsCompressorNode(audioContext, { threshold: -12, ratio: 12 });
+    const compressor = new DynamicsCompressorNode(audioContext);
     const limiter = new DynamicsCompressorNode(audioContext, {
       threshold: 0,
       ratio: 1,
       attack: 0.0001,
     });
 
-    // Values from https://github.com/musios-app/equal-loudness
-    const lowPeak = new BiquadFilterNode(audioContext, {
-      type: "peaking",
-      frequency: 25,
-      Q: 0.1,
-      gain: 3.162278,
-    });
-    const midPeak = new BiquadFilterNode(audioContext, {
-      type: "peaking",
-      frequency: 2500,
-      Q: 0.4,
-      gain: 0.74817,
-    });
-    const highPeak = new BiquadFilterNode(audioContext, {
-      type: "peaking",
-      frequency: 16000,
-      Q: 0.2,
-      gain: 1.035142,
-    });
+    // // Values from https://github.com/musios-app/equal-loudness
+    // const lowPeak = new BiquadFilterNode(audioContext, {
+    //   type: "peaking",
+    //   frequency: 25,
+    //   Q: 0.1,
+    //   gain: 3.162278,
+    // });
+    // const midPeak = new BiquadFilterNode(audioContext, {
+    //   type: "peaking",
+    //   frequency: 2500,
+    //   Q: 0.4,
+    //   gain: 0.74817,
+    // });
+    // const highPeak = new BiquadFilterNode(audioContext, {
+    //   type: "peaking",
+    //   frequency: 16000,
+    //   Q: 0.2,
+    //   gain: 1.035142,
+    // });
 
     const highPass = new BiquadFilterNode(audioContext, { type: "highpass", frequency: 20 });
     const lowPass = new BiquadFilterNode(audioContext, { type: "lowpass", frequency: 20000 });
 
-    musicCompressor.connect(musicGain).connect(mainGain);
-    effectsCompressor.connect(effectsGain).connect(mainGain);
+    const output = compressor;
 
-    lowPeak
-      .connect(midPeak)
-      .connect(highPeak)
-      .connect(lowPass)
-      .connect(highPass)
-      .connect(limiter)
-      .connect(audioContext.destination);
+    lowPass.connect(highPass).connect(limiter).connect(mainGain).connect(audioContext.destination);
 
     audioContext.addEventListener("statechange", onStateChange);
 
@@ -104,12 +91,12 @@ export const AudioSystem = new Magic(
           },
         });
 
-        mainGain.connect(reverbNode).connect(lowPeak);
+        output.connect(reverbNode).connect(lowPass);
 
         resolveReverb(reverbNode);
       })
       .catch((error) => {
-        mainGain.connect(lowPeak);
+        output.connect(lowPass);
         (reportError || console.error)(error);
       });
 
@@ -126,20 +113,13 @@ export const AudioSystem = new Magic(
 
       const panner = new StereoPannerNode(audioContext, { pan });
 
-      panner.connect(musicCompressor);
-      instrument.output.connect(panner);
+      instrument.output.connect(panner).connect(output);
     };
 
     return {
       audioContext,
       mainGain,
-      effectsGain,
-      musicGain,
-      musicCompressor,
-      effectsCompressor,
-      lowPass,
-      limiter,
-      output: limiter,
+      output,
       reverb,
       connectInstrument,
     };
@@ -153,16 +133,16 @@ const onStateChange = function (this: AudioContext) {
 };
 
 export const defaultReverbParameters = {
-  preDelay: 0.034, // could be up to 0.04ms before being obvious
-  bandwidth: 0.91,
+  preDelay: 1.0 / 60.0, // could be up to 0.04ms before being obvious
+  bandwidth: 0.854,
+  damping: 0.146,
   inputDiffusion1: 0.414,
   inputDiffusion2: 0.666,
-  decay: 0.236,
+  decay: 0.09,
   decayDiffusion1: 0.3,
   decayDiffusion2: 0.618,
-  damping: 0.09,
   excursionRate: 0.146,
   excursionDepth: 0.146,
-  dry: 0.618,
-  wet: 0.382,
+  dry: 0.764,
+  wet: 0.236,
 };

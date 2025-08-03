@@ -4,7 +4,7 @@ import { AudioSystem, defaultReverbParameters } from "./AudioSystem.js";
 import { Magic } from "./magic.js";
 
 export const AudioControls = new Magic(() => {
-  const { audioContext, mainGain, effectsGain, musicGain } = AudioSystem.get();
+  const { audioContext, mainGain } = AudioSystem.get();
 
   const isRunning = audioContext.state === "running";
   const action = () => (isRunning ? audioContext.suspend() : audioContext.resume());
@@ -31,8 +31,6 @@ export const AudioControls = new Magic(() => {
         <fieldset>
           <legend>Volume</legend>
           ${volumeSlider("Main", mainGain, 1.0)}
-          <!-- ${volumeSlider("Effects", effectsGain, 0.5)} -->
-          <!-- ${volumeSlider("Music", musicGain, 0.5)} -->
         </fieldset>
 
         <datalist id="gain-steps">
@@ -52,11 +50,7 @@ export const AudioControls = new Magic(() => {
 const volumeSlider = (title: string, gainNode: GainNode, maxGain: number) => {
   const handleInput = ({ target }: Event) => {
     if (!(target instanceof HTMLInputElement)) return;
-    gainNode.gain.setTargetAtTime(
-      Number.parseFloat(target.value) * maxGain,
-      gainNode.context.currentTime,
-      0.001,
-    );
+    gainNode.gain.setTargetAtTime(Number.parseFloat(target.value) * maxGain, gainNode.context.currentTime, 0.001);
   };
 
   return html`
@@ -81,8 +75,7 @@ const reverbSlider = (title: keyof typeof defaultReverbParameters) => {
     const { audioContext, reverb } = AudioSystem.get();
     const reverbNode = await reverb;
 
-    const value =
-      Number.parseFloat(target.value) * (title === "preDelay" ? audioContext.sampleRate : 1);
+    const value = Number.parseFloat(target.value) * (title === "preDelay" ? audioContext.sampleRate : 1);
 
     reverbNode.parameters.get(title)?.setTargetAtTime(value, audioContext.currentTime, 0.013);
   };
