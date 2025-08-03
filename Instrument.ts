@@ -149,11 +149,9 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
 
-    // Trying to approxiate the the "Railsback curve" for piano inharmonicity
-    const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(60));
-    const harmonicStretch = (Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle)) / 11.6;
-
-    frequency *= 1.0 + inharmonicity * harmonicStretch;
+    // Both strings and clarinets seem to have an inharmonicity curve like this?
+    const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(65));
+    frequency *= 1.0 + inharmonicity * fromMiddle;
 
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);

@@ -9,6 +9,7 @@ export const flute: InstrumentPreset = {
   attack: 0.034,
   decay: 0.382,
   release: 0.146,
+  inharmonicity: 0.005,
   formantFrequency: midiToFrequency(69),
 };
 
@@ -16,6 +17,7 @@ export const flute: InstrumentPreset = {
 // https://www.physicsforums.com/threads/origin-of-harmonics-in-helmholts-type-resonators.799974/
 export const ocarina: InstrumentPreset = {
   ...flute,
+  inharmonicity: 0.008,
   partials: [
     [1.0, 1],
     [0.034, 3],
@@ -78,7 +80,7 @@ export const clarinet: InstrumentPreset = {
     [0.034],
     [0.002],
   ],
-  inharmonicity: 0.021,
+  inharmonicity: 0.018,
   formantFrequency: midiToFrequency(62),
 };
 
@@ -107,6 +109,7 @@ export const saxophone: InstrumentPreset = {
     [0.034],
   ],
   // TODO: initial pitch instability
+  inharmonicity: 0.018,
   formantFrequency: midiToFrequency(64),
 };
 
