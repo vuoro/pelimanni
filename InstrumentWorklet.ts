@@ -112,7 +112,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         note,
         velocity,
         sustain,
-        frequency: this.frequencies[noteIndex * 10],
+        multiplier,
       });
 
       switch (data[0]) {

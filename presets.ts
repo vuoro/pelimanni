@@ -1,8 +1,8 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-const fluteEnvelope = { attack: 0.056, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
-const reedEnvelope = { ...fluteEnvelope, attack: 0.09, defaultSustain: 0.854 };
+const fluteEnvelope = { attack: 0.034, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
+const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
 // TODO: initial pitch instability
 const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
 

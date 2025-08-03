@@ -17,7 +17,7 @@ export class Instrument {
       decay = 0.146,
       defaultSustain = 1.0,
       release = 0.618,
-      pitchEffectOnAttack = 0.005,
+      pitchEffectOnAttack = 0.003,
       pitchEffectOnDecay = 0.003,
       pitchEffectOnRelease = 0.003,
       inharmonicity = 0.0,
