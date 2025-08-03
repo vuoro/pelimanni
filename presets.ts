@@ -318,8 +318,8 @@ export const contrabass: InstrumentPreset = {
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
   attack: 0.0,
-  // FIXME: too quiet because this is kind of a hack
-  decay: 0.00001,
+  decay: 0.00000001,
+  volume: 2.618,
   defaultSustain: 0.0,
   release: 0.382,
   inharmonicity: 0.008,
@@ -347,7 +347,7 @@ export const pluckedContrabass: InstrumentPreset = {
   ...pluckedStringEnvelope,
 };
 
-const hammeredStringEnvelope = { ...pluckedStringEnvelope };
+const hammeredStringEnvelope = { ...pluckedStringEnvelope, inharmonicity: 0.013 };
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/

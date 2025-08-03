@@ -37,8 +37,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
   notesStartAt = 0;
   mute = 0.0;
-
-  attack = 1.0;
+  volume = 1.0;
 
   partialOffsets: Int16Array;
   partialAmplitudes: Float64Array;
@@ -74,11 +73,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       frequencies,
       frequencyAmplitudes,
       frequencyReleases,
+      notesStartAt,
+      volume,
     } = customOptions;
 
-    this.notesStartAt = customOptions.notesStartAt || this.notesStartAt;
-
-    this.attack = customOptions.attack ?? this.attack;
+    this.notesStartAt = notesStartAt || this.notesStartAt;
+    this.volume = volume || this.volume;
 
     // Create buffers
     this.partialOffsets = Int16Array.from(partialOffsets);
@@ -118,7 +118,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       switch (data[0]) {
         case 0: {
           // attack
-          const loudness = velocity ** 0.5;
+          const loudness = velocity ** 0.5 * this.volume;
 
           for (let partialIndex = 0; partialIndex < partialCount; partialIndex++) {
             const targetIndex = partialIndex + partialCount * noteIndex;

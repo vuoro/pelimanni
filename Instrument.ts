@@ -24,6 +24,7 @@ export class Instrument {
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
+      volume = 1.0,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -47,6 +48,8 @@ export class Instrument {
 
     const processorOptions = {
       notesStartAt,
+      volume,
+
       partialOffsets,
       partialAmplitudes,
       partialAttacks,
@@ -180,7 +183,7 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency =
 export type InstrumentPreset = {
   partials: [
     /** Partial amplitude */
-    (number | undefined)?,
+    number,
     /** Partial ratio to fundamental frequency: 2.0 = 2.0 * fundamentalFrequency */
     (number | undefined)?,
     /** Partial attack multiplier */
@@ -189,6 +192,7 @@ export type InstrumentPreset = {
 
   notesStartAt?: number;
   notesEndAt?: number;
+  volume?: number;
 
   getNotes?: typeof defaultGetNotes;
   getFrequencies?: typeof defaultGetFrequencies;
