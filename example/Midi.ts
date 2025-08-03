@@ -1,7 +1,6 @@
 import { Instrument } from "../Instrument.ts";
-import { saxophone } from "../presets.ts";
+import { cello } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
-import { releaseWithController } from "./Keyboard.ts";
 import { Magic } from "./magic.ts";
 
 function onMIDIMessage(event: MIDIMessageEvent) {
@@ -16,10 +15,9 @@ function onMIDIMessage(event: MIDIMessageEvent) {
   switch (command) {
     case 144: {
       if (velocity === 0) {
-        releaseWithController(`midi-${midiNumber}`, false);
         tempInstrument.release(midiNumber);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0, undefined);
+        tempInstrument.attack(midiNumber, velocity / 127.0, undefined, 1.0);
       }
     }
   }
@@ -57,5 +55,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, saxophone);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, cello);
 tempInstrument.connect(AudioSystem.get().output);

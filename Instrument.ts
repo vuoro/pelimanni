@@ -17,7 +17,6 @@ export class Instrument {
       decay = 0.146,
       defaultSustain = 1.0,
       release = 0.618,
-      velocityImpactOnAttack = 8.0,
       pitchEffectOnAttack = 0.005,
       pitchEffectOnDecay = 0.003,
       pitchEffectOnRelease = 0.003,
@@ -42,7 +41,7 @@ export class Instrument {
       [amplitude = 1.0, partialRatio = index + 1, attack = partialRatio + (1.0 - amplitude)],
     ] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      partialAmplitudes[index] = amplitude / audioContext.sampleRate;
+      partialAmplitudes[index] = amplitude;
       partialAttacks[index] = 1.0 / attack;
     }
 
@@ -51,8 +50,6 @@ export class Instrument {
       partialOffsets,
       partialAmplitudes,
       partialAttacks,
-
-      velocityImpactOnAttack,
 
       noteAttacks: Float64Array.from(notes).map((note) =>
         Math.min(
@@ -89,7 +86,7 @@ export class Instrument {
     this.defaultSustain = defaultSustain;
   }
 
-  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain) {
+  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0) {
     // TODO:
     // // /** how much vibrato should affect the note frequency (in cents) */
     // vibratoEffectOnPitch: 0.0;
@@ -103,11 +100,13 @@ export class Instrument {
     // // /** for how long `attackDetune` should occur */
     // attackDetuneDuration: 0.0;
 
-    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain));
+    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, 1.0 / attackMultiplier));
   }
 
   async release(note: number) {
-    (await this.node).port.postMessage(Float32Array.of(1, note));
+    // TODO: would be nice to have a releaseMultiplier here, but releases come from frequencies instead of notes, so it's tricky.
+    // It could hook to decay instead, but currently decay dies upon release.
+    (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0));
   }
 
   async mute(amount: number) {
@@ -200,7 +199,6 @@ export type InstrumentPreset = {
   defaultSustain?: number;
   release?: number;
 
-  velocityImpactOnAttack?: number;
   pitchEffectOnAttack?: number;
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;

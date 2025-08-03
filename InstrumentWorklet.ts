@@ -39,7 +39,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   mute = 0.0;
 
   attack = 1.0;
-  velocityImpactOnAttack = 8.0;
 
   partialOffsets: Int16Array;
   partialAmplitudes: Float64Array;
@@ -53,7 +52,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   frequencyReleases: Float64Array;
 
   noteSustains: Float64Array;
-  noteVelocities: Float64Array;
+  noteMultipliers: Float64Array;
   noteForces: Float64Array;
   noteForceTargets: Float64Array;
   frequencyForces: Float64Array;
@@ -80,7 +79,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.notesStartAt = customOptions.notesStartAt || this.notesStartAt;
 
     this.attack = customOptions.attack ?? this.attack;
-    this.velocityImpactOnAttack = customOptions.velocityImpactOnAttack ?? this.velocityImpactOnAttack;
 
     // Create buffers
     this.partialOffsets = Int16Array.from(partialOffsets);
@@ -95,7 +93,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.frequencyReleases = Float64Array.from(frequencyReleases);
 
     this.noteSustains = new Float64Array(noteAttacks.length);
-    this.noteVelocities = new Float64Array(noteAttacks.length);
+    this.noteMultipliers = new Float64Array(noteAttacks.length);
 
     this.noteForces = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteForceTargets = new Float64Array(noteAttacks.length * partialOffsets.length);
@@ -105,7 +103,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
     // Handle messages
     this.port.addEventListener("message", ({ data }) => {
-      const [type, note, velocity = 1.0, sustain = 0.0] = data;
+      const [type, note, velocity = 1.0, sustain = 0.0, multiplier = 1.0] = data;
       const noteIndex = note - this.notesStartAt;
       const partialCount = this.partialOffsets.length;
 
@@ -120,15 +118,17 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       switch (data[0]) {
         case 0: {
           // attack
-          const loudness = velocity ** Math.SQRT1_2;
+          const loudness = velocity ** 0.5;
 
           for (let partialIndex = 0; partialIndex < partialCount; partialIndex++) {
             const targetIndex = partialIndex + partialCount * noteIndex;
 
-            this.noteForceTargets[targetIndex] = loudness;
+            // Higher velocity notes are brighter
+            this.noteForceTargets[targetIndex] =
+              (this.partialAmplitudes[partialIndex] ** (1.618 - velocity) / sampleRate) * loudness;
           }
 
-          this.noteVelocities[noteIndex] = velocity;
+          this.noteMultipliers[noteIndex] = multiplier;
           this.noteSustains[noteIndex] = sustain * loudness;
           break;
         }
@@ -191,16 +191,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Note forces head towards their targets
           const attack = this.noteAttacks[noteIndex] * this.partialAttacks[partialIndex];
-          this.noteForces[targetIndex] += (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]) * attack;
-
-          // TODO: redo this for the above, isn't working
-          // (this.velocityImpactOnAttack - (this.velocityImpactOnAttack - 1.0) * this.noteVelocities[noteIndex]));
+          this.noteForces[targetIndex] +=
+            (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]) *
+            (attack * this.noteMultipliers[noteIndex]);
 
           // Impact frequencies with this note
           this.frequencyForces[frequencyIndex] +=
-            this.noteForces[targetIndex] *
-            this.partialAmplitudes[partialIndex] *
-            this.frequencyAmplitudes[frequencyIndex];
+            this.noteForces[targetIndex] * this.frequencyAmplitudes[frequencyIndex];
 
           // Decay the force towards sustain level
           this.noteForceTargets[targetIndex] -=

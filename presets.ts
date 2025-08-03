@@ -32,6 +32,7 @@ export const ocarina: InstrumentPreset = {
 export const oboe: InstrumentPreset = {
   ...flute,
   partials: [[0.618], [0.382], [0.764], [1.0], [0.618], [0.236], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
+  attack: 0.056,
   inharmonicity: 0.013,
   formantFrequency: midiToFrequency(65),
 };
@@ -63,7 +64,7 @@ export const bassoon: InstrumentPreset = {
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 // https://www.youtube.com/watch?v=lhvJUU9Js-U
 export const clarinet: InstrumentPreset = {
-  ...flute,
+  ...oboe,
   partials: [
     [1.0],
     [0.056], // evens are very weak
@@ -94,19 +95,19 @@ export const clarinet: InstrumentPreset = {
 export const saxophone: InstrumentPreset = {
   ...clarinet,
   partials: [
-    [0.764, undefined, 2.0],
-    [1.0, undefined, 1.0],
-    [0.618, undefined, 2.0],
-    [0.09],
-    [0.618, undefined, 2.0],
-    [0.236],
-    [0.146],
-    [0.146],
-    [0.09],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
+    [0.764, undefined, 1.0 / 9.0],
+    [1.0, undefined, 1.0 / 11.0],
+    [0.618, undefined, 1.0 / 9.0],
+    [0.09, undefined, 1.0 / 10.0],
+    [0.618, undefined, 1.0 / 9.0],
+    [0.236, undefined, 1.0 / 8.0],
+    [0.146, undefined, 1.0 / 7.0],
+    [0.146, undefined, 1.0 / 6.0],
+    [0.09, undefined, 1.0 / 5.0],
+    [0.146, undefined, 1.0 / 4.0],
+    [0.09, undefined, 1.0 / 3.0],
+    [0.056, undefined, 1.0 / 2.0],
+    [0.034, undefined, 1.0],
   ],
   // TODO: initial pitch instability
   inharmonicity: 0.018,
@@ -134,7 +135,7 @@ export const cello: InstrumentPreset = {
   ],
   attack: 0.09,
   decay: 0.146,
-  release: 0.382,
+  release: 0.236,
 };
 
 export const piano: InstrumentPreset = {
