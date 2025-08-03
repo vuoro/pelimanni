@@ -39,7 +39,7 @@ export class Instrument {
 
     for (const [
       index,
-      [amplitude = 1.0, partialRatio = index + 1, attack = partialRatio + (1.0 - amplitude)],
+      [amplitude = 1.0, partialRatio = index + 1, attack = partialRatio * (2.0 - amplitude)],
     ] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
       partialAmplitudes[index] = amplitude;

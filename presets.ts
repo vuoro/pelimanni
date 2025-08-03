@@ -85,6 +85,20 @@ export const clarinet: InstrumentPreset = {
   formantFrequency: midiToFrequency(62),
 };
 
+const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
+const addBrassAttacks = (partials: InstrumentPreset["partials"]) => {
+  const newPartials = [];
+
+  for (let index = 0; index < partials.length; index++) {
+    const [amplitude] = partials[index];
+    newPartials[index] = [amplitude, index + 1, (partials.length - index) * (2.0 - amplitude)];
+  }
+
+  console.log(newPartials);
+
+  return newPartials as [number, number, number][];
+};
+
 // FIXME: saxophone seems to be a very dynamic instrument, so this is probably all off
 // https://www.phys.unsw.edu.au/music/saxophone/soprano/Asharp3.html
 // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-030-15046-4_2/MediaObjects/472011_1_En_2_Fig8_HTML.png
@@ -93,45 +107,43 @@ export const clarinet: InstrumentPreset = {
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 export const saxophone: InstrumentPreset = {
-  partials: [
-    [0.764, undefined, 1.0 / 10.0],
-    [1.0, undefined, 1.0 / 11.0],
-    [0.618, undefined, 1.0 / 9.0],
-    [0.09, undefined, 1.0 / 10.0],
-    [0.618, undefined, 1.0 / 9.0],
-    [0.236, undefined, 1.0 / 8.0],
-    [0.146, undefined, 1.0 / 7.0],
-    [0.146, undefined, 1.0 / 6.0],
-    [0.09, undefined, 1.0 / 5.0],
-    [0.146, undefined, 1.0 / 4.0],
-    [0.09, undefined, 1.0 / 3.0],
-    [0.056, undefined, 1.0 / 2.0],
-    [0.034, undefined, 1.0],
-  ],
+  partials: addBrassAttacks([
+    [0.764],
+    [1.0],
+    [0.618],
+    [0.09],
+    [0.618],
+    [0.236],
+    [0.146],
+    [0.146],
+    [0.09],
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.034],
+  ]),
   ...reedEnvelope,
   inharmonicity: 0.018,
   formantFrequency: midiToFrequency(64),
 };
 
-const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
-
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trumpet: InstrumentPreset = {
-  partials: [
-    [0.764, undefined, 1.0 / 11.0],
-    [1.0, undefined, 1.0 / 12.0],
-    [0.764, undefined, 1.0 / 10.0],
-    [0.382, undefined, 1.0 / 9.0],
-    [0.382, undefined, 1.0 / 8.0],
-    [0.146, undefined, 1.0 / 7.0],
-    [0.09, undefined, 1.0 / 6.0],
-    [0.056, undefined, 1.0 / 5.0],
-    [0.056, undefined, 1.0 / 4.0],
-    [0.021, undefined, 1.0 / 3.0],
-    [0.013, undefined, 1.0 / 2.0],
-    [0.008, undefined, 1.0],
-  ],
+  partials: addBrassAttacks([
+    [0.764],
+    [1.0],
+    [0.764],
+    [0.382],
+    [0.382],
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.056],
+    [0.021],
+    [0.013],
+    [0.008],
+  ]),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(67),
 };
@@ -140,18 +152,7 @@ export const trumpet: InstrumentPreset = {
 // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trombone: InstrumentPreset = {
-  partials: [
-    [0.764, undefined, 1.0 / 10.0],
-    [1.0, undefined, 1.0 / 9.0],
-    [0.854, undefined, 1.0 / 8.0],
-    [0.618, undefined, 1.0 / 7.0],
-    [0.236, undefined, 1.0 / 6.0],
-    [0.09, undefined, 1.0 / 5.0],
-    [0.034, undefined, 1.0 / 4.0],
-    [0.013, undefined, 1.0 / 3.0],
-    [0.005, undefined, 1.0 / 2.0],
-    [0.002, undefined, 1.0 / 1.0],
-  ],
+  partials: addBrassAttacks([[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]]),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(60),
 };
@@ -159,40 +160,40 @@ export const trombone: InstrumentPreset = {
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const frenchHorn: InstrumentPreset = {
-  partials: [
-    [1.0, undefined, 1.0 / 12.0],
-    [0.618, undefined, 1.0 / 11.0],
-    [0.382, undefined, 1.0 / 10.0],
-    [0.236, undefined, 1.0 / 9.0],
-    [0.146, undefined, 1.0 / 8.0],
-    [0.09, undefined, 1.0 / 7.0],
-    [0.056, undefined, 1.0 / 6.0],
-    [0.034, undefined, 1.0 / 5.0],
-    [0.021, undefined, 1.0 / 4.0],
-    [0.013, undefined, 1.0 / 3.0],
-    [0.008, undefined, 1.0 / 2.0],
-    [0.005, undefined, 1.0],
-  ],
+  partials: addBrassAttacks([
+    [1.0],
+    [0.618],
+    [0.382],
+    [0.236],
+    [0.146],
+    [0.09],
+    [0.056],
+    [0.034],
+    [0.021],
+    [0.013],
+    [0.008],
+    [0.005],
+  ]),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),
 };
 
 // https://www.rickdenney.com/the_tuba_sound.htm
 export const tuba: InstrumentPreset = {
-  partials: [
-    [0.764, undefined, 1.0 / 12.0],
-    [0.854, undefined, 1.0 / 11.0],
-    [0.764, undefined, 1.0 / 10.0],
-    [1.0, undefined, 1.0 / 9.0],
-    [0.382, undefined, 1.0 / 8.0],
-    [0.618, undefined, 1.0 / 7.0],
-    [0.382, undefined, 1.0 / 6.0],
-    [0.146, undefined, 1.0 / 5.0],
-    [0.056, undefined, 1.0 / 4.0],
-    [0.021, undefined, 1.0 / 3.0],
-    [0.008, undefined, 1.0 / 2.0],
-    [0.003, undefined, 1.0],
-  ],
+  partials: addBrassAttacks([
+    [0.764],
+    [0.854],
+    [0.764],
+    [1.0],
+    [0.382],
+    [0.618],
+    [0.382],
+    [0.146],
+    [0.056],
+    [0.021],
+    [0.008],
+    [0.003],
+  ]),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),
 };
