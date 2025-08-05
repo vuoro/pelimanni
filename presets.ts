@@ -1,13 +1,44 @@
 import type { InstrumentPreset } from "./Instrument.ts";
-import { midiToFrequency } from "./notes.js";
+import { frequencyToMidi10, midiToFrequency } from "./notes.js";
+
+const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
+  const newPartials = [];
+
+  for (let index = 0; index < partials.length; index++) {
+    const [amplitude, partialRatio = index + 1] = partials[index];
+    newPartials[index] = [
+      amplitude,
+      partialRatio,
+      (index + 1) * (2.0 - amplitude),
+      1.0 / ((index + 1) * (2.0 - amplitude)),
+    ];
+  }
+
+  return newPartials as [number, number, number, number][];
+};
 
 const fluteEnvelope = { attack: 0.034, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
+const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
+const brassEnvelope = { ...reedEnvelope, attack: 0.034, defaultSustain: 0.764, release: 0.2 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://www.youtube.com/watch?v=hfS7mDvrZ7g
 export const flute: InstrumentPreset = {
-  partials: [[1.0], [0.382], [0.618], [0.146], [0.236], [0.056], [0.09], [0.013], [0.034], [0.005], [0.013], [0.002]],
+  partials: addBasicEnvelope([
+    [1.0],
+    [0.382],
+    [0.618],
+    [0.146],
+    [0.236],
+    [0.056],
+    [0.09],
+    [0.013],
+    [0.034],
+    [0.005],
+    [0.013],
+    [0.002],
+  ]),
   ...fluteEnvelope,
   inharmonicity: 0.003,
   formantFrequency: midiToFrequency(69),
@@ -16,22 +47,33 @@ export const flute: InstrumentPreset = {
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
 // https://www.physicsforums.com/threads/origin-of-harmonics-in-helmholts-type-resonators.799974/
 export const ocarina: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0, 1],
     [0.034, 3],
     [0.021, 5],
     [0.013, 7],
     [0.008, 9],
-  ],
+  ]),
   ...fluteEnvelope,
 };
-
-const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=a0-ysmiQTss
 export const oboe: InstrumentPreset = {
-  partials: [[0.618], [0.382], [0.764], [1.0], [0.618], [0.236], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
+  partials: addBasicEnvelope([
+    [0.618],
+    [0.382],
+    [0.764],
+    [1.0],
+    [0.618],
+    [0.236],
+    [0.382],
+    [0.146],
+    [0.056],
+    [0.021],
+    [0.008],
+    [0.003],
+  ]),
   ...reedEnvelope,
   inharmonicity: 0.008,
   formantFrequency: midiToFrequency(65),
@@ -41,7 +83,7 @@ export const oboe: InstrumentPreset = {
 // https://koppreeds.com/harmonic.html
 export const bassoon: InstrumentPreset = {
   ...oboe,
-  partials: [
+  partials: addBasicEnvelope([
     [0.764],
     [1.0],
     [0.854],
@@ -57,14 +99,14 @@ export const bassoon: InstrumentPreset = {
     [0.013],
     [0.008],
     [0.005],
-  ],
+  ]),
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 // https://www.youtube.com/watch?v=lhvJUU9Js-U
 export const clarinet: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.056], // evens are very weak
     [0.618], // odds are strong
@@ -74,29 +116,15 @@ export const clarinet: InstrumentPreset = {
     [0.09], // weaker
     [0.021],
     [0.09],
-    [0.056, undefined, 2], // oddly strong at start
+    [0.056], // oddly strong at start
     [0.056],
     [0.005],
     [0.034],
     [0.002],
-  ],
+  ]),
   ...reedEnvelope,
   inharmonicity: 0.013,
   formantFrequency: midiToFrequency(62),
-};
-
-const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 0.2 };
-const addBrassAttacks = (partials: InstrumentPreset["partials"]) => {
-  const newPartials = [];
-
-  for (let index = 0; index < partials.length; index++) {
-    const [amplitude] = partials[index];
-    newPartials[index] = [amplitude, index + 1, (partials.length - index) * (2.0 - amplitude)];
-  }
-
-  console.log(newPartials);
-
-  return newPartials as [number, number, number][];
 };
 
 // FIXME: saxophone seems to be a very dynamic instrument, so this is probably all off
@@ -107,7 +135,7 @@ const addBrassAttacks = (partials: InstrumentPreset["partials"]) => {
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
 export const saxophone: InstrumentPreset = {
-  partials: addBrassAttacks([
+  partials: addBasicEnvelope([
     [0.764],
     [1.0],
     [0.618],
@@ -130,7 +158,7 @@ export const saxophone: InstrumentPreset = {
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trumpet: InstrumentPreset = {
-  partials: addBrassAttacks([
+  partials: addBasicEnvelope([
     [0.764],
     [1.0],
     [0.764],
@@ -152,7 +180,7 @@ export const trumpet: InstrumentPreset = {
 // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trombone: InstrumentPreset = {
-  partials: addBrassAttacks([[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]]),
+  partials: addBasicEnvelope([[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]]),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(60),
 };
@@ -160,7 +188,7 @@ export const trombone: InstrumentPreset = {
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const frenchHorn: InstrumentPreset = {
-  partials: addBrassAttacks([
+  partials: addBasicEnvelope([
     [1.0],
     [0.618],
     [0.382],
@@ -180,7 +208,7 @@ export const frenchHorn: InstrumentPreset = {
 
 // https://www.rickdenney.com/the_tuba_sound.htm
 export const tuba: InstrumentPreset = {
-  partials: addBrassAttacks([
+  partials: addBasicEnvelope([
     [0.764],
     [0.854],
     [0.764],
@@ -213,7 +241,7 @@ const bowedStringEnvelope = {
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 export const violin: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.764],
     [0.618],
@@ -230,7 +258,7 @@ export const violin: InstrumentPreset = {
     [0.008],
     [0.005],
     [0.003],
-  ],
+  ]),
   ...bowedStringEnvelope,
   formantFrequency: midiToFrequency(65),
 };
@@ -240,7 +268,7 @@ export const violin: InstrumentPreset = {
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
 export const viola: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.854],
     [0.382],
@@ -258,7 +286,7 @@ export const viola: InstrumentPreset = {
     [0.008],
     [0.005],
     [0.003],
-  ],
+  ]),
   ...bowedStringEnvelope,
   formantFrequency: midiToFrequency(69),
 };
@@ -268,7 +296,7 @@ export const viola: InstrumentPreset = {
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://vobarian.com/celloanly/index.html
 export const cello: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.618],
     [0.382],
@@ -285,14 +313,14 @@ export const cello: InstrumentPreset = {
     [0.008],
     [0.005],
     [0.003],
-  ],
+  ]),
   ...bowedStringEnvelope,
   formantFrequency: midiToFrequency(71),
 };
 
 // Guessed based on cello
 export const contrabass: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.618],
     [0.382],
@@ -309,7 +337,7 @@ export const contrabass: InstrumentPreset = {
     [0.003],
     [0.002],
     [0.001],
-  ],
+  ]),
   ...bowedStringEnvelope,
   formantFrequency: midiToFrequency(60),
 };
@@ -318,9 +346,9 @@ export const contrabass: InstrumentPreset = {
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 0.0,
-  decay: 0.00000001,
-  volume: 2.618,
+  attack: 0.001,
+  decay: 0.000001,
+  volume: 5.0,
   defaultSustain: 0.0,
   release: 0.382,
   inharmonicity: 0.008,
@@ -348,7 +376,7 @@ export const pluckedContrabass: InstrumentPreset = {
   ...pluckedStringEnvelope,
 };
 
-const hammeredStringEnvelope = { ...pluckedStringEnvelope, inharmonicity: 0.013 };
+const hammeredStringEnvelope = { ...pluckedStringEnvelope };
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
@@ -365,7 +393,7 @@ const hammeredStringEnvelope = { ...pluckedStringEnvelope, inharmonicity: 0.013 
 // later key/hammer noise: 914 hz, 10–20ms attack, strong
 // also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
 export const piano: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0], // First 4 are quite high and often in a U shape
     [0.764],
     [0.382],
@@ -382,14 +410,17 @@ export const piano: InstrumentPreset = {
     [0.005],
     [0.003],
     [0.002],
-  ],
+  ]),
+  transients: [[1.0, frequencyToMidi10(38), 0.09, 0.001]],
   ...hammeredStringEnvelope,
+  inharmonicity: 0.013,
   formantFrequency: midiToFrequency(60),
 };
 
 // Guessed based on piano
+// also has the hammer and body noises, but the body noises are probably higher?
 export const hammeredDulcimer: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [1.0],
     [0.5],
     [0.382],
@@ -406,12 +437,13 @@ export const hammeredDulcimer: InstrumentPreset = {
     [0.005],
     [0.003],
     [0.002],
-  ],
+  ]),
   ...hammeredStringEnvelope,
+  formantFrequency: midiToFrequency(69),
 };
 
 export const bell: InstrumentPreset = {
-  partials: [
+  partials: addBasicEnvelope([
     [0.382, 0.25],
     [0.618, 0.5],
     [0.382, 1.2],
@@ -424,7 +456,7 @@ export const bell: InstrumentPreset = {
     [0.382, 8],
     [0.236, 16],
     [0.146, 32],
-  ],
+  ]),
   attack: 0.0,
   decay: 0.001,
   defaultSustain: 0.0,

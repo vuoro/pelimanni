@@ -1,6 +1,52 @@
 import InstrumentWorklet from "./InstrumentWorklet.ts?url";
 import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.js";
 
+export type InstrumentPreset = {
+  partials: [
+    /** Partial amplitude */
+    number,
+    /** Partial ratio to fundamental frequency: 2.0 = 2.0 * fundamentalFrequency */
+    number,
+    /** Partial attack multiplier */
+    number,
+    /** Partial release multiplier */
+    number,
+  ][];
+
+  transients?: [
+    /** Transient amplitude */
+    number,
+    /** Transient midi10 number (midi number, but multiplied by 10) */
+    number,
+    /** Transient attack */
+    number,
+    /** Transient release */
+    number,
+  ][];
+
+  notesStartAt?: number;
+  notesEndAt?: number;
+  volume?: number;
+
+  getNotes?: typeof defaultGetNotes;
+  getFrequencies?: typeof defaultGetFrequencies;
+  getFrequencyAmplitudes?: typeof defaultGetFrequencyAmplitudes;
+
+  attack?: number;
+  decay?: number;
+  defaultSustain?: number;
+  release?: number;
+
+  pitchEffectOnAttack?: number;
+  pitchEffectOnDecay?: number;
+  pitchEffectOnRelease?: number;
+
+  /** Passed to getFrequencies. */
+  inharmonicity?: number;
+  /** Passed to getFrequencyAmplitudes. */
+  formantFrequency?: number;
+};
+
 export class Instrument {
   node: Promise<AudioWorkletNode>;
   audioContext: AudioContext;
@@ -10,6 +56,7 @@ export class Instrument {
     audioContext: AudioContext,
     {
       partials,
+      transients,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
@@ -36,23 +83,32 @@ export class Instrument {
     const partialOffsets = new Int16Array(partials.length);
     const partialAmplitudes = new Float64Array(partials.length);
     const partialAttacks = new Float64Array(partials.length);
+    const partialReleases = new Float64Array(partials.length);
 
-    for (const [
-      index,
-      [amplitude = 1.0, partialRatio = index + 1, attack = partialRatio * (2.0 - amplitude)],
-    ] of partials.entries()) {
+    const transientAmplitudes = new Float64Array(transients?.length ?? 0);
+    const transientIndexes = new Int16Array(transients?.length ?? 0);
+    const transientAttacks = new Float64Array(transients?.length ?? 0);
+    const transientReleases = new Float64Array(transients?.length ?? 0);
+
+    for (const [index, [amplitude, partialRatio, attack, release]] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
       partialAmplitudes[index] = amplitude;
       partialAttacks[index] = 1.0 / attack;
+      partialReleases[index] = release;
+    }
+
+    if (transients) {
+      for (const [index, [amplitude, transientIndex, attack, release]] of transients.entries()) {
+        transientAmplitudes[index] = amplitude / audioContext.sampleRate;
+        transientIndexes[index] = transientIndex - notesStartAt * 10;
+        transientAttacks[index] = 1.0 / attack / audioContext.sampleRate;
+        transientReleases[index] = release ** (1.0 / audioContext.sampleRate);
+      }
     }
 
     const processorOptions = {
       notesStartAt,
       volume,
-
-      partialOffsets,
-      partialAmplitudes,
-      partialAttacks,
 
       noteAttacks: Float64Array.from(notes).map((note) =>
         Math.min(
@@ -62,19 +118,35 @@ export class Instrument {
             audioContext.sampleRate,
         ),
       ),
-      noteDecays: Float64Array.from(notes).map(
-        (note) =>
-          1.0 -
-          decay ** ((1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1))) / audioContext.sampleRate),
+      noteDecays: Float64Array.from(notes).map((note) =>
+        Math.min(
+          1.0,
+          1.0 /
+            (decay / (1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1)))) /
+            audioContext.sampleRate,
+        ),
       ),
+      noteReleases: Float64Array.from(notes).map((note) =>
+        Math.min(
+          1.0,
+          1.0 /
+            (release / (1.0 + pitchEffectOnRelease * midiToFrequency(note - (notesStartAt - 1)))) /
+            audioContext.sampleRate,
+        ),
+      ),
+
+      partialOffsets,
+      partialAmplitudes,
+      partialAttacks,
+      partialReleases,
+
+      transientIndexes,
+      transientAmplitudes,
+      transientAttacks,
+      transientReleases,
 
       frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
       frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
-      frequencyReleases: Float64Array.from(frequencies).map(
-        (frequency) =>
-          release **
-          ((1.0 + pitchEffectOnRelease * (frequency - midiToFrequency(notesStartAt - 1))) / audioContext.sampleRate),
-      ),
     };
 
     this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {
@@ -106,10 +178,8 @@ export class Instrument {
     (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, 1.0 / attackMultiplier));
   }
 
-  async release(note: number) {
-    // TODO: would be nice to have a releaseMultiplier here, but releases come from frequencies instead of notes, so it's tricky.
-    // It could hook to decay instead, but currently decay dies upon release.
-    (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0));
+  async release(note: number, releaseMultiplier = 1.0) {
+    (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier));
   }
 
   async mute(amount: number) {
@@ -178,37 +248,4 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency =
   }
 
   return amplitudes;
-};
-
-export type InstrumentPreset = {
-  partials: [
-    /** Partial amplitude */
-    number,
-    /** Partial ratio to fundamental frequency: 2.0 = 2.0 * fundamentalFrequency */
-    (number | undefined)?,
-    /** Partial attack multiplier */
-    (number | undefined)?,
-  ][];
-
-  notesStartAt?: number;
-  notesEndAt?: number;
-  volume?: number;
-
-  getNotes?: typeof defaultGetNotes;
-  getFrequencies?: typeof defaultGetFrequencies;
-  getFrequencyAmplitudes?: typeof defaultGetFrequencyAmplitudes;
-
-  attack?: number;
-  decay?: number;
-  defaultSustain?: number;
-  release?: number;
-
-  pitchEffectOnAttack?: number;
-  pitchEffectOnDecay?: number;
-  pitchEffectOnRelease?: number;
-
-  /** Passed to getFrequencies. */
-  inharmonicity?: number;
-  /** Passed to getFrequencyAmplitudes. */
-  formantFrequency?: number;
 };
