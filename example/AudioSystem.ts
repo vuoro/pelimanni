@@ -36,33 +36,41 @@ export const AudioSystem = new Magic(
       attack: 0.0001,
     });
 
-    // // Values from https://github.com/musios-app/equal-loudness
-    // const lowPeak = new BiquadFilterNode(audioContext, {
-    //   type: "peaking",
-    //   frequency: 25,
-    //   Q: 0.1,
-    //   gain: 3.162278,
-    // });
-    // const midPeak = new BiquadFilterNode(audioContext, {
-    //   type: "peaking",
-    //   frequency: 2500,
-    //   Q: 0.4,
-    //   gain: 0.74817,
-    // });
-    // const highPeak = new BiquadFilterNode(audioContext, {
-    //   type: "peaking",
-    //   frequency: 16000,
-    //   Q: 0.2,
-    //   gain: 1.035142,
-    // });
+    // Values from https://github.com/musios-app/equal-loudness
+    const lowPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 25,
+      Q: 0.1,
+      gain: 3.162278,
+    });
+    const midPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 2500,
+      Q: 0.4,
+      gain: 0.74817,
+    });
+    const highPeak = new BiquadFilterNode(audioContext, {
+      type: "peaking",
+      frequency: 16000,
+      Q: 0.2,
+      gain: 1.035142,
+    });
 
     const highPass = new BiquadFilterNode(audioContext, { type: "highpass", frequency: 20 });
     const lowPass = new BiquadFilterNode(audioContext, { type: "lowpass", frequency: 20000 });
 
     const input = compressor;
     const output = mainGain;
+    const connector = lowPeak;
 
-    lowPass.connect(highPass).connect(limiter).connect(mainGain).connect(audioContext.destination);
+    lowPeak
+      .connect(midPeak)
+      .connect(highPeak)
+      .connect(lowPass)
+      .connect(highPass)
+      .connect(limiter)
+      .connect(mainGain)
+      .connect(audioContext.destination);
 
     audioContext.addEventListener("statechange", onStateChange);
 
@@ -93,12 +101,12 @@ export const AudioSystem = new Magic(
           },
         });
 
-        input.connect(reverbNode).connect(lowPass);
+        input.connect(reverbNode).connect(connector);
 
         resolveReverb(reverbNode);
       })
       .catch((error) => {
-        input.connect(lowPass);
+        input.connect(connector);
         (reportError || console.error)(error);
       });
 
