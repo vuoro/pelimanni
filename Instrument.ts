@@ -63,9 +63,9 @@ export class Instrument {
       decay = 0.146,
       defaultSustain = 1.0,
       release = 0.618,
-      pitchEffectOnAttack = 0.01,
-      pitchEffectOnDecay = 0.01,
-      pitchEffectOnRelease = 0.01,
+      pitchEffectOnAttack = 0.008,
+      pitchEffectOnDecay = 0.008,
+      pitchEffectOnRelease = 0.008,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
@@ -96,11 +96,11 @@ export class Instrument {
     }
 
     if (transients) {
-      for (const [index, [amplitude, transientIndex, attack, release]] of transients.entries()) {
-        transientAmplitudes[index] = amplitude / audioContext.sampleRate;
-        transientIndexes[index] = transientIndex - notesStartAt * 10;
-        transientAttacks[index] = 1.0 / attack / audioContext.sampleRate;
-        transientReleases[index] = release ** (1.0 / audioContext.sampleRate);
+      for (const [index, [amplitude, frequency, attack, release]] of transients.entries()) {
+        transientAmplitudes[index] = amplitude;
+        transientIndexes[index] = frequencyToMidi10(frequency) - notesStartAt * 10;
+        transientAttacks[index] = attack / audioContext.sampleRate;
+        transientReleases[index] = release / audioContext.sampleRate;
       }
     }
 
@@ -161,15 +161,11 @@ export class Instrument {
     // // /** for how long `attackDetune` should occur */
     // attackDetuneDuration: 0.0;
 
-    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, 1.0 / attackMultiplier));
+    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier));
   }
 
   async release(note: number, releaseMultiplier = 1.0) {
     (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier));
-  }
-
-  async mute(amount: number) {
-    (await this.node).port.postMessage(Float32Array.of(2, amount / (this.audioContext.sampleRate / 10.0)));
   }
 
   async destroy() {
@@ -177,7 +173,7 @@ export class Instrument {
 
     // FIXME: this can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
     // https://issues.chromium.org/issues/41435286
-    (await this.node).port.postMessage(Float32Array.of(3));
+    (await this.node).port.postMessage(Float32Array.of(666));
   }
 
   async connect(where: AudioNode, output?: number, input?: number) {
@@ -210,7 +206,6 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
     // Both strings and clarinets seem to have an inharmonicity curve like this?
     const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(65));
     frequency *= 1.0 + Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity;
-    console.log(fromMiddle, Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity);
 
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);

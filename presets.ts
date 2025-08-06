@@ -12,9 +12,13 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
   return newPartials as [number, number, number, number][];
 };
 
-const fluteEnvelope = { attack: 0.034, decay: 0.382, defaultSustain: 0.91, release: 0.146 };
-const reedEnvelope = { ...fluteEnvelope, attack: 0.056, defaultSustain: 0.854 };
-const brassEnvelope = { ...reedEnvelope, attack: 0.034, defaultSustain: 0.764, release: 0.2 };
+// attack: 1.0,
+// decay: 1.618,
+// release: 1.618,
+
+const fluteEnvelope = { attack: 2.0, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
+const reedEnvelope = { ...fluteEnvelope, attack: 2.0, defaultSustain: 0.854 };
+const brassEnvelope = { ...reedEnvelope, attack: 2.0, defaultSustain: 0.764, release: 1.618 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -35,7 +39,7 @@ export const flute: InstrumentPreset = {
     [0.002],
   ]),
   ...fluteEnvelope,
-  inharmonicity: 0.003,
+  inharmonicity: 0.0003,
   formantFrequency: midiToFrequency(69),
 };
 
@@ -50,6 +54,7 @@ export const ocarina: InstrumentPreset = {
     [0.008, 9],
   ]),
   ...fluteEnvelope,
+  inharmonicity: 0.0003,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -70,7 +75,7 @@ export const oboe: InstrumentPreset = {
     [0.003],
   ]),
   ...reedEnvelope,
-  inharmonicity: 0.008,
+  inharmonicity: 0.0005,
   formantFrequency: midiToFrequency(65),
 };
 
@@ -118,7 +123,7 @@ export const clarinet: InstrumentPreset = {
     [0.002],
   ]),
   ...reedEnvelope,
-  inharmonicity: 0.013,
+  inharmonicity: 0.0008,
   formantFrequency: midiToFrequency(62),
 };
 
@@ -146,7 +151,6 @@ export const saxophone: InstrumentPreset = {
     [0.034],
   ]),
   ...reedEnvelope,
-  inharmonicity: 0.018,
   formantFrequency: midiToFrequency(64),
 };
 
@@ -225,8 +229,9 @@ export const tuba: InstrumentPreset = {
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 const bowedStringEnvelope = {
   attack: 1.0,
-  decay: 1.618,
+  decay: Math.SQRT2,
   release: 1.618,
+  defaultSustain: 0.91,
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -341,11 +346,16 @@ export const contrabass: InstrumentPreset = {
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 22.0,
-  decay: 16.0,
+  attack: 16.0,
+  decay: 12.0,
   release: 0.764,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
+  // transients: [
+  //   [0.034, 104, 8.0, 8.0],
+  //   [0.021, 562, 8.0, 8.0],
+  //   [0.013, 780, 8.0, 8.0],
+  // ],
   // TODO:
   // defaultAttackDetune: 100,
 };
@@ -370,7 +380,13 @@ export const pluckedContrabass: InstrumentPreset = {
   ...pluckedStringEnvelope,
 };
 
-const hammeredStringEnvelope = { ...pluckedStringEnvelope, attack: 20.0, decay: 16.0, release: 0.618 };
+const hammeredStringEnvelope = {
+  ...pluckedStringEnvelope,
+  attack: 20.0,
+  decay: 16.0,
+  release: 0.618,
+  inharmonicity: 0.0008,
+};
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
@@ -404,8 +420,14 @@ export const piano: InstrumentPreset = {
     [0.005],
     [0.003],
     [0.002],
+    [0.001],
   ]),
-  // transients: [[1.0, frequencyToMidi10(38), 0.09, 0.001]],
+  // transients: [
+  //   [0.013, 38, 8.0, 8.0],
+  //   [0.021, 100, 8.0, 8.0],
+  //   [0.034, 250, 8.0, 8.0],
+  //   [0.056, 914, 8.0, 8.0],
+  // ],
   ...hammeredStringEnvelope,
   release: 0.382,
   formantFrequency: midiToFrequency(60),
