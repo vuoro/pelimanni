@@ -1,17 +1,12 @@
 import type { InstrumentPreset } from "./Instrument.ts";
-import { frequencyToMidi10, midiToFrequency } from "./notes.js";
+import { midiToFrequency } from "./notes.js";
 
 const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
   const newPartials = [];
 
   for (let index = 0; index < partials.length; index++) {
     const [amplitude, partialRatio = index + 1] = partials[index];
-    newPartials[index] = [
-      amplitude,
-      partialRatio,
-      (index + 1) * (2.0 - amplitude),
-      1.0 / ((index + 1) * (2.0 - amplitude)),
-    ];
+    newPartials[index] = [amplitude, partialRatio, 1.0 / (index + 2 - amplitude), index + 2 - amplitude];
   }
 
   return newPartials as [number, number, number, number][];
@@ -229,9 +224,9 @@ export const tuba: InstrumentPreset = {
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 const bowedStringEnvelope = {
-  attack: 0.056,
-  decay: 0.146,
-  release: 0.236,
+  attack: 1.0,
+  decay: 1.618,
+  release: 1.618,
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -346,12 +341,11 @@ export const contrabass: InstrumentPreset = {
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 0.001,
-  decay: 0.000001,
-  volume: 5.0,
+  attack: 22.0,
+  decay: 16.0,
+  release: 0.764,
   defaultSustain: 0.0,
-  release: 0.382,
-  inharmonicity: 0.008,
+  inharmonicity: 0.0008,
   // TODO:
   // defaultAttackDetune: 100,
 };
@@ -376,7 +370,7 @@ export const pluckedContrabass: InstrumentPreset = {
   ...pluckedStringEnvelope,
 };
 
-const hammeredStringEnvelope = { ...pluckedStringEnvelope };
+const hammeredStringEnvelope = { ...pluckedStringEnvelope, attack: 20.0, decay: 16.0, release: 0.618 };
 
 // Oh dear…
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
@@ -411,9 +405,9 @@ export const piano: InstrumentPreset = {
     [0.003],
     [0.002],
   ]),
-  transients: [[1.0, frequencyToMidi10(38), 0.09, 0.001]],
+  // transients: [[1.0, frequencyToMidi10(38), 0.09, 0.001]],
   ...hammeredStringEnvelope,
-  inharmonicity: 0.013,
+  release: 0.382,
   formantFrequency: midiToFrequency(60),
 };
 
@@ -444,18 +438,18 @@ export const hammeredDulcimer: InstrumentPreset = {
 
 export const bell: InstrumentPreset = {
   partials: addBasicEnvelope([
-    [0.382, 0.25],
-    [0.618, 0.5],
-    [0.382, 1.2],
-    [0.146, 1.5],
-    [1.0, 2.0],
-    [0.382, 3.0],
-    [0.618, 4.0],
-    [0.382, 5.4],
-    [0.236, 6.75],
-    [0.382, 8],
-    [0.236, 16],
-    [0.146, 32],
+    [0.382],
+    [0.618],
+    [0.382],
+    [0.146],
+    [1.0],
+    [0.382],
+    [0.618],
+    [0.382],
+    [0.236],
+    [0.382],
+    [0.236],
+    [0.146],
   ]),
   attack: 0.0,
   decay: 0.001,

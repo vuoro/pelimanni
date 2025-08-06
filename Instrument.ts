@@ -26,7 +26,6 @@ export type InstrumentPreset = {
 
   notesStartAt?: number;
   notesEndAt?: number;
-  volume?: number;
 
   getNotes?: typeof defaultGetNotes;
   getFrequencies?: typeof defaultGetFrequencies;
@@ -64,14 +63,13 @@ export class Instrument {
       decay = 0.146,
       defaultSustain = 1.0,
       release = 0.618,
-      pitchEffectOnAttack = 0.002,
-      pitchEffectOnDecay = 0.002,
-      pitchEffectOnRelease = 0.002,
+      pitchEffectOnAttack = 0.01,
+      pitchEffectOnDecay = 0.01,
+      pitchEffectOnRelease = 0.01,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
-      volume = 1.0,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -93,7 +91,7 @@ export class Instrument {
     for (const [index, [amplitude, partialRatio, attack, release]] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
       partialAmplitudes[index] = amplitude;
-      partialAttacks[index] = 1.0 / attack;
+      partialAttacks[index] = attack;
       partialReleases[index] = release;
     }
 
@@ -108,31 +106,19 @@ export class Instrument {
 
     const processorOptions = {
       notesStartAt,
-      volume,
 
-      noteAttacks: Float64Array.from(notes).map((note) =>
-        Math.min(
-          1.0,
-          1.0 /
-            (attack / (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) /
-            audioContext.sampleRate,
-        ),
+      noteAttacks: Float64Array.from(notes).map(
+        (note) =>
+          (attack * (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) / audioContext.sampleRate,
       ),
-      noteDecays: Float64Array.from(notes).map((note) =>
-        Math.min(
-          1.0,
-          1.0 /
-            (decay / (1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1)))) /
-            audioContext.sampleRate,
-        ),
+      noteDecays: Float64Array.from(notes).map(
+        (note) =>
+          (decay * (1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1)))) / audioContext.sampleRate,
       ),
-      noteReleases: Float64Array.from(notes).map((note) =>
-        Math.min(
-          1.0,
-          1.0 /
-            (release / (1.0 + pitchEffectOnRelease * midiToFrequency(note - (notesStartAt - 1)))) /
-            audioContext.sampleRate,
-        ),
+      noteReleases: Float64Array.from(notes).map(
+        (note) =>
+          (release * (1.0 + pitchEffectOnRelease * midiToFrequency(note - (notesStartAt - 1)))) /
+          audioContext.sampleRate,
       ),
 
       partialOffsets,
@@ -223,7 +209,8 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
 
     // Both strings and clarinets seem to have an inharmonicity curve like this?
     const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(65));
-    frequency *= 1.0 + inharmonicity * fromMiddle;
+    frequency *= 1.0 + Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity;
+    console.log(fromMiddle, Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity);
 
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);

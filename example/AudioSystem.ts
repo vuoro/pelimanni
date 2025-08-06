@@ -15,6 +15,7 @@ export const AudioSystem = new Magic(
     effectsCompressor: DynamicsCompressorNode;
     lowPass: BiquadFilterNode;
     limiter: DynamicsCompressorNode;
+    input: AudioNode;
     output: AudioNode;
     reverb: Promise<AudioWorkletNode>;
     connectInstrument: (instrument: ReturnType<typeof createInstrument>) => void;
@@ -58,7 +59,8 @@ export const AudioSystem = new Magic(
     const highPass = new BiquadFilterNode(audioContext, { type: "highpass", frequency: 20 });
     const lowPass = new BiquadFilterNode(audioContext, { type: "lowpass", frequency: 20000 });
 
-    const output = compressor;
+    const input = compressor;
+    const output = mainGain;
 
     lowPass.connect(highPass).connect(limiter).connect(mainGain).connect(audioContext.destination);
 
@@ -91,12 +93,12 @@ export const AudioSystem = new Magic(
           },
         });
 
-        output.connect(reverbNode).connect(lowPass);
+        input.connect(reverbNode).connect(lowPass);
 
         resolveReverb(reverbNode);
       })
       .catch((error) => {
-        output.connect(lowPass);
+        input.connect(lowPass);
         (reportError || console.error)(error);
       });
 
@@ -113,12 +115,13 @@ export const AudioSystem = new Magic(
 
       const panner = new StereoPannerNode(audioContext, { pan });
 
-      instrument.output.connect(panner).connect(output);
+      instrument.output.connect(panner).connect(input);
     };
 
     return {
       audioContext,
       mainGain,
+      input,
       output,
       reverb,
       connectInstrument,
@@ -133,16 +136,16 @@ const onStateChange = function (this: AudioContext) {
 };
 
 export const defaultReverbParameters = {
-  preDelay: 1.0 / 60.0, // could be up to 0.04ms before being obvious
-  bandwidth: 0.854,
-  damping: 0.146,
-  inputDiffusion1: 0.414,
-  inputDiffusion2: 0.666,
-  decay: 0.09,
-  decayDiffusion1: 0.3,
+  preDelay: 2.0 / 60.0, // could be up to 0.04ms before being obvious
+  bandwidth: 0.618,
+  damping: 0.382,
+  inputDiffusion1: 0.382,
+  inputDiffusion2: 0.236,
+  decay: 0.236,
+  decayDiffusion1: 0.764,
   decayDiffusion2: 0.618,
-  excursionRate: 0.146,
-  excursionDepth: 0.146,
-  dry: 0.764,
-  wet: 0.236,
+  excursionRate: 0.0,
+  excursionDepth: 0.0,
+  dry: 0.618,
+  wet: 0.382,
 };
