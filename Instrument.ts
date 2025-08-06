@@ -147,7 +147,7 @@ export class Instrument {
     this.defaultSustain = defaultSustain;
   }
 
-  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0) {
+  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0, dynamics = 0.414) {
     // TODO:
     // // /** how much vibrato should affect the note frequency (in cents) */
     // vibratoEffectOnPitch: 0.0;
@@ -161,7 +161,9 @@ export class Instrument {
     // // /** for how long `attackDetune` should occur */
     // attackDetuneDuration: 0.0;
 
-    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier));
+    (await this.node).port.postMessage(
+      Float32Array.of(0, note, velocity, sustain, attackMultiplier * (1.0 + velocity), dynamics),
+    );
   }
 
   async release(note: number, releaseMultiplier = 1.0) {

@@ -16,9 +16,9 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
 // decay: 1.618,
 // release: 1.618,
 
-const fluteEnvelope = { attack: 2.0, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
-const reedEnvelope = { ...fluteEnvelope, attack: 2.0, defaultSustain: 0.854 };
-const brassEnvelope = { ...reedEnvelope, attack: 2.0, defaultSustain: 0.764, release: 1.618 };
+const fluteEnvelope = { attack: 1.618, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
+const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
+const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 1.618 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -347,7 +347,7 @@ export const contrabass: InstrumentPreset = {
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
   attack: 16.0,
-  decay: 12.0,
+  decay: 16.0,
   release: 0.764,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
@@ -382,8 +382,8 @@ export const pluckedContrabass: InstrumentPreset = {
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
-  attack: 20.0,
-  decay: 16.0,
+  attack: 12.0,
+  decay: 12.0,
   release: 0.618,
   inharmonicity: 0.0008,
 };

@@ -1,5 +1,5 @@
 import { Instrument } from "../Instrument.ts";
-import { ocarina } from "../presets.ts";
+import { trombone } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
@@ -17,7 +17,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
       if (velocity === 0) {
         tempInstrument.release(midiNumber);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0, undefined, 1.0);
+        tempInstrument.attack(midiNumber, velocity / 127.0);
       }
     }
   }
@@ -55,5 +55,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, ocarina);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, trombone);
 tempInstrument.connect(AudioSystem.get().input);

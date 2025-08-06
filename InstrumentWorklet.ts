@@ -126,7 +126,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     // Handle messages
     // TODO: type this message
     this.port.addEventListener("message", ({ data }) => {
-      const [type, note, velocity = 1.0, sustain = 0.0, multiplier = 1.0] = data;
+      const [type, note, velocity = 1.0, sustain = 1.0, multiplier = 1.0, dynamics = 1.0] = data;
       const noteIndex = note - this.notesStartAt;
       const partialCount = this.partialOffsets.length;
 
@@ -143,7 +143,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       switch (data[0]) {
         case 0: {
           // attack
-          const loudness = velocity ** 0.5;
+          const loudness = velocity ** dynamics;
 
           for (let partialIndex = 0; partialIndex < partialCount; partialIndex++) {
             const targetIndex = partialIndex + partialCount * noteIndex;
