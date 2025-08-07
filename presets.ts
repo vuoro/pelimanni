@@ -470,23 +470,42 @@ export const hammeredDulcimer: InstrumentPreset = {
   formantFrequency: midiToFrequency(69),
 };
 
-export const bell: InstrumentPreset = {
+// https://www.youtube.com/watch?v=0_WJbOpG0Fg
+export const taikoDrum: InstrumentPreset = {
   partials: addBasicEnvelope([
-    [0.382],
-    [0.618],
-    [0.382],
-    [0.146],
-    [1.0],
-    [0.382],
-    [0.618],
-    [0.382],
-    [0.236],
-    [0.382],
-    [0.236],
-    [0.146],
+    [0.618, 1.0],
+    [1.0, 2.11],
+    [0.618, 2.92],
+    [0.236, 3.75],
+    [0.146, 4.4],
+    [0.09, 5.57],
+    [0.056, 7.6],
+    [0.034, 8.5],
+    [0.021, 9.3],
   ]),
-  attack: 0.0,
-  decay: 0.001,
-  defaultSustain: 0.0,
-  release: 0.618,
+  // transients: [[0.236, 700, 20.0, 16.0]],
+  ...drumEnvelope,
+};
+
+export const timpani: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [0.618, 1.0],
+    [1.0, 1.5],
+    [0.618, 1.98],
+    [0.236, 2.44],
+    [0.146, 3.16],
+  ]),
+  ...drumEnvelope,
+};
+
+export const bassDrum: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [0.618, 1.0],
+    [1.0, 1.86],
+    [0.618, 2.72],
+    [0.236, 3.64],
+    [0.146, 4.5],
+    [0.09, 5.46],
+  ]),
+  ...drumEnvelope,
 };
