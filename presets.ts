@@ -16,9 +16,57 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
 // decay: 1.618,
 // release: 1.618,
 
-const fluteEnvelope = { attack: 1.618, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
-const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
-const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 1.618 };
+// attack: 2.0,
+// decay: Math.SQRT2,
+// release: 2.0,
+
+const fluteEnvelope = { attack: 3.0, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
+const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
+const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 2.618 };
+
+// https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
+// http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
+const bowedStringEnvelope = {
+  attack: 2.0,
+  decay: Math.SQRT2,
+  release: 2.0,
+  defaultSustain: 0.91,
+};
+
+// Guitar transients
+// https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
+// body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
+const pluckedStringEnvelope = {
+  attack: 19.0,
+  decay: 19.0,
+  release: 2.0,
+  defaultSustain: 0.0,
+  inharmonicity: 0.0008,
+  // transients: [
+  //   [0.034, 104, 8.0, 8.0],
+  //   [0.021, 562, 8.0, 8.0],
+  //   [0.013, 780, 8.0, 8.0],
+  // ],
+  // TODO:
+  // defaultAttackDetune: 100,
+};
+
+const hammeredStringEnvelope = {
+  ...pluckedStringEnvelope,
+  attack: 18.0,
+  decay: 18.0,
+  release: 1.0,
+  inharmonicity: 0.0008,
+};
+
+export const drumEnvelope = {
+  attack: 20.0,
+  decay: 20.0,
+  defaultSustain: 0.0,
+  release: 1.618,
+  // TODO:
+  // defaultAttackDetune: 200,
+};
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -225,15 +273,6 @@ export const tuba: InstrumentPreset = {
   formantFrequency: midiToFrequency(65),
 };
 
-// https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
-// http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
-const bowedStringEnvelope = {
-  attack: 1.0,
-  decay: Math.SQRT2,
-  release: 1.618,
-  defaultSustain: 0.91,
-};
-
 // https://musiccrashcourses.com/lessons/harmonic_series.html
 // https://amath.colorado.edu/pub/matlab/music/MathMusic.pdf
 // https://www.rickertmusicalinstruments.com/2017/11/amplified-violins-effects-processors-pickups.html
@@ -342,24 +381,6 @@ export const contrabass: InstrumentPreset = {
   formantFrequency: midiToFrequency(60),
 };
 
-// Plucked string transients
-// https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
-// body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
-const pluckedStringEnvelope = {
-  attack: 16.0,
-  decay: 16.0,
-  release: 0.764,
-  defaultSustain: 0.0,
-  inharmonicity: 0.0008,
-  // transients: [
-  //   [0.034, 104, 8.0, 8.0],
-  //   [0.021, 562, 8.0, 8.0],
-  //   [0.013, 780, 8.0, 8.0],
-  // ],
-  // TODO:
-  // defaultAttackDetune: 100,
-};
-
 export const pluckedViolin: InstrumentPreset = {
   ...violin,
   ...pluckedStringEnvelope,
@@ -378,14 +399,6 @@ export const pluckedCello: InstrumentPreset = {
 export const pluckedContrabass: InstrumentPreset = {
   ...contrabass,
   ...pluckedStringEnvelope,
-};
-
-const hammeredStringEnvelope = {
-  ...pluckedStringEnvelope,
-  attack: 12.0,
-  decay: 12.0,
-  release: 0.618,
-  inharmonicity: 0.0008,
 };
 
 // Oh dear…
@@ -423,13 +436,12 @@ export const piano: InstrumentPreset = {
     [0.001],
   ]),
   // transients: [
-  //   [0.013, 38, 8.0, 8.0],
-  //   [0.021, 100, 8.0, 8.0],
-  //   [0.034, 250, 8.0, 8.0],
-  //   [0.056, 914, 8.0, 8.0],
+  //   [0.056, 38, 8.0, 8.0],
+  //   [0.034, 100, 8.0, 8.0],
+  //   [0.021, 250, 8.0, 8.0],
+  //   [0.034, 914, 8.0, 8.0],
   // ],
   ...hammeredStringEnvelope,
-  release: 0.382,
   formantFrequency: midiToFrequency(60),
 };
 

@@ -39,6 +39,7 @@ export type InstrumentPreset = {
   pitchEffectOnAttack?: number;
   pitchEffectOnDecay?: number;
   pitchEffectOnRelease?: number;
+  pitchEffectOnBrightness?: number;
 
   /** Passed to getFrequencies. */
   inharmonicity?: number;
@@ -60,12 +61,13 @@ export class Instrument {
       getFrequencies = defaultGetFrequencies,
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
       attack = 0.09,
-      decay = 0.146,
+      decay = 0.09,
       defaultSustain = 1.0,
       release = 0.618,
-      pitchEffectOnAttack = 0.008,
-      pitchEffectOnDecay = 0.008,
-      pitchEffectOnRelease = 0.008,
+      pitchEffectOnAttack = 0.09,
+      pitchEffectOnDecay = 0.09,
+      pitchEffectOnRelease = 0.618,
+      pitchEffectOnBrightness = 0.5,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
@@ -109,16 +111,24 @@ export class Instrument {
 
       noteAttacks: Float64Array.from(notes).map(
         (note) =>
-          (attack * (1.0 + pitchEffectOnAttack * midiToFrequency(note - (notesStartAt - 1)))) / audioContext.sampleRate,
+          (attack *
+            2.0 ** (pitchEffectOnAttack * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+          audioContext.sampleRate,
       ),
       noteDecays: Float64Array.from(notes).map(
         (note) =>
-          (decay * (1.0 + pitchEffectOnDecay * midiToFrequency(note - (notesStartAt - 1)))) / audioContext.sampleRate,
+          (decay * 2.0 ** (pitchEffectOnDecay * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+          audioContext.sampleRate,
       ),
       noteReleases: Float64Array.from(notes).map(
         (note) =>
-          (release * (1.0 + pitchEffectOnRelease * midiToFrequency(note - (notesStartAt - 1)))) /
+          (release *
+            2.0 ** (pitchEffectOnRelease * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
           audioContext.sampleRate,
+      ),
+      noteBrightnesses: Float64Array.from(notes).map(
+        (note) =>
+          2.0 ** (pitchEffectOnBrightness * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60)))),
       ),
 
       partialOffsets,
@@ -147,7 +157,7 @@ export class Instrument {
     this.defaultSustain = defaultSustain;
   }
 
-  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0, dynamics = 0.414) {
+  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0, dynamics = 0.5) {
     // TODO:
     // // /** how much vibrato should affect the note frequency (in cents) */
     // vibratoEffectOnPitch: 0.0;
@@ -205,8 +215,8 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
 
-    // Both strings and clarinets seem to have an inharmonicity curve like this?
-    const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(65));
+    // Both strings and clarinets seem to have an inharmonicity curve like this? Resembles the Railsback Curve.
+    const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(60));
     frequency *= 1.0 + Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity;
 
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
@@ -216,7 +226,7 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
   return frequencies;
 };
 
-const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency = midiToFrequency(65)) => {
+const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency = midiToFrequency(60)) => {
   const amplitudes = [];
 
   // I get my values mostly from these sources:
