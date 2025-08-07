@@ -171,9 +171,7 @@ export class Instrument {
     // // /** for how long `attackDetune` should occur */
     // attackDetuneDuration: 0.0;
 
-    (await this.node).port.postMessage(
-      Float32Array.of(0, note, velocity, sustain, attackMultiplier * (1.0 + velocity), dynamics),
-    );
+    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier, dynamics));
   }
 
   async release(note: number, releaseMultiplier = 1.0) {
@@ -237,6 +235,8 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency =
   // https://sengpielaudio.com/VowelDiagram.htm
 
   for (const frequency of frequencies) {
+    // Make all the frequencies matching the chosen formant note stronger, and also the frequencies exactly between them.
+    // As a result the instrument "body" itself "resonates" a harmonic chord.
     amplitudes.push(0.764 + 0.236 * Math.cos((Math.log2(frequency) - Math.log2(formantFrequency)) * 4.0 * Math.PI));
     // amplitudes.push(1.0);
   }

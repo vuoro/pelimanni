@@ -2,14 +2,14 @@ import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
 const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
-  const newPartials = [];
+  const newPartials: [number, number, number, number][] = [];
 
   for (let index = 0; index < partials.length; index++) {
     const [amplitude, partialRatio = index + 1] = partials[index];
     newPartials[index] = [amplitude, partialRatio, 1.0 / (index + 2 - amplitude), index + 2 - amplitude];
   }
 
-  return newPartials as [number, number, number, number][];
+  return newPartials;
 };
 
 // attack: 1.0,
@@ -62,6 +62,15 @@ const hammeredStringEnvelope = {
 export const drumEnvelope = {
   attack: 20.0,
   decay: 20.0,
+  defaultSustain: 0.0,
+  release: 1.618,
+  // TODO:
+  // defaultAttackDetune: 200,
+};
+
+export const idiophoneEnvelope = {
+  attack: 18.0,
+  decay: 18.0,
   defaultSustain: 0.0,
   release: 1.618,
   // TODO:
@@ -508,4 +517,146 @@ export const bassDrum: InstrumentPreset = {
     [0.09, 5.46],
   ]),
   ...drumEnvelope,
+};
+
+// https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
+export const marimba: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [1.0, 1.0],
+    [0.618, 3.92],
+    [0.236, 9.24],
+    [0.034, 16.27],
+    [0.021, 24.22],
+    [0.013, 33.56],
+    [0.008, 42.97],
+  ]),
+  ...idiophoneEnvelope,
+};
+
+// https://orchestrationonline.com/orchestration-tip-harmonic-spectra-of-xylophone-vs-marimba/
+export const xylophone: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [1.0, 1],
+    [0.382, 3],
+    [0.5, 5],
+    [0.146, 7],
+    [0.034, 10.29],
+    [0.021, 14.01],
+    [0.013, 19.66],
+    // Not sure about these
+    // [0.5, 6.16],
+    // [0.008, 24.02],
+  ]),
+  ...idiophoneEnvelope,
+  release: idiophoneEnvelope.release * 1.618,
+};
+
+// Pure idiophone overtones
+// [1.0, 1.0],
+// [0.618, 2.756],
+// [0.382, 5.4],
+// [0.618, 8.9],
+// [0.382, 13.34],
+// [0.236, 18.64],
+// [0.146, 31.87],
+
+// https://www.physics.mcgill.ca/~grant/224/19-224.pdf
+export const glockenspiel: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [1.0, 1.0],
+    [0.382, 2.7],
+    [0.236, 3.25],
+    [0.382, 5.55],
+    [0.236, 5.15],
+    [0.146, 7.05],
+    [0.09, 8],
+    [0.056, 8.45],
+    [0.034, 10.6],
+    [0.021, 11.25],
+    [0.013, 12.2],
+    [0.008, 13.95],
+  ]),
+  ...idiophoneEnvelope,
+  release: idiophoneEnvelope.release * 0.618,
+};
+
+// https://www.hibberts.co.uk/the-upper-partials-of-bells/
+export const bell: InstrumentPreset = {
+  partials: addBasicEnvelope([
+    [0.382, 0.25],
+    [0.618, 0.5],
+    [0.382, 1.2],
+    [0.146, 1.5],
+    [1.0, 2.0],
+    [0.382, 3.0],
+    [0.618, 4.0],
+    [0.382, 5.4],
+    [0.236, 6.75],
+    [0.382, 8],
+    [0.236, 16],
+    [0.146, 32],
+  ]),
+  ...idiophoneEnvelope,
+  release: idiophoneEnvelope.release * 0.236,
+};
+
+const fractalPartials: [number, number][] = [];
+
+for (let index = 1, gain = 1; index < 9; index *= 2.0, gain /= 2.0) {
+  fractalPartials.push([gain, index]);
+}
+
+export const fractalPiano: InstrumentPreset = {
+  ...piano,
+  partials: addBasicEnvelope(fractalPartials),
+};
+
+const primes = [
+  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
+  113, 127,
+];
+const primePartials: [number, number][] = [];
+const primelessPartials: [number, number][] = [];
+
+for (let index = 1; index < 16; index++) {
+  if (!primes.includes(index)) primelessPartials.push([Math.SQRT2 ** -(index - 1), index]);
+}
+
+for (let index = 0; index < primes.length; index++) {
+  primePartials.push([Math.exp(-index), primes[index]]);
+}
+
+export const primeBell: InstrumentPreset = {
+  partials: addBasicEnvelope(primePartials),
+  ...idiophoneEnvelope,
+  release: idiophoneEnvelope.release * 0.618,
+};
+
+export const primelessCello: InstrumentPreset = {
+  ...bowedStringEnvelope,
+  partials: addBasicEnvelope(primelessPartials),
+};
+
+const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
+const PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
+
+const fibonacciPartials: [number, number][] = [];
+const fibonaccilessPartials: [number, number][] = [];
+
+for (let index = 1; index < 32; index++) {
+  if (!fibonacciSeries.includes(index)) fibonaccilessPartials.push([PHI ** -(index - 4), index]);
+}
+
+for (let index = 0; index < fibonacciSeries.length; index++) {
+  fibonacciPartials.push([(1.0 / PHI) ** (index * 2), fibonacciSeries[index]]);
+}
+
+export const fibonacciHarp: InstrumentPreset = {
+  partials: addBasicEnvelope(fibonacciPartials),
+  ...pluckedStringEnvelope,
+};
+
+export const fibonaccilessHorn: InstrumentPreset = {
+  partials: addBasicEnvelope(fibonaccilessPartials),
+  ...brassEnvelope,
 };
