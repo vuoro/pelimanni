@@ -44,10 +44,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   noteReleases: Float64Array;
   noteBrightnesses: Float64Array;
 
-  noteSustains: Float64Array;
-  noteMultipliers: Float64Array;
   noteForces: Float64Array;
   noteForceTargets: Float64Array;
+  noteSustains: Float64Array;
+  noteMultipliers: Float64Array;
+  noteDetunes: Float64Array;
 
   partialOffsets: Int16Array;
   partialAmplitudes: Float64Array;
@@ -66,6 +67,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   frequencyAmplitudes: Float64Array;
 
   frequencyForces: Float64Array;
+  frequencyTunes: Float64Array;
   frequencyPhases: Float64Array;
 
   constructor(options?: AudioWorkletNodeOptions) {
@@ -105,6 +107,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.noteForces = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteForceTargets = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteSustains = new Float64Array(noteAttacks.length * partialOffsets.length);
+    this.noteDetunes = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteMultipliers = new Float64Array(noteAttacks.length);
 
     this.partialOffsets = Int16Array.from(partialOffsets);
@@ -124,12 +127,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.frequencyAmplitudes = Float64Array.from(frequencyAmplitudes);
 
     this.frequencyForces = new Float64Array(frequencies.length);
+    this.frequencyTunes = new Float64Array(frequencies.length).fill(1.0);
     this.frequencyPhases = new Float64Array(frequencies.length).map((_) => Math.random());
 
     // Handle messages
     // TODO: type this message
     this.port.addEventListener("message", ({ data }) => {
-      const [type, note, velocity = 1.0, sustain = 1.0, multiplier = 1.0, dynamics = 1.0] = data;
+      const [type, note, velocity = 1.0, sustain = 1.0, multiplier = 1.0, detune = 0.0, dynamics = 1.0] = data;
       const noteIndex = note - this.notesStartAt;
       const partialCount = this.partialOffsets.length;
 
@@ -160,7 +164,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
               this.partialAmplitudes[partialIndex] ** ((1.618 - velocity ** 1.382) * this.noteBrightnesses[noteIndex]) *
               this.frequencyAmplitudes[frequencyIndex] *
               loudness;
+
             this.noteSustains[targetIndex] = this.noteForceTargets[targetIndex] * sustain;
+            if (detune !== 0.0) this.noteDetunes[targetIndex] = detune;
           }
 
           this.noteMultipliers[noteIndex] = multiplier * (0.618 + velocity ** 1.382);
@@ -236,6 +242,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           // Impact frequencies with this note
           this.frequencyForces[frequencyIndex] += this.noteForces[targetIndex];
 
+          // Detune if needed
+          if (this.noteDetunes[targetIndex] !== 0.0) {
+            this.frequencyTunes[frequencyIndex] += this.noteForces[targetIndex] * this.noteDetunes[targetIndex];
+          }
+
           // Decay force target towards sustain level
           this.noteForceTargets[targetIndex] =
             this.noteSustains[targetIndex] +
@@ -278,7 +289,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
         // Increase phase
         this.frequencyPhases[frequencyIndex] =
-          (this.frequencyPhases[frequencyIndex] + this.frequencies[frequencyIndex] / sampleRate) % 1.0;
+          (this.frequencyPhases[frequencyIndex] +
+            (this.frequencies[frequencyIndex] * this.frequencyTunes[frequencyIndex]) / sampleRate) %
+          1.0;
 
         // Play sine, amplified by force
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
@@ -286,6 +299,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
         // Nullify force for next frame
         this.frequencyForces[frequencyIndex] = 0.0;
+        this.frequencyTunes[frequencyIndex] = 1.0;
       }
 
       // Normalize by total playing forces

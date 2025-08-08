@@ -33,8 +33,10 @@ export type InstrumentPreset = {
 
   attack?: number;
   decay?: number;
-  defaultSustain?: number;
   release?: number;
+
+  defaultSustain?: number;
+  defaultDetune?: number;
 
   pitchEffectOnAttack?: number;
   pitchEffectOnDecay?: number;
@@ -50,7 +52,9 @@ export type InstrumentPreset = {
 export class Instrument {
   node: Promise<AudioWorkletNode>;
   audioContext: AudioContext;
+
   defaultSustain: number;
+  defaultDetune: number;
 
   constructor(
     audioContext: AudioContext,
@@ -62,8 +66,9 @@ export class Instrument {
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
       attack = 0.09,
       decay = 0.09,
-      defaultSustain = 1.0,
       release = 0.618,
+      defaultSustain = 1.0,
+      defaultDetune = 0.0,
       pitchEffectOnAttack = 0.09,
       pitchEffectOnDecay = 0.09,
       pitchEffectOnRelease = 0.618,
@@ -155,9 +160,17 @@ export class Instrument {
     });
 
     this.defaultSustain = defaultSustain;
+    this.defaultDetune = defaultDetune;
   }
 
-  async attack(note: number, velocity = 1.0, sustain = this.defaultSustain, attackMultiplier = 1.0, dynamics = 0.5) {
+  async attack(
+    note: number,
+    velocity = 1.0,
+    sustain = this.defaultSustain,
+    attackMultiplier = 1.0,
+    detune = this.defaultDetune,
+    dynamics = 0.5,
+  ) {
     // TODO:
     // // /** how much vibrato should affect the note frequency (in cents) */
     // vibratoEffectOnPitch: 0.0;
@@ -166,12 +179,7 @@ export class Instrument {
     // // /** amount of brass instrument style initial note vibration: causes the "braaap" */
     // attackInstability: 0.0;
 
-    // // /** detunes oscillator by this many cents * velocity */
-    // attackDetune: 0.0;
-    // // /** for how long `attackDetune` should occur */
-    // attackDetuneDuration: 0.0;
-
-    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier, dynamics));
+    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier, detune, dynamics));
   }
 
   async release(note: number, releaseMultiplier = 1.0) {

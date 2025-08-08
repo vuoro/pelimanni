@@ -20,7 +20,13 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
 // decay: Math.SQRT2,
 // release: 2.0,
 
-const fluteEnvelope = { attack: 3.0, decay: Math.SQRT2, defaultSustain: 0.91, release: 3.0 };
+const fluteEnvelope = {
+  attack: 3.0,
+  decay: Math.SQRT2,
+  defaultSustain: 0.91,
+  release: 3.0,
+  defaultDetune: -(2.0 ** -5.0),
+};
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
 const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 2.618 };
 
@@ -47,8 +53,7 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  // TODO:
-  // defaultAttackDetune: 100,
+  defaultDetune: 2.0 ** -6.0,
 };
 
 const hammeredStringEnvelope = {
@@ -191,25 +196,25 @@ export const clarinet: InstrumentPreset = {
 // https://media.springernature.com/lw685/springer-static/image/chp%3A10.1007%2F978-3-031-53507-9_7/MediaObjects/539603_1_En_7_Fig13_HTML.png
 // https://www.physics.rutgers.edu/~jackph/2005s/sm_fft/sm_fft.html
 // https://newt.phys.unsw.edu.au/jw/inharmonic-resonances.html
-export const saxophone: InstrumentPreset = {
-  partials: addBasicEnvelope([
-    [0.764],
-    [1.0],
-    [0.618],
-    [0.09],
-    [0.618],
-    [0.236],
-    [0.146],
-    [0.146],
-    [0.09],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
-  ]),
-  ...reedEnvelope,
-  formantFrequency: midiToFrequency(64),
-};
+// export const saxophone: InstrumentPreset = {
+//   partials: addBasicEnvelope([
+//     [0.764],
+//     [1.0],
+//     [0.618],
+//     [0.09],
+//     [0.618],
+//     [0.236],
+//     [0.146],
+//     [0.146],
+//     [0.09],
+//     [0.146],
+//     [0.09],
+//     [0.056],
+//     [0.034],
+//   ]),
+//   ...reedEnvelope,
+//   formantFrequency: midiToFrequency(64),
+// };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
