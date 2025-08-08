@@ -13,16 +13,16 @@ export type InstrumentPreset = {
     number,
   ][];
 
-  transients?: [
-    /** Transient amplitude */
-    number,
-    /** Transient midi10 number (midi number, but multiplied by 10) */
-    number,
-    /** Transient attack */
-    number,
-    /** Transient release */
-    number,
-  ][];
+  // transients?: [
+  //   /** Transient amplitude */
+  //   number,
+  //   /** Transient midi10 number (midi number, but multiplied by 10) */
+  //   number,
+  //   /** Transient attack */
+  //   number,
+  //   /** Transient release */
+  //   number,
+  // ][];
 
   notesStartAt?: number;
   notesEndAt?: number;
@@ -60,7 +60,7 @@ export class Instrument {
     audioContext: AudioContext,
     {
       partials,
-      transients,
+      // transients,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
@@ -90,10 +90,10 @@ export class Instrument {
     const partialAttacks = new Float64Array(partials.length);
     const partialReleases = new Float64Array(partials.length);
 
-    const transientAmplitudes = new Float64Array(transients?.length ?? 0);
-    const transientIndexes = new Int16Array(transients?.length ?? 0);
-    const transientAttacks = new Float64Array(transients?.length ?? 0);
-    const transientReleases = new Float64Array(transients?.length ?? 0);
+    // const transientAmplitudes = new Float64Array(transients?.length ?? 0);
+    // const transientIndexes = new Int16Array(transients?.length ?? 0);
+    // const transientAttacks = new Float64Array(transients?.length ?? 0);
+    // const transientReleases = new Float64Array(transients?.length ?? 0);
 
     for (const [index, [amplitude, partialRatio, attack, release]] of partials.entries()) {
       partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
@@ -102,14 +102,14 @@ export class Instrument {
       partialReleases[index] = release;
     }
 
-    if (transients) {
-      for (const [index, [amplitude, frequency, attack, release]] of transients.entries()) {
-        transientAmplitudes[index] = amplitude;
-        transientIndexes[index] = frequencyToMidi10(frequency) - notesStartAt * 10;
-        transientAttacks[index] = attack / audioContext.sampleRate;
-        transientReleases[index] = release / audioContext.sampleRate;
-      }
-    }
+    // if (transients) {
+    //   for (const [index, [amplitude, frequency, attack, release]] of transients.entries()) {
+    //     transientAmplitudes[index] = amplitude;
+    //     transientIndexes[index] = frequencyToMidi10(frequency) - notesStartAt * 10;
+    //     transientAttacks[index] = attack / audioContext.sampleRate;
+    //     transientReleases[index] = release / audioContext.sampleRate;
+    //   }
+    // }
 
     const processorOptions = {
       notesStartAt,
@@ -141,10 +141,10 @@ export class Instrument {
       partialAttacks,
       partialReleases,
 
-      transientIndexes,
-      transientAmplitudes,
-      transientAttacks,
-      transientReleases,
+      // transientIndexes,
+      // transientAmplitudes,
+      // transientAttacks,
+      // transientReleases,
 
       frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
       frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),

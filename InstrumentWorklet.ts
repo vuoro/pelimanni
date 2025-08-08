@@ -55,13 +55,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   partialAttacks: Float64Array;
   partialReleases: Float64Array;
 
-  transientIndexes: Int16Array;
-  transientAmplitudes: Float64Array;
-  transientAttacks: Float64Array;
-  transientReleases: Float64Array;
+  // transientIndexes: Int16Array;
+  // transientAmplitudes: Float64Array;
+  // transientAttacks: Float64Array;
+  // transientReleases: Float64Array;
 
-  transientForces: Float64Array;
-  transientForceTargets: Float64Array;
+  // transientForces: Float64Array;
+  // transientForceTargets: Float64Array;
 
   frequencies: Float64Array;
   frequencyAmplitudes: Float64Array;
@@ -88,10 +88,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       partialReleases,
       frequencies,
       frequencyAmplitudes,
-      transientIndexes,
-      transientAmplitudes,
-      transientAttacks,
-      transientReleases,
+      // transientIndexes,
+      // transientAmplitudes,
+      // transientAttacks,
+      // transientReleases,
       notesStartAt,
     } = customOptions;
 
@@ -115,13 +115,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.partialAttacks = Float64Array.from(partialAttacks);
     this.partialReleases = Float64Array.from(partialReleases);
 
-    this.transientIndexes = Int16Array.from(transientIndexes);
-    this.transientAmplitudes = Float64Array.from(transientAmplitudes);
-    this.transientAttacks = Float64Array.from(transientAttacks);
-    this.transientReleases = Float64Array.from(transientReleases);
+    // this.transientIndexes = Int16Array.from(transientIndexes);
+    // this.transientAmplitudes = Float64Array.from(transientAmplitudes);
+    // this.transientAttacks = Float64Array.from(transientAttacks);
+    // this.transientReleases = Float64Array.from(transientReleases);
 
-    this.transientForces = new Float64Array(transientIndexes.length);
-    this.transientForceTargets = new Float64Array(transientIndexes.length);
+    // this.transientForces = new Float64Array(transientIndexes.length);
+    // this.transientForceTargets = new Float64Array(transientIndexes.length);
 
     this.frequencies = Float64Array.from(frequencies);
     this.frequencyAmplitudes = Float64Array.from(frequencyAmplitudes);
@@ -171,9 +171,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
           this.noteMultipliers[noteIndex] = multiplier * (0.618 + velocity ** 1.382);
 
-          for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
-            this.transientForceTargets[transientIndex] = velocity * transientAmplitudes[transientIndex];
-          }
+          // for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
+          //   this.transientForceTargets[transientIndex] = velocity * transientAmplitudes[transientIndex];
+          // }
 
           break;
         }
@@ -255,27 +255,27 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         }
       }
 
-      // Transients also add force to frequencies, but in a simpler way
-      for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
-        // Skip if dormant
-        if (this.transientForces[transientIndex] + this.transientForceTargets[transientIndex] < this.cutoff) continue;
+      // // Transients also add force to frequencies, but in a simpler way
+      // for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
+      //   // Skip if dormant
+      //   if (this.transientForces[transientIndex] + this.transientForceTargets[transientIndex] < this.cutoff) continue;
 
-        const frequencyIndex = this.transientIndexes[transientIndex];
+      //   const frequencyIndex = this.transientIndexes[transientIndex];
 
-        // Transient force heads towards target, attacking or releasing
-        const goingDown = this.transientForceTargets[transientIndex] < this.transientForces[transientIndex];
+      //   // Transient force heads towards target, attacking or releasing
+      //   const goingDown = this.transientForceTargets[transientIndex] < this.transientForces[transientIndex];
 
-        this.transientForces[transientIndex] =
-          this.transientForceTargets[transientIndex] +
-          (this.transientForces[transientIndex] - this.transientForceTargets[transientIndex]) *
-            Math.exp(-(goingDown ? this.transientReleases : this.transientAttacks)[transientIndex]);
+      //   this.transientForces[transientIndex] =
+      //     this.transientForceTargets[transientIndex] +
+      //     (this.transientForces[transientIndex] - this.transientForceTargets[transientIndex]) *
+      //       Math.exp(-(goingDown ? this.transientReleases : this.transientAttacks)[transientIndex]);
 
-        // Impact frequencies with this transient
-        this.frequencyForces[frequencyIndex] += this.transientForces[transientIndex];
+      //   // Impact frequencies with this transient
+      //   this.frequencyForces[frequencyIndex] += this.transientForces[transientIndex];
 
-        // Decay force target
-        this.transientForceTargets[transientIndex] *= Math.exp(-this.transientReleases[transientIndex]);
-      }
+      //   // Decay force target
+      //   this.transientForceTargets[transientIndex] *= Math.exp(-this.transientReleases[transientIndex]);
+      // }
 
       // Frequencies play sine waves
       let amplitude = 0.0;
@@ -297,7 +297,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
         totalForce += force;
 
-        // Nullify force for next frame
+        // Nullify for next frame
         this.frequencyForces[frequencyIndex] = 0.0;
         this.frequencyTunes[frequencyIndex] = 1.0;
       }
