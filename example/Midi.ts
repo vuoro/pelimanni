@@ -1,5 +1,5 @@
 import { Instrument } from "../Instrument.ts";
-import { viola } from "../presets.ts";
+import { taikoDrum } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
@@ -55,5 +55,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, viola);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, taikoDrum);
 tempInstrument.connect(AudioSystem.get().input);

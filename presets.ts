@@ -53,7 +53,7 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  defaultDetune: 2.0 ** -6.0,
+  defaultDetune: 2.0 ** -5.0,
 };
 
 const hammeredStringEnvelope = {
@@ -62,6 +62,7 @@ const hammeredStringEnvelope = {
   decay: 18.0,
   release: 1.0,
   inharmonicity: 0.0008,
+  defaultDetune: 2.0 ** -6.0,
 };
 
 export const drumEnvelope = {
@@ -69,8 +70,7 @@ export const drumEnvelope = {
   decay: 20.0,
   defaultSustain: 0.0,
   release: 1.618,
-  // TODO:
-  // defaultAttackDetune: 200,
+  defaultDetune: 2.0 ** -3.0,
 };
 
 export const idiophoneEnvelope = {
@@ -78,8 +78,7 @@ export const idiophoneEnvelope = {
   decay: 18.0,
   defaultSustain: 0.0,
   release: 1.618,
-  // TODO:
-  // defaultAttackDetune: 200,
+  defaultDetune: 2.0 ** -6.0,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -638,8 +637,8 @@ export const primeBell: InstrumentPreset = {
 };
 
 export const primelessCello: InstrumentPreset = {
-  ...bowedStringEnvelope,
   partials: addBasicEnvelope(primelessPartials),
+  ...bowedStringEnvelope,
 };
 
 const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
