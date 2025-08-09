@@ -39,6 +39,14 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   notesStartAt = 0;
   cutoff = 1.0 / sampleRate;
 
+  vibratoPhase = 0.0;
+  vibratoFrequency = 5.5;
+  vibratoWave = 0.0;
+
+  amplitudeVibrato = 0.09;
+  brightnessVibrato = 0.146;
+  pitchVibrato = 0.021;
+
   noteAttacks: Float64Array;
   noteDecays: Float64Array;
   noteReleases: Float64Array;
@@ -161,7 +169,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             if (frequencyIndex > this.frequencyForces.length - 1 || frequencyIndex < 0) continue;
 
             // Higher velocity notes are brighter
-
             this.noteForceTargets[targetIndex] =
               this.partialAmplitudes[partialIndex] ** ((1.618 - velocity ** 1.382) * this.noteBrightnesses[noteIndex]) *
               this.frequencyAmplitudes[frequencyIndex] *
@@ -222,6 +229,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     let allDormant = true;
 
     for (let index = 0; index < channel.length; index++) {
+      // Compute vibrato, which may be applied later to partials and frequencies
+      this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
+      this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0);
+
       // Notes add force to frequencies
       for (let noteIndex = 0; noteIndex < this.noteAttacks.length; noteIndex++) {
         for (let partialIndex = 0; partialIndex < this.partialOffsets.length; partialIndex++) {
@@ -261,7 +272,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
             // Decay detune
             this.noteDetunes[targetIndex] *= Math.exp(
-              -20.0 * this.noteReleases[noteIndex] * this.partialReleases[partialIndex],
+              -19.0 * this.noteReleases[noteIndex] * this.partialReleases[partialIndex],
             );
           }
         }
@@ -294,20 +305,29 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       let totalForce = 0.0;
 
       for (let frequencyIndex = 0; frequencyIndex < this.frequencyForces.length; frequencyIndex++) {
-        const force = this.frequencyForces[frequencyIndex];
+        let force = this.frequencyForces[frequencyIndex];
         if (force < this.cutoff) continue; // skip if dormant
 
         allDormant = false;
 
         // Increase phase
+        let tune = this.frequencyTunes[frequencyIndex];
+
+        if (this.pitchVibrato > this.cutoff)
+          tune -= this.pitchVibrato * (this.vibratoWave * 2.0 - 1.0) * (this.vibratoWave < 0.5 ? 0.5 : 1.0);
+
         this.frequencyPhases[frequencyIndex] =
-          (this.frequencyPhases[frequencyIndex] +
-            (this.frequencies[frequencyIndex] * this.frequencyTunes[frequencyIndex]) / sampleRate) %
-          1.0;
+          (this.frequencyPhases[frequencyIndex] + (this.frequencies[frequencyIndex] * tune) / sampleRate) % 1.0;
+
+        // Apply vibrato
+        totalForce += force;
 
         // Play sine, amplified by force
+
+        if (Math.abs(this.brightnessVibrato) > this.cutoff) force **= 1.0 + this.vibratoWave * this.brightnessVibrato;
+        if (Math.abs(this.amplitudeVibrato) > this.cutoff) force *= 1.0 - this.vibratoWave * this.amplitudeVibrato;
+
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
-        totalForce += force;
 
         // Nullify for next frame
         this.frequencyForces[frequencyIndex] = 0.0;
