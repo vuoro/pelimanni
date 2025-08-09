@@ -49,6 +49,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   noteSustains: Float64Array;
   noteMultipliers: Float64Array;
   noteDetunes: Float64Array;
+  noteDetuneTargets: Float64Array;
 
   partialOffsets: Int16Array;
   partialAmplitudes: Float64Array;
@@ -108,6 +109,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.noteForceTargets = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteSustains = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteDetunes = new Float64Array(noteAttacks.length);
+    this.noteDetuneTargets = new Float64Array(noteAttacks.length);
     this.noteMultipliers = new Float64Array(noteAttacks.length);
 
     this.partialOffsets = Int16Array.from(partialOffsets);
@@ -169,7 +171,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           this.noteMultipliers[noteIndex] = multiplier * (0.618 + velocity ** 1.382);
-          if (detune !== 0.0) this.noteDetunes[noteIndex] = detune;
+          if (detune !== 0.0) this.noteDetuneTargets[noteIndex] = detune * velocity;
 
           // for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
           //   this.transientForceTargets[transientIndex] = velocity * transientAmplitudes[transientIndex];
@@ -218,6 +220,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     for (let index = 0; index < channel.length; index++) {
       // Notes add force to frequencies
       for (let noteIndex = 0; noteIndex < this.noteAttacks.length; noteIndex++) {
+        // Compute detune
+        if (Math.abs(this.noteDetunes[noteIndex] + this.noteDetuneTargets[noteIndex]) > this.cutoff) {
+          this.noteDetunes[noteIndex] =
+            this.noteDetuneTargets[noteIndex] +
+            (this.noteDetunes[noteIndex] - this.noteDetuneTargets[noteIndex]) * Math.exp(-128.0 / sampleRate);
+        }
+
         for (let partialIndex = 0; partialIndex < this.partialOffsets.length; partialIndex++) {
           const targetIndex = partialIndex + this.partialOffsets.length * noteIndex;
 
@@ -243,15 +252,20 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           this.frequencyForces[frequencyIndex] += this.noteForces[targetIndex];
 
           // Detune if needed
-          if (this.noteDetunes[noteIndex] !== 0.0) {
-            this.frequencyTunes[frequencyIndex] += this.noteForces[targetIndex] * this.noteDetunes[noteIndex];
+          if (Math.abs(this.noteDetunes[noteIndex]) > this.cutoff) {
+            this.frequencyTunes[frequencyIndex] += this.noteDetunes[noteIndex];
           }
 
-          // Decay force target towards sustain level
+          // Decay target towards sustain level
           this.noteForceTargets[targetIndex] =
             this.noteSustains[targetIndex] +
             (this.noteForceTargets[targetIndex] - this.noteSustains[targetIndex]) *
               Math.exp(-this.noteDecays[noteIndex]);
+        }
+
+        // Decay detune
+        if (Math.abs(this.noteDetuneTargets[noteIndex]) >= this.cutoff) {
+          this.noteDetuneTargets[noteIndex] *= Math.exp(-64.0 / sampleRate);
         }
       }
 

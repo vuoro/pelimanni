@@ -25,7 +25,8 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 3.0,
-  defaultDetune: -(2.0 ** -5.0),
+  defaultDetune: -(2.0 ** -4.0),
+  // defaultDetune: -0.5,
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
 const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 2.618 };
