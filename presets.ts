@@ -585,7 +585,7 @@ export const bell: InstrumentPreset = {
     [0.146, 32],
   ]),
   ...idiophoneEnvelope,
-  release: idiophoneEnvelope.release * 0.236,
+  release: idiophoneEnvelope.release * 0.333333,
 };
 
 const fractalPartials: [number, number][] = [];
