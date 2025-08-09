@@ -43,9 +43,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   vibratoFrequency = 5.5;
   vibratoWave = 0.0;
 
-  amplitudeVibrato = 0.09;
-  brightnessVibrato = 0.146;
-  pitchVibrato = 0.021;
+  amplitudeVibrato = 0.0;
+  brightnessVibrato = 0.0;
+  pitchVibrato = 0.0;
+
+  instability = 0.0;
+  instabilityWave = 0.0;
+  instabilityPhase = 0.0;
 
   noteAttacks: Float64Array;
   noteDecays: Float64Array;
@@ -229,10 +233,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     let allDormant = true;
 
     for (let index = 0; index < channel.length; index++) {
-      // Compute vibrato, which may be applied later to partials and frequencies
-      this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
-      this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0);
-
       // Notes add force to frequencies
       for (let noteIndex = 0; noteIndex < this.noteAttacks.length; noteIndex++) {
         for (let partialIndex = 0; partialIndex < this.partialOffsets.length; partialIndex++) {
@@ -272,7 +272,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
             // Decay detune
             this.noteDetunes[targetIndex] *= Math.exp(
-              -19.0 * this.noteReleases[noteIndex] * this.partialReleases[partialIndex],
+              -1.0 * this.noteReleases[noteIndex] * this.partialReleases[partialIndex],
             );
           }
         }
@@ -300,6 +300,22 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       //   this.transientForceTargets[transientIndex] *= Math.exp(-this.transientReleases[transientIndex]);
       // }
 
+      // Vibrato may be applied later to frequencies
+      if (
+        this.amplitudeVibrato > this.cutoff ||
+        this.brightnessVibrato > this.cutoff ||
+        this.pitchVibrato > this.cutoff
+      ) {
+        this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
+        this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0);
+      }
+
+      // Instability too
+      if (this.instability > this.cutoff) {
+        this.instabilityPhase = (this.instabilityPhase + 80.0 / sampleRate) % 1.0;
+        this.instabilityWave = Math.abs(this.instabilityPhase * 2.0 - 1.0);
+      }
+
       // Frequencies play sine waves
       let amplitude = 0.0;
       let totalForce = 0.0;
@@ -322,11 +338,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         // Apply vibrato
         totalForce += force;
 
+        if (this.instability > this.cutoff)
+          force **= 1.0 + (this.instabilityWave * 2.0 - 1.0) * (this.instability < 0.5 ? 0.5 : 1.0) * this.instability;
+        if (this.brightnessVibrato > this.cutoff) force **= 1.0 + this.vibratoWave * this.brightnessVibrato;
+        if (this.amplitudeVibrato > this.cutoff) force *= 1.0 - this.vibratoWave * this.amplitudeVibrato;
+
         // Play sine, amplified by force
-
-        if (Math.abs(this.brightnessVibrato) > this.cutoff) force **= 1.0 + this.vibratoWave * this.brightnessVibrato;
-        if (Math.abs(this.amplitudeVibrato) > this.cutoff) force *= 1.0 - this.vibratoWave * this.amplitudeVibrato;
-
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
 
         // Nullify for next frame
