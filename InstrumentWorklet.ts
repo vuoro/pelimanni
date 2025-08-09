@@ -271,9 +271,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             this.frequencyTunes[frequencyIndex] += this.noteDetunes[targetIndex];
 
             // Decay detune
-            this.noteDetunes[targetIndex] *= Math.exp(
-              -1.0 * this.noteReleases[noteIndex] * this.partialReleases[partialIndex],
-            );
+            this.noteDetunes[targetIndex] -=
+              this.noteReleases[noteIndex] *
+              this.partialReleases[partialIndex] *
+              (this.noteDetunes[targetIndex] < 0.0 ? -0.5 : 1.0);
           }
         }
       }

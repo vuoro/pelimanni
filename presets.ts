@@ -35,8 +35,7 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 3.0,
-  defaultDetune: -(2.0 ** -6.0),
-  // defaultDetune: -0.5,
+  defaultDetune: -(2.0 ** -4.0),
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
 const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 2.618 };
@@ -64,7 +63,7 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  defaultDetune: 2.0 ** -6.0,
+  defaultDetune: 2.0 ** -4.0,
 };
 
 const hammeredStringEnvelope = {
@@ -73,7 +72,7 @@ const hammeredStringEnvelope = {
   decay: 18.0,
   release: 1.0,
   inharmonicity: 0.0008,
-  defaultDetune: 2.0 ** -7.0,
+  defaultDetune: 2.0 ** -5.0,
 };
 
 export const drumEnvelope = {
@@ -89,7 +88,7 @@ export const idiophoneEnvelope = {
   decay: 18.0,
   defaultSustain: 0.0,
   release: 1.618,
-  defaultDetune: 2.0 ** -5.0,
+  defaultDetune: 2.0 ** -4.0,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -427,10 +426,13 @@ export const piano: InstrumentPreset = {
     [0.021],
     [0.013],
     [0.008],
+    [0.002],
     [0.005],
     [0.003],
     [0.002],
     [0.001],
+    [0.0006],
+    [0.0004],
   ]),
   // transients: [
   //   [0.056, 38, 8.0, 8.0],
