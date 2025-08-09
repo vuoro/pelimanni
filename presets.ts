@@ -1,12 +1,22 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-const addBasicEnvelope = (partials: [number, number?, number?, number?][]) => {
+const addBasicEnvelope = (
+  partials: [number, number?, number?, number?][],
+  attackSlowness = 1.0,
+  releaseSlowness = 1.0,
+) => {
   const newPartials: [number, number, number, number][] = [];
 
   for (let index = 0; index < partials.length; index++) {
-    const [amplitude, partialRatio = index + 1] = partials[index];
-    newPartials[index] = [amplitude, partialRatio, 1.0 / (index + 2 - amplitude), index + 2 - amplitude];
+    const [amplitude, partialRatio = index + 1.0] = partials[index];
+
+    newPartials[index] = [
+      amplitude,
+      partialRatio,
+      1.0 / (1.0 + attackSlowness * (partialRatio - 1.0 + (1.0 - amplitude))),
+      1.0 + (partialRatio - 1.0 + (1.0 - amplitude)) / releaseSlowness,
+    ];
   }
 
   return newPartials;
@@ -211,7 +221,7 @@ export const clarinet: InstrumentPreset = {
 //     [0.09],
 //     [0.056],
 //     [0.034],
-//   ]),
+//   ], 2.0),
 //   ...reedEnvelope,
 //   formantFrequency: midiToFrequency(64),
 // };
@@ -219,20 +229,10 @@ export const clarinet: InstrumentPreset = {
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trumpet: InstrumentPreset = {
-  partials: addBasicEnvelope([
-    [0.764],
-    [1.0],
-    [0.764],
-    [0.382],
-    [0.382],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.056],
-    [0.021],
-    [0.013],
-    [0.008],
-  ]),
+  partials: addBasicEnvelope(
+    [[0.764], [1.0], [0.764], [0.382], [0.382], [0.146], [0.09], [0.056], [0.056], [0.021], [0.013], [0.008]],
+    2.0,
+  ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(67),
 };
@@ -241,7 +241,10 @@ export const trumpet: InstrumentPreset = {
 // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/tromw.html
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const trombone: InstrumentPreset = {
-  partials: addBasicEnvelope([[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]]),
+  partials: addBasicEnvelope(
+    [[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]],
+    2.0,
+  ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(60),
 };
@@ -249,40 +252,20 @@ export const trombone: InstrumentPreset = {
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
 // https://www.youtube.com/watch?v=2f5TxqlLUEs
 export const frenchHorn: InstrumentPreset = {
-  partials: addBasicEnvelope([
-    [1.0],
-    [0.618],
-    [0.382],
-    [0.236],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.005],
-  ]),
+  partials: addBasicEnvelope(
+    [[1.0], [0.618], [0.382], [0.236], [0.146], [0.09], [0.056], [0.034], [0.021], [0.013], [0.008], [0.005]],
+    2.0,
+  ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),
 };
 
 // https://www.rickdenney.com/the_tuba_sound.htm
 export const tuba: InstrumentPreset = {
-  partials: addBasicEnvelope([
-    [0.764],
-    [0.854],
-    [0.764],
-    [1.0],
-    [0.382],
-    [0.618],
-    [0.382],
-    [0.146],
-    [0.056],
-    [0.021],
-    [0.008],
-    [0.003],
-  ]),
+  partials: addBasicEnvelope(
+    [[0.764], [0.854], [0.764], [1.0], [0.382], [0.618], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
+    2.0,
+  ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),
 };
