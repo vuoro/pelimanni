@@ -25,7 +25,7 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 3.0,
-  defaultDetune: -(2.0 ** -4.0),
+  defaultDetune: -(2.0 ** -6.0),
   // defaultDetune: -0.5,
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
@@ -54,7 +54,7 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  defaultDetune: 2.0 ** -5.0,
+  defaultDetune: 2.0 ** -6.0,
 };
 
 const hammeredStringEnvelope = {
@@ -63,7 +63,7 @@ const hammeredStringEnvelope = {
   decay: 18.0,
   release: 1.0,
   inharmonicity: 0.0008,
-  defaultDetune: 2.0 ** -6.0,
+  defaultDetune: 2.0 ** -7.0,
 };
 
 export const drumEnvelope = {
@@ -79,7 +79,7 @@ export const idiophoneEnvelope = {
   decay: 18.0,
   defaultSustain: 0.0,
   release: 1.618,
-  defaultDetune: 2.0 ** -6.0,
+  defaultDetune: 2.0 ** -5.0,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
