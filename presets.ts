@@ -1,11 +1,7 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-const addBasicEnvelope = (
-  partials: [number, number?, number?, number?][],
-  attackSlowness = 1.0,
-  releaseSlowness = 1.0,
-) => {
+const addBasicEnvelope = (partials: [number, number?, number?, number?][], attackSpeed = 1.0, releaseSpeed = 1.0) => {
   const newPartials: [number, number, number, number][] = [];
 
   for (let index = 0; index < partials.length; index++) {
@@ -14,8 +10,8 @@ const addBasicEnvelope = (
     newPartials[index] = [
       amplitude,
       partialRatio,
-      1.0 / (1.0 + attackSlowness * (partialRatio - 1.0 + (1.0 - amplitude))),
-      1.0 + (partialRatio - 1.0 + (1.0 - amplitude)) / releaseSlowness,
+      Math.sqrt(attackSpeed * (1.0 / (partialRatio - 1.0 + (1.0 - amplitude)))),
+      Math.sqrt(releaseSpeed * (partialRatio - 1.0 + (1.0 - amplitude))),
     ];
   }
 
@@ -31,14 +27,20 @@ const addBasicEnvelope = (
 // release: 2.0,
 
 const fluteEnvelope = {
-  attack: 3.0,
+  attack: 4.0,
   decay: Math.SQRT2,
   defaultSustain: 0.91,
-  release: 3.0,
-  defaultDetune: -(2.0 ** -4.0),
+  release: 4.0,
+  attackDetune: -(2.0 ** -6.0),
 };
-const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 2.618 };
-const brassEnvelope = { ...reedEnvelope, defaultSustain: 0.764, release: 2.618 };
+const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 3.0 };
+const brassEnvelope = {
+  ...reedEnvelope,
+  defaultSustain: 0.764,
+  release: 3.0,
+  // attackBrightnessInstability: 1.0,
+  // attackPitchInstability: 0.0,
+};
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
@@ -63,7 +65,7 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  defaultDetune: 2.0 ** -4.0,
+  attackDetune: 2.0 ** -4.0,
 };
 
 const hammeredStringEnvelope = {
@@ -72,7 +74,7 @@ const hammeredStringEnvelope = {
   decay: 18.0,
   release: 1.0,
   inharmonicity: 0.0008,
-  defaultDetune: 2.0 ** -5.0,
+  attackDetune: 2.0 ** -5.0,
 };
 
 export const drumEnvelope = {
@@ -80,7 +82,7 @@ export const drumEnvelope = {
   decay: 20.0,
   defaultSustain: 0.0,
   release: 1.618,
-  defaultDetune: 2.0 ** -3.0,
+  attackDetune: 2.0 ** -3.0,
 };
 
 export const idiophoneEnvelope = {
@@ -88,7 +90,7 @@ export const idiophoneEnvelope = {
   decay: 18.0,
   defaultSustain: 0.0,
   release: 1.618,
-  defaultDetune: 2.0 ** -4.0,
+  attackDetune: 2.0 ** -4.0,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -220,8 +222,9 @@ export const clarinet: InstrumentPreset = {
 //     [0.09],
 //     [0.056],
 //     [0.034],
-//   ], 2.0),
+//   ]),
 //   ...reedEnvelope,
+//   attackInstability: brassEnvelope.attackInstability,
 //   formantFrequency: midiToFrequency(64),
 // };
 
@@ -230,7 +233,7 @@ export const clarinet: InstrumentPreset = {
 export const trumpet: InstrumentPreset = {
   partials: addBasicEnvelope(
     [[0.764], [1.0], [0.764], [0.382], [0.382], [0.146], [0.09], [0.056], [0.056], [0.021], [0.013], [0.008]],
-    2.0,
+    0.5,
   ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(67),
@@ -242,7 +245,7 @@ export const trumpet: InstrumentPreset = {
 export const trombone: InstrumentPreset = {
   partials: addBasicEnvelope(
     [[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]],
-    2.0,
+    0.5,
   ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(60),
@@ -253,7 +256,7 @@ export const trombone: InstrumentPreset = {
 export const frenchHorn: InstrumentPreset = {
   partials: addBasicEnvelope(
     [[1.0], [0.618], [0.382], [0.236], [0.146], [0.09], [0.056], [0.034], [0.021], [0.013], [0.008], [0.005]],
-    2.0,
+    0.5,
   ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),
@@ -263,7 +266,7 @@ export const frenchHorn: InstrumentPreset = {
 export const tuba: InstrumentPreset = {
   partials: addBasicEnvelope(
     [[0.764], [0.854], [0.764], [1.0], [0.382], [0.618], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
-    2.0,
+    0.5,
   ),
   ...brassEnvelope,
   formantFrequency: midiToFrequency(65),

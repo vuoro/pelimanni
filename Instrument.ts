@@ -2,51 +2,55 @@ import InstrumentWorklet from "./InstrumentWorklet.ts?url";
 import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.js";
 
 export type InstrumentPreset = {
-  partials: [
-    /** Partial amplitude */
-    number,
-    /** Partial ratio to fundamental frequency: 2.0 = 2.0 * fundamentalFrequency */
-    number,
-    /** Partial attack multiplier */
-    number,
-    /** Partial release multiplier */
-    number,
-  ][];
+  /** List of partials: [amplitude, frequencyRatio, attackMultiplier, releaseMultiplier]. */
+  partials: [number, number, number, number][];
 
-  // transients?: [
-  //   /** Transient amplitude */
-  //   number,
-  //   /** Transient midi10 number (midi number, but multiplied by 10) */
-  //   number,
-  //   /** Transient attack */
-  //   number,
-  //   /** Transient release */
-  //   number,
-  // ][];
-
+  /** The lowest note this instrument can play, in MIDI numbers */
   notesStartAt?: number;
+  /** The highest note this instrument can play, in MIDI numbers */
   notesEndAt?: number;
 
+  /** Returns the list of notes this instrument can play */
   getNotes?: typeof defaultGetNotes;
+  /** Returns the list of frequencies the notes of this instrument can play */
   getFrequencies?: typeof defaultGetFrequencies;
+  /** Returns the loudnesses of the frequencies this instrument can play */
   getFrequencyAmplitudes?: typeof defaultGetFrequencyAmplitudes;
 
+  /** How quickly should notes reach full volume */
   attack?: number;
+  /** How quickly should notes drop to sustain level */
   decay?: number;
+  /** How quickly should notes die off after being released */
   release?: number;
-
+  /** How loud should notes be, by default, after the initial attack (0.0–1.0) */
   defaultSustain?: number;
-  defaultDetune?: number;
 
+  /** Multiplies the frequency being played at the start of the note. Used to create a "transient" for most instruments. */
+  attackDetune?: number;
+  /** A triangle wave that multiplies the frequency being played at a start of the note. Used for the "brrrr" in brass instruments. */
+  attackPitchInstability?: number;
+  /** A triangle wave that affects partial amplitudes at the start of a note. Used for the "brrrr" in brass instruments. */
+  attackBrightnessInstability?: number;
+  /** The frequency of the triangle wave in attack instability (80 is good) */
+  attackInstabilityFrequency?: number;
+
+  /** How much faster should higher notes attack */
   pitchEffectOnAttack?: number;
+  /** How much faster should higher notes decay */
   pitchEffectOnDecay?: number;
+  /** How much faster should higher notes release */
   pitchEffectOnRelease?: number;
+  /** How much much louder should the overtones of higher notes be */
   pitchEffectOnBrightness?: number;
 
   /** Passed to getFrequencies. */
   inharmonicity?: number;
   /** Passed to getFrequencyAmplitudes. */
   formantFrequency?: number;
+
+  /** Applies attack effects like detune and instability on release too */
+  shouldApplyAttackEffectsOnReleaseToo?: boolean;
 };
 
 export class Instrument {
@@ -54,7 +58,6 @@ export class Instrument {
   audioContext: AudioContext;
 
   defaultSustain: number;
-  defaultDetune: number;
 
   constructor(
     audioContext: AudioContext,
@@ -68,15 +71,19 @@ export class Instrument {
       decay = 0.09,
       release = 0.618,
       defaultSustain = 1.0,
-      defaultDetune = 0.0,
       pitchEffectOnAttack = 0.09,
       pitchEffectOnDecay = 0.09,
       pitchEffectOnRelease = 0.618,
       pitchEffectOnBrightness = 0.5,
+      attackDetune = 0.0,
+      attackPitchInstability = 0.0,
+      attackBrightnessInstability = 0.0,
+      attackInstabilityFrequency = 80.0,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
+      shouldApplyAttackEffectsOnReleaseToo = false,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -146,8 +153,15 @@ export class Instrument {
       // transientAttacks,
       // transientReleases,
 
+      attackDetune,
+      attackPitchInstability,
+      attackBrightnessInstability,
+      attackInstabilityFrequency,
+
       frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
       frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
+
+      shouldApplyAttackEffectsOnReleaseToo,
     };
 
     this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {
@@ -160,7 +174,6 @@ export class Instrument {
     });
 
     this.defaultSustain = defaultSustain;
-    this.defaultDetune = defaultDetune;
   }
 
   async attack(
@@ -168,18 +181,26 @@ export class Instrument {
     velocity = 1.0,
     sustain = this.defaultSustain,
     attackMultiplier = 1.0,
-    detune = this.defaultDetune,
+    amplitudeVibrato = 0.0,
+    brightnessVibrato = 0.0,
+    pitchVibrato = 0.0,
+    vibratoFrequency = 5.5,
     dynamics = 0.5,
   ) {
-    // TODO:
-    // // /** how much vibrato should affect the note frequency (in cents) */
-    // vibratoEffectOnPitch: 0.0;
-    // // /** how much vibrato should affect volume (in gain) */
-    // vibratoEffectOnVolume: 0.0;
-    // // /** amount of brass instrument style initial note vibration: causes the "braaap" */
-    // attackInstability: 0.0;
-
-    (await this.node).port.postMessage(Float32Array.of(0, note, velocity, sustain, attackMultiplier, detune, dynamics));
+    (await this.node).port.postMessage(
+      Float32Array.of(
+        0,
+        note,
+        velocity,
+        sustain,
+        attackMultiplier,
+        amplitudeVibrato,
+        brightnessVibrato,
+        pitchVibrato,
+        vibratoFrequency,
+        dynamics,
+      ),
+    );
   }
 
   async release(note: number, releaseMultiplier = 1.0) {

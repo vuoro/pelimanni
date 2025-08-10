@@ -40,16 +40,20 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   cutoff = 1.0 / sampleRate;
 
   vibratoPhase = 0.0;
-  vibratoFrequency = 5.5;
+  vibratoFrequency = 0.0;
   vibratoWave = 0.0;
 
   amplitudeVibrato = 0.0;
   brightnessVibrato = 0.0;
   pitchVibrato = 0.0;
 
-  instability = 0.0;
-  instabilityWave = 0.0;
-  instabilityPhase = 0.0;
+  attackDetune = 0.0;
+  attackPitchInstability = 0.0;
+  attackBrightnessInstability = 0.0;
+  attackInstabilityFrequency = 80.0;
+  attackInstabilityWave = 0.0;
+  attackInstabilityPhase = 0.0;
+  shouldApplyAttackEffectsOnReleaseToo = false;
 
   noteAttacks: Float64Array;
   noteDecays: Float64Array;
@@ -60,7 +64,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   noteForceTargets: Float64Array;
   noteSustains: Float64Array;
   noteMultipliers: Float64Array;
-  noteDetunes: Float64Array;
 
   partialOffsets: Int16Array;
   partialAmplitudes: Float64Array;
@@ -104,7 +107,12 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       // transientAmplitudes,
       // transientAttacks,
       // transientReleases,
+      attackDetune,
+      attackPitchInstability,
+      attackBrightnessInstability,
+      attackInstabilityFrequency,
       notesStartAt,
+      shouldApplyAttackEffectsOnReleaseToo,
     } = customOptions;
 
     this.notesStartAt = notesStartAt || this.notesStartAt;
@@ -118,7 +126,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.noteForces = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteForceTargets = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteSustains = new Float64Array(noteAttacks.length * partialOffsets.length);
-    this.noteDetunes = new Float64Array(noteAttacks.length * partialOffsets.length);
     this.noteMultipliers = new Float64Array(noteAttacks.length);
 
     this.partialOffsets = Int16Array.from(partialOffsets);
@@ -141,10 +148,27 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.frequencyTunes = new Float64Array(frequencies.length).fill(1.0);
     this.frequencyPhases = new Float64Array(frequencies.length).map((_) => Math.random());
 
+    this.attackDetune = attackDetune;
+    this.attackPitchInstability = attackPitchInstability;
+    this.attackBrightnessInstability = attackBrightnessInstability;
+    this.attackInstabilityFrequency = attackInstabilityFrequency;
+    this.shouldApplyAttackEffectsOnReleaseToo = shouldApplyAttackEffectsOnReleaseToo;
+
     // Handle messages
     // TODO: type this message
     this.port.addEventListener("message", ({ data }) => {
-      const [type, note, velocity = 1.0, sustain = 1.0, multiplier = 1.0, detune = 0.0, dynamics = 1.0] = data;
+      const [
+        type,
+        note,
+        velocity,
+        sustain,
+        multiplier,
+        amplitudeVibrato,
+        brightnessVibrato,
+        pitchVibrato,
+        vibratoFrequency,
+        dynamics,
+      ] = data as Float32Array;
       const noteIndex = note - this.notesStartAt;
       const partialCount = this.partialOffsets.length;
 
@@ -154,7 +178,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         velocity,
         sustain,
         multiplier,
-        detune,
         dynamics,
       });
 
@@ -179,14 +202,14 @@ class InstrumentWorklet extends AudioWorkletProcessor {
               loudness;
 
             this.noteSustains[targetIndex] = this.noteForceTargets[targetIndex] * sustain;
-
-            // Detune as defined, but less if already playing
-            if (detune !== 0.0)
-              this.noteDetunes[targetIndex] =
-                detune * (this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]);
           }
 
           this.noteMultipliers[noteIndex] = multiplier * (0.618 + velocity ** 1.382);
+
+          this.amplitudeVibrato = amplitudeVibrato;
+          this.brightnessVibrato = brightnessVibrato;
+          this.pitchVibrato = pitchVibrato;
+          this.vibratoFrequency = vibratoFrequency;
 
           // for (let transientIndex = 0; transientIndex < this.transientIndexes.length; transientIndex++) {
           //   this.transientForceTargets[transientIndex] = velocity * transientAmplitudes[transientIndex];
@@ -233,8 +256,28 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     let allDormant = true;
 
     for (let index = 0; index < channel.length; index++) {
+      // Compute attack instability if needed: it may be used below.
+      if (this.attackPitchInstability !== 0.0 || this.attackBrightnessInstability !== 0.0) {
+        this.attackInstabilityPhase =
+          (this.attackInstabilityPhase + this.attackInstabilityFrequency / sampleRate) % 1.0;
+        this.attackInstabilityWave = Math.abs(this.attackInstabilityPhase * 2.0 - 1.0) * 2.0 - 1.0;
+      }
+
+      // Compute vibrato if needed: it may be used below.
+      if (
+        this.amplitudeVibrato > this.cutoff ||
+        this.brightnessVibrato > this.cutoff ||
+        this.pitchVibrato > this.cutoff
+      ) {
+        this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
+        this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0) * 2.0 - 1.0;
+      }
+
       // Notes add force to frequencies
       for (let noteIndex = 0; noteIndex < this.noteAttacks.length; noteIndex++) {
+        let fundamentalForce = 0.0;
+        // let fundamentalDifference = 0.0;
+
         for (let partialIndex = 0; partialIndex < this.partialOffsets.length; partialIndex++) {
           const targetIndex = partialIndex + this.partialOffsets.length * noteIndex;
 
@@ -244,8 +287,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const frequencyIndex = noteIndex * 10 + this.partialOffsets[partialIndex];
 
           // Note force heads towards target, attacking or releasing
-          const goingDown = this.noteForceTargets[targetIndex] < this.noteForces[targetIndex];
           const likelyReleased = this.noteForceTargets[targetIndex] === 0.0;
+          const goingDown = this.noteForceTargets[targetIndex] < this.noteForces[targetIndex];
 
           this.noteForces[targetIndex] =
             this.noteForceTargets[targetIndex] +
@@ -256,26 +299,60 @@ class InstrumentWorklet extends AudioWorkletProcessor {
                   (likelyReleased || !goingDown ? -this.noteMultipliers[noteIndex] : -1.0),
               );
 
+          // Save fundamental frequency force
+          if (partialIndex === 0) {
+            fundamentalForce = this.noteForces[targetIndex];
+            // fundamentalDifference = this.noteForces[targetIndex] - this.noteForceTargets[targetIndex];
+          }
+
+          // Apply effects
+          let force = this.noteForces[targetIndex];
+
+          // Apply instability and detune if needed
+          if (!goingDown || this.shouldApplyAttackEffectsOnReleaseToo) {
+            const toTarget = Math.abs(this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]);
+
+            if (this.attackDetune !== 0.0) {
+              const detune = toTarget * this.attackDetune;
+              this.frequencyTunes[frequencyIndex] *= detune < 0.0 ? 1.0 / (1.0 - detune) : 1.0 + detune;
+            }
+
+            if (this.attackPitchInstability !== 0.0) {
+              const instability = toTarget * this.attackInstabilityWave * this.attackPitchInstability;
+              this.frequencyTunes[frequencyIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
+            }
+
+            // FIXME: changing volumes like this is going to instantly hit the attackless normalisation further below.
+            if (this.attackBrightnessInstability !== 0.0) {
+              const instability = toTarget * this.attackInstabilityWave * this.attackBrightnessInstability;
+              force **= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
+            }
+          }
+
+          // Apply vibrato if needed
+          if (this.pitchVibrato !== 0.0) {
+            const vibrato = fundamentalForce * this.pitchVibrato * this.vibratoWave;
+            this.frequencyTunes[frequencyIndex] *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+          }
+
+          if (this.brightnessVibrato !== 0.0) {
+            const vibrato = fundamentalForce * this.brightnessVibrato * this.vibratoWave;
+            force **= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+          }
+
+          if (this.amplitudeVibrato !== 0.0) {
+            const vibrato = fundamentalForce * this.amplitudeVibrato * this.vibratoWave;
+            force *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+          }
+
           // Add force to frequencies
-          this.frequencyForces[frequencyIndex] += this.noteForces[targetIndex];
+          this.frequencyForces[frequencyIndex] += force;
 
           // Decay force target towards sustain level
           this.noteForceTargets[targetIndex] =
             this.noteSustains[targetIndex] +
             (this.noteForceTargets[targetIndex] - this.noteSustains[targetIndex]) *
               Math.exp(-this.noteDecays[noteIndex]);
-
-          // Detune if needed
-          if (Math.abs(this.noteDetunes[targetIndex]) > this.cutoff) {
-            // Add detune to frequencies
-            this.frequencyTunes[frequencyIndex] += this.noteDetunes[targetIndex];
-
-            // Decay detune
-            this.noteDetunes[targetIndex] -=
-              this.noteReleases[noteIndex] *
-              this.partialReleases[partialIndex] *
-              (this.noteDetunes[targetIndex] < 0.0 ? -0.5 : 1.0);
-          }
         }
       }
 
@@ -301,60 +378,34 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       //   this.transientForceTargets[transientIndex] *= Math.exp(-this.transientReleases[transientIndex]);
       // }
 
-      // Vibrato may be applied later to frequencies
-      if (
-        this.amplitudeVibrato > this.cutoff ||
-        this.brightnessVibrato > this.cutoff ||
-        this.pitchVibrato > this.cutoff
-      ) {
-        this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
-        this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0);
-      }
-
-      // Instability too
-      if (this.instability > this.cutoff) {
-        this.instabilityPhase = (this.instabilityPhase + 80.0 / sampleRate) % 1.0;
-        this.instabilityWave = Math.abs(this.instabilityPhase * 2.0 - 1.0);
-      }
-
       // Frequencies play sine waves
       let amplitude = 0.0;
       let totalForce = 0.0;
 
       for (let frequencyIndex = 0; frequencyIndex < this.frequencyForces.length; frequencyIndex++) {
-        let force = this.frequencyForces[frequencyIndex];
+        const force = this.frequencyForces[frequencyIndex];
         if (force < this.cutoff) continue; // skip if dormant
 
         allDormant = false;
 
         // Increase phase
-        let tune = this.frequencyTunes[frequencyIndex];
-
-        if (this.pitchVibrato > this.cutoff)
-          tune -= this.pitchVibrato * (this.vibratoWave * 2.0 - 1.0) * (this.vibratoWave < 0.5 ? 0.5 : 1.0);
-
         this.frequencyPhases[frequencyIndex] =
-          (this.frequencyPhases[frequencyIndex] + (this.frequencies[frequencyIndex] * tune) / sampleRate) % 1.0;
-
-        // Apply vibrato
-        totalForce += force;
-
-        if (this.instability > this.cutoff)
-          force **= 1.0 + (this.instabilityWave * 2.0 - 1.0) * (this.instability < 0.5 ? 0.5 : 1.0) * this.instability;
-        if (this.brightnessVibrato > this.cutoff) force **= 1.0 + this.vibratoWave * this.brightnessVibrato;
-        if (this.amplitudeVibrato > this.cutoff) force *= 1.0 - this.vibratoWave * this.amplitudeVibrato;
+          (this.frequencyPhases[frequencyIndex] +
+            (this.frequencies[frequencyIndex] * this.frequencyTunes[frequencyIndex]) / sampleRate) %
+          1.0;
 
         // Play sine, amplified by force
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
+        totalForce += force;
 
         // Nullify for next frame
         this.frequencyForces[frequencyIndex] = 0.0;
         this.frequencyTunes[frequencyIndex] = 1.0;
       }
 
-      // Normalize by total playing forces
-      // channel[index] = amplitude / (totalForce + Math.exp(-totalForce));
-      channel[index] = amplitude / (1.0 + totalForce);
+      // Normalize by total playing force
+      channel[index] = amplitude / (totalForce + Math.exp(-totalForce));
+      // channel[index] = amplitude / (1.0 + totalForce);
     }
 
     // If no frequencies play, it's safe to sleep until the next message and save some CPU.
