@@ -10,12 +10,27 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][], attac
     newPartials[index] = [
       amplitude,
       partialRatio,
-      Math.sqrt(attackSpeed * (1.0 / (partialRatio - 1.0 + (1.0 - amplitude)))),
-      Math.sqrt(releaseSpeed * (partialRatio - 1.0 + (1.0 - amplitude))),
+      Math.sqrt(attackSpeed * (1.0 / (partialRatio + (1.0 - amplitude)))),
+      Math.sqrt(releaseSpeed * (partialRatio + (1.0 - amplitude))),
     ];
   }
 
   return newPartials;
+};
+
+const addSympatheticStrings = (partials: [number, number, number, number][], volume = 0.09) => {
+  const length = partials.length;
+
+  for (let index = 0; index < length; index++) {
+    const [amplitude, partialRatio = index + 1.0, attack, release] = partials[index];
+
+    partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio / 3.0, attack, release]);
+    partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio / 2.0, attack, release]);
+    partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio * 2.0, attack, release]);
+    partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio * 3.0, attack, release]);
+  }
+
+  return partials;
 };
 
 // attack: 1.0,
@@ -31,24 +46,25 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 4.0,
-  attackDetune: -(2.0 ** -6.0),
+  attackDetune: -(2.0 ** -5.0),
 };
-const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854, release: 3.0 };
+const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
 const brassEnvelope = {
   ...reedEnvelope,
   defaultSustain: 0.764,
   release: 3.0,
-  // attackBrightnessInstability: 1.0,
-  // attackPitchInstability: 0.0,
+  attackBrightnessInstability: 0.236,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 const bowedStringEnvelope = {
-  attack: 2.0,
+  attack: 3.0,
   decay: Math.SQRT2,
   release: 2.0,
   defaultSustain: 0.91,
+  // TODO: probably needs a tiny bit of attack noise instead of this
+  attackBrightnessInstability: 0.09,
 };
 
 // Guitar transients
@@ -57,7 +73,7 @@ const bowedStringEnvelope = {
 const pluckedStringEnvelope = {
   attack: 19.0,
   decay: 19.0,
-  release: 2.0,
+  release: 1.618,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
   // transients: [
@@ -65,16 +81,18 @@ const pluckedStringEnvelope = {
   //   [0.021, 562, 8.0, 8.0],
   //   [0.013, 780, 8.0, 8.0],
   // ],
-  attackDetune: 2.0 ** -4.0,
+  attackDetune: 2.0 ** -5.0,
+  attackBrightnessInstability: 0.021,
 };
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
   attack: 18.0,
   decay: 18.0,
-  release: 1.0,
+  release: 1.236,
   inharmonicity: 0.0008,
-  attackDetune: 2.0 ** -5.0,
+  attackDetune: 2.0 ** -6.0,
+  attackBrightnessInstability: 0.056,
 };
 
 export const drumEnvelope = {
@@ -82,15 +100,20 @@ export const drumEnvelope = {
   decay: 20.0,
   defaultSustain: 0.0,
   release: 1.618,
-  attackDetune: 2.0 ** -3.0,
+  attackDetune: 2.0 ** -2.0,
+  // TODO: lots and lots of noise
+  attackBrightnessInstability: 1.0,
+  attackPitchInstability: 4.0,
 };
 
 export const idiophoneEnvelope = {
-  attack: 18.0,
-  decay: 18.0,
+  attack: 19.0,
+  decay: 19.0,
   defaultSustain: 0.0,
   release: 1.618,
-  attackDetune: 2.0 ** -4.0,
+  attackDetune: 2.0 ** -5.0,
+  attackBrightnessInstability: 0.146,
+  attackPitchInstability: 0.056,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -417,25 +440,18 @@ export const pluckedContrabass: InstrumentPreset = {
 export const piano: InstrumentPreset = {
   partials: addBasicEnvelope([
     [1.0], // First 4 are quite high and often in a U shape
-    [0.764],
+    [0.854],
     [0.382],
-    [0.5],
+    [0.414],
     [0.09], // Then there's a pair arcing up
     [0.146],
-    [0.034], // And 7th is weak
-    [0.09],
-    [0.056],
+    [0.002], // And 7th is weak because the hammer hits the 1/7th point of the string
     [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.002],
-    [0.005],
-    [0.003],
-    [0.002],
-    [0.001],
-    [0.0006],
-    [0.0004],
+    [0.056 * 2.0 ** -0.0], // here they start dropping quickly
+    [0.056 * 2.0 ** -1.0],
+    [0.056 * 2.0 ** -2.0],
+    [0.056 * 2.0 ** -3.0],
+    [0.056 * 2.0 ** -4.0],
   ]),
   // transients: [
   //   [0.056, 38, 8.0, 8.0],
@@ -451,22 +467,20 @@ export const piano: InstrumentPreset = {
 // also has the hammer and body noises, but the body noises are probably higher?
 export const hammeredDulcimer: InstrumentPreset = {
   partials: addBasicEnvelope([
+    // Similar to piano, but the strings are not probably struck 1/7th of the way in
     [1.0],
-    [0.5],
+    [0.764],
     [0.382],
-    [0.618],
+    [0.236],
     [0.09],
     [0.146],
     [0.09],
     [0.056],
-    [0.056],
-    [0.034],
-    [0.021],
     [0.013],
-    [0.008],
-    [0.005],
-    [0.003],
-    [0.002],
+    [0.001], // maybe struck around here
+    [0.013 * 2.0 ** -0.0],
+    [0.013 * 2.0 ** -1.0],
+    [0.013 * 2.0 ** -2.0],
   ]),
   ...hammeredStringEnvelope,
   formantFrequency: midiToFrequency(69),

@@ -38,6 +38,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
   notesStartAt = 0;
   cutoff = 1.0 / sampleRate;
+  totalForce = 0.0;
 
   vibratoPhase = 0.0;
   vibratoFrequency = 0.0;
@@ -269,14 +270,20 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         this.brightnessVibrato > this.cutoff ||
         this.pitchVibrato > this.cutoff
       ) {
-        this.vibratoPhase = (this.vibratoPhase + this.vibratoFrequency / sampleRate) % 1.0;
+        // Smoothstep vibrato speed
+        const vibratoMin = -0.25;
+        const vibratoMax = 0.25;
+        const t = Math.max(0.0, Math.min(1.0, (this.totalForce - vibratoMin) / (vibratoMax - vibratoMin)));
+        const vibratoSpeed = Math.max(0.0, Math.min(1.0, t * t * (3.0 - 2.0 * t)));
+
+        this.vibratoPhase = (this.vibratoPhase + (this.vibratoFrequency * vibratoSpeed) / sampleRate) % 1.0;
         this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0) * 2.0 - 1.0;
       }
 
       // Notes add force to frequencies
       for (let noteIndex = 0; noteIndex < this.noteAttacks.length; noteIndex++) {
         let fundamentalForce = 0.0;
-        // let fundamentalDifference = 0.0;
+        let fundamentalDifference = 0.0;
 
         for (let partialIndex = 0; partialIndex < this.partialOffsets.length; partialIndex++) {
           const targetIndex = partialIndex + this.partialOffsets.length * noteIndex;
@@ -302,7 +309,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           // Save fundamental frequency force
           if (partialIndex === 0) {
             fundamentalForce = this.noteForces[targetIndex];
-            // fundamentalDifference = this.noteForces[targetIndex] - this.noteForceTargets[targetIndex];
+            fundamentalDifference = Math.abs(this.noteForces[targetIndex] - this.noteForceTargets[targetIndex]);
           }
 
           // Apply effects
@@ -310,21 +317,19 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Apply instability and detune if needed
           if (!goingDown || this.shouldApplyAttackEffectsOnReleaseToo) {
-            const toTarget = Math.abs(this.noteForceTargets[targetIndex] - this.noteForces[targetIndex]);
-
             if (this.attackDetune !== 0.0) {
-              const detune = toTarget * this.attackDetune;
+              const detune = fundamentalDifference * this.attackDetune;
               this.frequencyTunes[frequencyIndex] *= detune < 0.0 ? 1.0 / (1.0 - detune) : 1.0 + detune;
             }
 
             if (this.attackPitchInstability !== 0.0) {
-              const instability = toTarget * this.attackInstabilityWave * this.attackPitchInstability;
+              const instability = fundamentalDifference * this.attackInstabilityWave * this.attackPitchInstability;
               this.frequencyTunes[frequencyIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
 
             // FIXME: changing volumes like this is going to instantly hit the attackless normalisation further below.
             if (this.attackBrightnessInstability !== 0.0) {
-              const instability = toTarget * this.attackInstabilityWave * this.attackBrightnessInstability;
+              const instability = fundamentalDifference * this.attackInstabilityWave * this.attackBrightnessInstability;
               force **= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
           }
@@ -380,7 +385,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Frequencies play sine waves
       let amplitude = 0.0;
-      let totalForce = 0.0;
+      this.totalForce = 0.0;
 
       for (let frequencyIndex = 0; frequencyIndex < this.frequencyForces.length; frequencyIndex++) {
         const force = this.frequencyForces[frequencyIndex];
@@ -396,7 +401,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
         // Play sine, amplified by force
         amplitude += Math.sin(this.frequencyPhases[frequencyIndex] * (Math.PI * 2.0)) * force;
-        totalForce += force;
+        this.totalForce += force;
 
         // Nullify for next frame
         this.frequencyForces[frequencyIndex] = 0.0;
@@ -404,7 +409,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Normalize by total playing force
-      channel[index] = amplitude / (totalForce + Math.exp(-totalForce));
+      channel[index] = amplitude / (this.totalForce + Math.exp(-this.totalForce));
       // channel[index] = amplitude / (1.0 + totalForce);
     }
 
