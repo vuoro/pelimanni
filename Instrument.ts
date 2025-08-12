@@ -49,8 +49,10 @@ export type InstrumentPreset = {
   /** Passed to getFrequencyAmplitudes. */
   formantFrequency?: number;
 
-  /** Applies attack effects like detune and instability on release too */
-  shouldApplyAttackEffectsOnReleaseToo?: boolean;
+  /** Makes each partial of the note detune individually, instead of following the fundamental. */
+  attackDetuneUsesPartialForce?: boolean;
+  /** Makes each partial of the note instabilise individually, instead of following the fundamental. */
+  attackInstabilityUsesPartialForce?: boolean;
 };
 
 export class Instrument {
@@ -83,7 +85,8 @@ export class Instrument {
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
-      shouldApplyAttackEffectsOnReleaseToo = false,
+      attackDetuneUsesPartialForce = false,
+      attackInstabilityUsesPartialForce = false,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -161,7 +164,8 @@ export class Instrument {
       frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
       frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
 
-      shouldApplyAttackEffectsOnReleaseToo,
+      attackDetuneUsesPartialForce,
+      attackInstabilityUsesPartialForce,
     };
 
     this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {

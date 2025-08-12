@@ -83,6 +83,8 @@ const pluckedStringEnvelope = {
   // ],
   attackDetune: 2.0 ** -5.0,
   attackBrightnessInstability: 0.021,
+  attackDetuneUsesPartialForce: true,
+  attackInstabilityUsesPartialForce: true,
 };
 
 const hammeredStringEnvelope = {
@@ -101,7 +103,6 @@ export const drumEnvelope = {
   defaultSustain: 0.0,
   release: 1.618,
   attackDetune: 2.0 ** -2.0,
-  // TODO: lots and lots of noise
   attackBrightnessInstability: 1.0,
   attackPitchInstability: 4.0,
 };
