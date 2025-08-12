@@ -64,7 +64,7 @@ export class Instrument {
   constructor(
     audioContext: AudioContext,
     {
-      partials,
+      partials: partialList,
       // transients,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
@@ -91,26 +91,55 @@ export class Instrument {
   ) {
     this.audioContext = audioContext;
 
-    const notes = getNotes(notesStartAt, notesEndAt);
-    const frequencies = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
-    const frequencyAmplitudes = getFrequencyAmplitudes(frequencies, formantFrequency);
+    const noteList = getNotes(notesStartAt, notesEndAt);
 
-    const partialOffsets = new Int16Array(partials.length);
-    const partialAmplitudes = new Float64Array(partials.length);
-    const partialAttacks = new Float64Array(partials.length);
-    const partialReleases = new Float64Array(partials.length);
+    const notes = new Float64Array(noteList.length * 4);
+
+    for (let index = 0; index < noteList.length; index++) {
+      const note = noteList[index];
+
+      notes[index * 4 + 0] =
+        (attack * 2.0 ** (pitchEffectOnAttack * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        audioContext.sampleRate;
+
+      notes[index * 4 + 1] =
+        (decay * 2.0 ** (pitchEffectOnDecay * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        audioContext.sampleRate;
+
+      notes[index * 4 + 2] =
+        (release *
+          2.0 ** (pitchEffectOnRelease * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        audioContext.sampleRate;
+
+      notes[index * 4 + 3] =
+        2.0 ** (pitchEffectOnBrightness * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))));
+    }
+
+    const partials = new Float64Array(partialList.length * 4);
+
+    for (let index = 0; index < partialList.length; index++) {
+      const [amplitude, partialRatio, attack, release] = partialList[index];
+
+      partials[index * 4 + 0] = amplitude;
+      partials[index * 4 + 1] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
+      partials[index * 4 + 2] = attack;
+      partials[index * 4 + 3] = release;
+    }
+
+    const frequencyList = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
+    const frequencyAmplitudeList = getFrequencyAmplitudes(frequencyList, formantFrequency);
+
+    const frequencies = new Float64Array(frequencyList.length * 2);
+
+    for (let index = 0; index < frequencyList.length; index++) {
+      frequencies[index * 2 + 0] = frequencyList[index];
+      frequencies[index * 2 + 1] = frequencyAmplitudeList[index];
+    }
 
     // const transientAmplitudes = new Float64Array(transients?.length ?? 0);
     // const transientIndexes = new Int16Array(transients?.length ?? 0);
     // const transientAttacks = new Float64Array(transients?.length ?? 0);
     // const transientReleases = new Float64Array(transients?.length ?? 0);
-
-    for (const [index, [amplitude, partialRatio, attack, release]] of partials.entries()) {
-      partialOffsets[index] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      partialAmplitudes[index] = amplitude;
-      partialAttacks[index] = attack;
-      partialReleases[index] = release;
-    }
 
     // if (transients) {
     //   for (const [index, [amplitude, frequency, attack, release]] of transients.entries()) {
@@ -122,48 +151,20 @@ export class Instrument {
     // }
 
     const processorOptions = {
-      notesStartAt,
-
-      noteAttacks: Float64Array.from(notes).map(
-        (note) =>
-          (attack *
-            2.0 ** (pitchEffectOnAttack * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
-          audioContext.sampleRate,
-      ),
-      noteDecays: Float64Array.from(notes).map(
-        (note) =>
-          (decay * 2.0 ** (pitchEffectOnDecay * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
-          audioContext.sampleRate,
-      ),
-      noteReleases: Float64Array.from(notes).map(
-        (note) =>
-          (release *
-            2.0 ** (pitchEffectOnRelease * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
-          audioContext.sampleRate,
-      ),
-      noteBrightnesses: Float64Array.from(notes).map(
-        (note) =>
-          2.0 ** (pitchEffectOnBrightness * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60)))),
-      ),
-
-      partialOffsets,
-      partialAmplitudes,
-      partialAttacks,
-      partialReleases,
+      notes,
+      partials,
+      frequencies,
 
       // transientIndexes,
       // transientAmplitudes,
       // transientAttacks,
       // transientReleases,
 
+      notesStartAt,
       attackDetune,
       attackPitchInstability,
       attackBrightnessInstability,
       attackInstabilityFrequency,
-
-      frequencies: Float64Array.from(frequencies), // FIXME: getFrequencies might as well create this typedarray right away
-      frequencyAmplitudes: Float64Array.from(frequencyAmplitudes),
-
       attackDetuneUsesPartialForce,
       attackInstabilityUsesPartialForce,
     };
