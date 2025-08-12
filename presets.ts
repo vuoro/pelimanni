@@ -18,20 +18,20 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][], attac
   return newPartials;
 };
 
-const addSympatheticStrings = (partials: [number, number, number, number][], volume = 0.09) => {
-  const length = partials.length;
+// const addSympatheticStrings = (partials: [number, number, number, number][], volume = 0.09) => {
+//   const length = partials.length;
 
-  for (let index = 0; index < length; index++) {
-    const [amplitude, partialRatio = index + 1.0, attack, release] = partials[index];
+//   for (let index = 0; index < length; index++) {
+//     const [amplitude, partialRatio = index + 1.0, attack, release] = partials[index];
 
-    partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio / 3.0, attack, release]);
-    partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio / 2.0, attack, release]);
-    partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio * 2.0, attack, release]);
-    partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio * 3.0, attack, release]);
-  }
+//     partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio / 3.0, attack, release]);
+//     partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio / 2.0, attack, release]);
+//     partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio * 2.0, attack, release]);
+//     partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio * 3.0, attack, release]);
+//   }
 
-  return partials;
-};
+//   return partials;
+// };
 
 // attack: 1.0,
 // decay: 1.618,
@@ -53,7 +53,9 @@ const brassEnvelope = {
   ...reedEnvelope,
   defaultSustain: 0.764,
   release: 3.0,
-  attackBrightnessInstability: 0.236,
+  attackBrightnessInstability: 1.0,
+  // attackPitchInstability: 1.0,
+  // attackInstabilityUsesPartialForce: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis

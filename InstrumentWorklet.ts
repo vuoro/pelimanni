@@ -51,12 +51,13 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   brightnessVibrato = 0.0;
   pitchVibrato = 0.0;
 
+  maxPartialOffset = 0.0;
   attackDetune = 0.0;
   attackPitchInstability = 0.0;
   attackBrightnessInstability = 0.0;
   attackInstabilityFrequency = 80.0;
   attackInstabilityWave = 0.0;
-  attackInstabilityPhase = 0.0;
+  attackInstabilityPhases = new Float64Array(8);
   attackDetuneUsesPartialForce: false;
   attackInstabilityUsesPartialForce: false;
 
@@ -133,6 +134,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.attackInstabilityFrequency = attackInstabilityFrequency;
     this.attackDetuneUsesPartialForce = attackDetuneUsesPartialForce;
     this.attackInstabilityUsesPartialForce = attackInstabilityUsesPartialForce;
+    this.maxPartialOffset = partials[partials.length - 1 - 2];
 
     // Handle messages
     // TODO: type this message
@@ -184,7 +186,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
             // Higher velocity notes are brighter
             this.partialStates[forceTargetIndex] =
-              amplitude ** ((1.618 - velocity ** 1.382) * brightness) * frequencyAmplitude * loudness;
+              amplitude ** ((1.618 - velocity ** Math.SQRT2) * brightness) * frequencyAmplitude * loudness;
 
             this.partialStates[sustainIndex] = this.partialStates[forceTargetIndex] * sustain;
           }
@@ -250,9 +252,22 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Compute attack instability if needed: it may be used below.
       if (this.attackPitchInstability !== 0.0 || this.attackBrightnessInstability !== 0.0) {
-        this.attackInstabilityPhase =
-          (this.attackInstabilityPhase + this.attackInstabilityFrequency / sampleRate) % 1.0;
-        this.attackInstabilityWave = Math.abs(this.attackInstabilityPhase * 2.0 - 1.0) * 2.0 - 1.0;
+        this.attackInstabilityWave = 0.0;
+
+        // FIXME: is this actually any better than a cheap non-bandlimited triangle wave?
+        for (let index = 0; index < this.attackInstabilityPhases.length; index++) {
+          const partialNumber = 1.0 + index * 2.0;
+          // const partialNumber = 1.0 * 1.618033988749895 ** (index * 2.0);
+
+          this.attackInstabilityPhases[index] =
+            (this.attackInstabilityPhases[index] + (this.attackInstabilityFrequency * partialNumber) / sampleRate) %
+            1.0;
+
+          this.attackInstabilityWave +=
+            Math.sin(this.attackInstabilityPhases[index] * 2.0 * Math.PI) * (1.0 / (partialNumber * partialNumber));
+        }
+
+        // this.attackInstabilityWave = (this.attackInstabilityWave + (Math.random() * 2.0 - 1.0)) / 2.0;
       }
 
       // Compute vibrato if needed: it may be used below.
@@ -314,9 +329,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
               );
 
           // Save fundamental frequency force
+          const difference = Math.abs(this.partialStates[forceIndex] - this.partialStates[forceTargetIndex]);
+
           if (partialIndex === 0) {
             fundamentalForce = this.partialStates[forceIndex];
-            fundamentalDifference = Math.abs(this.partialStates[forceIndex] - this.partialStates[forceTargetIndex]);
+            fundamentalDifference = difference;
           }
 
           // Apply effects
@@ -331,16 +348,20 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
             if (this.attackPitchInstability !== 0.0) {
               const instability =
-                (this.attackInstabilityUsesPartialForce ? force : fundamentalDifference) *
+                (this.attackInstabilityUsesPartialForce ? difference : fundamentalDifference) *
                 this.attackInstabilityWave *
                 this.attackPitchInstability;
               this.frequencyStates[tuneIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
 
-            // FIXME: changing volumes like this is going to instantly hit the attackless normalisation further below.
             if (this.attackBrightnessInstability !== 0.0) {
-              const instability = fundamentalDifference * this.attackInstabilityWave * this.attackBrightnessInstability;
-              force **= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
+              const instability =
+                (this.attackInstabilityUsesPartialForce ? difference : fundamentalDifference) *
+                this.attackInstabilityWave *
+                this.attackBrightnessInstability *
+                (partialOffset / this.maxPartialOffset);
+
+              force *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
           }
 
@@ -351,8 +372,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           if (this.brightnessVibrato !== 0.0) {
-            const vibrato = fundamentalForce * this.brightnessVibrato * this.vibratoWave;
-            force **= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+            const vibrato =
+              fundamentalForce * this.brightnessVibrato * this.vibratoWave * (partialOffset / this.maxPartialOffset);
+            force *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
           }
 
           if (this.amplitudeVibrato !== 0.0) {
@@ -412,6 +434,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
         // Play sine, amplified by force
         amplitude += Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0)) * force;
+        // amplitude += this.attackInstabilityWave * force;
 
         // Nullify for next frame
         this.frequencyStates[frequencyForceIndex] = 0.0;
