@@ -1,5 +1,5 @@
 import { Instrument } from "../Instrument.ts";
-import { trumpet } from "../presets.ts";
+import { clarinet } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
@@ -55,5 +55,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, trumpet);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, clarinet);
 tempInstrument.connect(AudioSystem.get().input);

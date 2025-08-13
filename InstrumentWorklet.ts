@@ -318,14 +318,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const likelyReleased = this.partialStates[forceTargetIndex] === 0.0;
           const goingDown = this.partialStates[forceTargetIndex] < this.partialStates[forceIndex];
 
-          this.partialStates[forceIndex] =
-            this.partialStates[forceTargetIndex] +
-            (this.partialStates[forceIndex] - this.partialStates[forceTargetIndex]) *
-              Math.exp(
-                -(goingDown ? release : attack) *
-                  (goingDown ? partialRelease : partialAttack) *
-                  (likelyReleased || !goingDown ? multiplier : 1.0),
-              );
+          this.partialStates[forceIndex] +=
+            (this.partialStates[forceTargetIndex] - this.partialStates[forceIndex]) *
+            ((goingDown ? release : attack) *
+              (goingDown ? partialRelease : partialAttack) *
+              (likelyReleased || !goingDown ? multiplier : 1.0));
 
           // Save fundamental frequency force
           const difference = Math.abs(this.partialStates[forceIndex] - this.partialStates[forceTargetIndex]);
@@ -386,9 +383,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           this.totalForce += force;
 
           // Decay force target towards sustain level
-          this.partialStates[forceTargetIndex] =
-            this.partialStates[sustainIndex] +
-            (this.partialStates[forceTargetIndex] - this.partialStates[sustainIndex]) * Math.exp(-decay);
+          this.partialStates[forceTargetIndex] +=
+            (this.partialStates[sustainIndex] - this.partialStates[forceTargetIndex]) * decay;
         }
       }
 
@@ -441,8 +437,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Normalize by total playing force
-      channel[index] = amplitude / (this.totalForce + Math.exp(-this.totalForce));
-      // channel[index] = amplitude / (1.0 + totalForce);
+      // channel[index] = amplitude / (this.totalForce + Math.exp(-this.totalForce));
+      channel[index] = amplitude / (1.0 + this.totalForce);
 
       // If no notes play, it's safe to sleep until the next message and save some CPU.
       if (allDormant) {
