@@ -33,14 +33,14 @@ if (!globalThis.SharedArrayBuffer) {
 }
 
 class InstrumentWorklet extends AudioWorkletProcessor {
-  shouldPlay = true;
-  sleeping = false;
+  isAlive = true;
+  isSleeping = false;
   partialCount = 0;
   frequencyCount = 0;
   noteCount = 0;
 
   notesStartAt = 0;
-  cutoff = 1.0 / sampleRate;
+  cutoff = 0.0001;
   totalForce = 0.0;
 
   vibratoPhase = 0.0;
@@ -162,7 +162,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         dynamics,
       });
 
-      this.sleeping = false;
+      this.isSleeping = false;
 
       switch (data[0]) {
         case 0: {
@@ -224,7 +224,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           // destroy
           // FIXME: this whole thing can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
           // https://issues.chromium.org/issues/41435286
-          this.shouldPlay = false;
+          this.isAlive = false;
           break;
         }
       }
@@ -236,7 +236,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   }
 
   process(_inputs: Float32Array[][], outputs: Float32Array[][], _parameters: Record<string, Float32Array>) {
-    if (!this.shouldPlay) return false;
+    if (!this.isAlive) return false;
+    if (this.isSleeping) return true;
 
     // TODO: figure out if this should support multiple outputs and/or channels
     const output = outputs[0];
@@ -245,8 +246,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     const previousTotalForce = this.totalForce;
 
     for (let index = 0; index < channel.length; index++) {
-      if (this.sleeping) return true;
-
       let allDormant = true;
       this.totalForce = 0.0;
 
@@ -447,7 +446,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
       // If no notes play, it's safe to sleep until the next message and save some CPU.
       if (allDormant) {
-        this.sleeping = true;
+        this.isSleeping = true;
       }
     }
 
