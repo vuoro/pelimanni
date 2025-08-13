@@ -65,7 +65,6 @@ export class Instrument {
     audioContext: AudioContext,
     {
       partials: partialList,
-      // transients,
       getNotes = defaultGetNotes,
       getFrequencies = defaultGetFrequencies,
       getFrequencyAmplitudes = defaultGetFrequencyAmplitudes,
@@ -136,29 +135,10 @@ export class Instrument {
       frequencies[index * 2 + 1] = frequencyAmplitudeList[index];
     }
 
-    // const transientAmplitudes = new Float64Array(transients?.length ?? 0);
-    // const transientIndexes = new Int16Array(transients?.length ?? 0);
-    // const transientAttacks = new Float64Array(transients?.length ?? 0);
-    // const transientReleases = new Float64Array(transients?.length ?? 0);
-
-    // if (transients) {
-    //   for (const [index, [amplitude, frequency, attack, release]] of transients.entries()) {
-    //     transientAmplitudes[index] = amplitude;
-    //     transientIndexes[index] = frequencyToMidi10(frequency) - notesStartAt * 10;
-    //     transientAttacks[index] = attack / audioContext.sampleRate;
-    //     transientReleases[index] = release / audioContext.sampleRate;
-    //   }
-    // }
-
     const processorOptions = {
       notes,
       partials,
       frequencies,
-
-      // transientIndexes,
-      // transientAmplitudes,
-      // transientAttacks,
-      // transientReleases,
 
       notesStartAt,
       attackDetune,

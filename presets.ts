@@ -52,7 +52,6 @@ const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
 const brassEnvelope = {
   ...reedEnvelope,
   defaultSustain: 0.764,
-  release: 3.0,
   attackBrightnessInstability: 1.0,
   // attackPitchInstability: 1.0,
   // attackInstabilityUsesPartialAmplitude: true,
@@ -78,11 +77,6 @@ const pluckedStringEnvelope = {
   release: 1.618,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
-  // transients: [
-  //   [0.034, 104, 8.0, 8.0],
-  //   [0.021, 562, 8.0, 8.0],
-  //   [0.013, 780, 8.0, 8.0],
-  // ],
   attackDetune: 2.0 ** -5.0,
   attackBrightnessInstability: 0.021,
   attackDetuneUsesPartialAmplitude: true,
@@ -456,12 +450,6 @@ export const piano: InstrumentPreset = {
     [0.056 * 2.0 ** -3.0],
     [0.056 * 2.0 ** -4.0],
   ]),
-  // transients: [
-  //   [0.056, 38, 8.0, 8.0],
-  //   [0.034, 100, 8.0, 8.0],
-  //   [0.021, 250, 8.0, 8.0],
-  //   [0.034, 914, 8.0, 8.0],
-  // ],
   ...hammeredStringEnvelope,
   formantFrequency: midiToFrequency(60),
 };
@@ -502,7 +490,6 @@ export const taikoDrum: InstrumentPreset = {
     [0.034, 8.5],
     [0.021, 9.3],
   ]),
-  // transients: [[0.236, 700, 20.0, 16.0]],
   ...drumEnvelope,
 };
 
