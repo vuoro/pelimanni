@@ -50,9 +50,9 @@ export type InstrumentPreset = {
   formantFrequency?: number;
 
   /** Makes each partial of the note detune individually, instead of following the fundamental. */
-  attackDetuneUsesPartialForce?: boolean;
+  attackDetuneUsesPartialAmplitude?: boolean;
   /** Makes each partial of the note instabilise individually, instead of following the fundamental. */
-  attackInstabilityUsesPartialForce?: boolean;
+  attackInstabilityUsesPartialAmplitude?: boolean;
 };
 
 export class Instrument {
@@ -85,8 +85,8 @@ export class Instrument {
       formantFrequency = midiToFrequency(65),
       notesStartAt = 21,
       notesEndAt = 108,
-      attackDetuneUsesPartialForce = false,
-      attackInstabilityUsesPartialForce = false,
+      attackDetuneUsesPartialAmplitude = false,
+      attackInstabilityUsesPartialAmplitude = false,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -165,8 +165,8 @@ export class Instrument {
       attackPitchInstability,
       attackBrightnessInstability,
       attackInstabilityFrequency,
-      attackDetuneUsesPartialForce,
-      attackInstabilityUsesPartialForce,
+      attackDetuneUsesPartialAmplitude,
+      attackInstabilityUsesPartialAmplitude,
     };
 
     this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {

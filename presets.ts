@@ -55,7 +55,7 @@ const brassEnvelope = {
   release: 3.0,
   attackBrightnessInstability: 1.0,
   // attackPitchInstability: 1.0,
-  // attackInstabilityUsesPartialForce: true,
+  // attackInstabilityUsesPartialAmplitude: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -85,8 +85,8 @@ const pluckedStringEnvelope = {
   // ],
   attackDetune: 2.0 ** -5.0,
   attackBrightnessInstability: 0.021,
-  attackDetuneUsesPartialForce: true,
-  attackInstabilityUsesPartialForce: true,
+  attackDetuneUsesPartialAmplitude: true,
+  attackInstabilityUsesPartialAmplitude: true,
 };
 
 const hammeredStringEnvelope = {
