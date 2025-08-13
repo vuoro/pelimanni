@@ -46,14 +46,14 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 4.0,
-  attackDetune: -(2.0 ** -5.0),
+  attackDetune: -(2.0 ** -6.0),
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
 const brassEnvelope = {
   ...reedEnvelope,
   defaultSustain: 0.764,
-  attackBrightnessInstability: 1.0,
-  // attackPitchInstability: 1.0,
+  // attackBrightnessInstability: 0.013,
+  // attackPitchInstability: 0.5,
   // attackInstabilityUsesPartialAmplitude: true,
 };
 

@@ -48,6 +48,8 @@ export type InstrumentPreset = {
   inharmonicity?: number;
   /** Passed to getFrequencyAmplitudes. */
   formantFrequency?: number;
+  /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `pitchEffectOnAttack` etc. start taking effect. */
+  homeFrequency?: number;
 
   /** Makes each partial of the note detune individually, instead of following the fundamental. */
   attackDetuneUsesPartialAmplitude?: boolean;
@@ -75,13 +77,14 @@ export class Instrument {
       pitchEffectOnAttack = 0.09,
       pitchEffectOnDecay = 0.09,
       pitchEffectOnRelease = 0.618,
-      pitchEffectOnBrightness = 0.5,
+      pitchEffectOnBrightness = -0.056,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackBrightnessInstability = 0.0,
       attackInstabilityFrequency = 80.0,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
+      homeFrequency = midiToFrequency(60),
       notesStartAt = 21,
       notesEndAt = 108,
       attackDetuneUsesPartialAmplitude = false,
@@ -98,20 +101,19 @@ export class Instrument {
       const note = noteList[index];
 
       notes[index * 4 + 0] =
-        (attack * 2.0 ** (pitchEffectOnAttack * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        (attack * 2.0 ** (pitchEffectOnAttack * (Math.log2(midiToFrequency(note)) - Math.log2(homeFrequency)))) /
         audioContext.sampleRate;
 
       notes[index * 4 + 1] =
-        (decay * 2.0 ** (pitchEffectOnDecay * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        (decay * 2.0 ** (pitchEffectOnDecay * (Math.log2(midiToFrequency(note)) - Math.log2(homeFrequency)))) /
         audioContext.sampleRate;
 
       notes[index * 4 + 2] =
-        (release *
-          2.0 ** (pitchEffectOnRelease * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))))) /
+        (release * 2.0 ** (pitchEffectOnRelease * (Math.log2(midiToFrequency(note)) - Math.log2(homeFrequency)))) /
         audioContext.sampleRate;
 
-      notes[index * 4 + 3] =
-        2.0 ** (pitchEffectOnBrightness * (Math.log2(midiToFrequency(note)) - Math.log2(midiToFrequency(60))));
+      notes[index * 4 + 3] = pitchEffectOnBrightness * (Math.log2(midiToFrequency(note)) - Math.log2(homeFrequency));
+      notes[index * 4 + 3] = Math.abs(notes[index * 4 + 3]) ** 2.0 * Math.sign(notes[index * 4 + 3]);
     }
 
     const partials = new Float64Array(partialList.length * 4);
@@ -162,15 +164,23 @@ export class Instrument {
   }
 
   async attack(
+    /** MIDI number */
     note: number,
-    velocity = 1.0,
+    velocity: number,
+    /** uses `defaultSustain` if left undefined */
     sustain = this.defaultSustain,
+    /** multiplies attack time */
     attackMultiplier = 1.0,
+    /** vibrates all partials in unison */
     amplitudeVibrato = 0.0,
+    /** vibrates only overtones */
     brightnessVibrato = 0.0,
+    /** vibrates pitch, in cents: 200 = 2 semitones and so on */
     pitchVibrato = 0.0,
-    vibratoFrequency = 5.5,
-    dynamics = 0.5,
+    /** in hertz: 6.0 by default */
+    vibratoFrequency = 6.0,
+    /** how velocity affects loudness: 0.5 means all notes are quite loud, 1.0 means default, 2.0 means very quiet  */
+    dynamics = 1.0,
   ) {
     (await this.node).port.postMessage(
       Float32Array.of(
@@ -179,16 +189,21 @@ export class Instrument {
         velocity,
         sustain,
         attackMultiplier,
-        amplitudeVibrato,
-        brightnessVibrato,
-        pitchVibrato,
+        amplitudeVibrato * 4.0,
+        brightnessVibrato * 0.01,
+        2.0 ** (pitchVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
         vibratoFrequency,
         dynamics,
       ),
     );
   }
 
-  async release(note: number, releaseMultiplier = 1.0) {
+  async release(
+    /** MIDI number */
+    note: number,
+    /** multiplies release time */
+    releaseMultiplier = 1.0,
+  ) {
     (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier));
   }
 

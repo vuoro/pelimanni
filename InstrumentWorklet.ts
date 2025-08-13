@@ -57,7 +57,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   attackBrightnessInstability = 0.0;
   attackInstabilityFrequency = 80.0;
   attackInstabilityWave = 0.0;
-  attackInstabilityPhases = new Float64Array(8);
+  attackInstabilityPhase = 0.0;
   attackDetuneUsesPartialAmplitude: false;
   attackInstabilityUsesPartialAmplitude: false;
 
@@ -151,24 +151,25 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const loudness = velocity ** dynamics;
 
           for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-            const offset = this.partials[partialIndex * 4 + 1];
-            const frequencyIndex = noteIndex * 10 + offset;
+            const partialOffset = this.partials[partialIndex * 4 + 1];
+            const frequencyIndex = noteIndex * 10 + partialOffset;
 
             // Skip if out of range
             if (frequencyIndex > this.frequencyCount - 1 || frequencyIndex < 0) continue;
 
             const amplitude = this.partials[partialIndex * 4 + 0];
-            const brightness = this.notes[noteIndex * 4 + 3];
             const frequencyAmplitude = this.frequencies[frequencyIndex * 2 + 1];
+
+            // Notes vary brightness by frequency and velocity
+            let brightness = this.notes[noteIndex * 4 + 3] * partialOffset;
+            brightness *= 0.618 + velocity ** Math.SQRT2;
+            brightness = brightness < 0.0 ? 1.0 / (1.0 - brightness) : 1.0 + brightness;
 
             const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 3;
             const amplitudeTargetIndex = partialStateIndex + 1;
             const sustainIndex = partialStateIndex + 2;
 
-            // Higher velocity notes are brighter
-            this.partialStates[amplitudeTargetIndex] =
-              amplitude ** ((1.618 - velocity ** Math.SQRT2) * brightness) * frequencyAmplitude * loudness;
-
+            this.partialStates[amplitudeTargetIndex] = amplitude * frequencyAmplitude * loudness * brightness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
           }
 
@@ -228,22 +229,10 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Compute attack instability if needed: it may be used below.
       if (this.attackPitchInstability !== 0.0 || this.attackBrightnessInstability !== 0.0) {
-        this.attackInstabilityWave = 0.0;
+        this.attackInstabilityPhase =
+          (this.attackInstabilityPhase + this.attackInstabilityFrequency / sampleRate) % 1.0;
 
-        // FIXME: is this actually any better than a cheap non-bandlimited triangle wave?
-        for (let index = 0; index < this.attackInstabilityPhases.length; index++) {
-          const partialNumber = 1.0 + index * 2.0;
-          // const partialNumber = 1.0 * 1.618033988749895 ** (index * 2.0);
-
-          this.attackInstabilityPhases[index] =
-            (this.attackInstabilityPhases[index] + (this.attackInstabilityFrequency * partialNumber) / sampleRate) %
-            1.0;
-
-          this.attackInstabilityWave +=
-            Math.sin(this.attackInstabilityPhases[index] * 2.0 * Math.PI) * (1.0 / (partialNumber * partialNumber));
-        }
-
-        // this.attackInstabilityWave = (this.attackInstabilityWave + (Math.random() * 2.0 - 1.0)) / 2.0;
+        this.attackInstabilityWave = Math.abs(this.attackInstabilityPhase * 2.0 - 1.0) * 2.0 - 1.0;
       }
 
       // Compute vibrato if needed: it may be used below.
@@ -333,7 +322,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
                 (this.attackInstabilityUsesPartialAmplitude ? difference : fundamentalDifference) *
                 this.attackInstabilityWave *
                 this.attackBrightnessInstability *
-                (partialOffset / this.maxPartialOffset);
+                partialOffset;
 
               amplitude *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
@@ -346,11 +335,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           if (this.brightnessVibrato !== 0.0) {
-            const vibrato =
-              fundamentalAmplitude *
-              this.brightnessVibrato *
-              this.vibratoWave *
-              (partialOffset / this.maxPartialOffset);
+            const vibrato = fundamentalAmplitude * this.brightnessVibrato * this.vibratoWave * partialOffset;
             amplitude *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
           }
 
