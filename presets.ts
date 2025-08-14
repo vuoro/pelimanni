@@ -10,8 +10,8 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][], attac
     newPartials[index] = [
       amplitude,
       partialRatio,
-      Math.sqrt(attackSpeed * (1.0 / (partialRatio + (1.0 - amplitude)))),
-      Math.sqrt(releaseSpeed * (partialRatio + (1.0 - amplitude))),
+      Math.sqrt(attackSpeed * (1.0 / (partialRatio + (Math.exp(1.0 - amplitude) - 1.0)))),
+      Math.sqrt(releaseSpeed * (partialRatio + (Math.exp(1.0 - amplitude) - 1.0))),
     ];
   }
 
@@ -90,7 +90,7 @@ const hammeredStringEnvelope = {
   release: 1.236,
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -6.0,
-  attackBrightnessInstability: 0.056,
+  // attackBrightnessInstability: 0.056,
 };
 
 export const drumEnvelope = {
