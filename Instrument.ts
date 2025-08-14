@@ -30,8 +30,6 @@ export type InstrumentPreset = {
   attackDetune?: number;
   /** A triangle wave that multiplies the frequency being played at a start of the note. Used for the "brrrr" in brass instruments. */
   attackPitchInstability?: number;
-  /** A triangle wave that affects partial amplitudes at the start of a note. Used for the "brrrr" in brass instruments. */
-  attackBrightnessInstability?: number;
   /** The frequency of the triangle wave in attack instability (80 is good) */
   attackInstabilityFrequency?: number;
 
@@ -80,7 +78,6 @@ export class Instrument {
       pitchEffectOnBrightness = -0.056,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
-      attackBrightnessInstability = 0.0,
       attackInstabilityFrequency = 80.0,
       inharmonicity = 0.0,
       formantFrequency = midiToFrequency(65),
@@ -145,7 +142,6 @@ export class Instrument {
       notesStartAt,
       attackDetune,
       attackPitchInstability,
-      attackBrightnessInstability,
       attackInstabilityFrequency,
       attackDetuneUsesPartialAmplitude,
       attackInstabilityUsesPartialAmplitude,
@@ -190,7 +186,7 @@ export class Instrument {
         sustain,
         attackMultiplier,
         amplitudeVibrato * 4.0,
-        brightnessVibrato * 0.01,
+        brightnessVibrato * 6.0,
         2.0 ** (pitchVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
         vibratoFrequency,
         dynamics,

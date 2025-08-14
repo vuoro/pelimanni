@@ -54,7 +54,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   maxPartialOffset = 0.0;
   attackDetune = 0.0;
   attackPitchInstability = 0.0;
-  attackBrightnessInstability = 0.0;
   attackInstabilityFrequency = 80.0;
   attackInstabilityWave = 0.0;
   attackInstabilityPhase = 0.0;
@@ -84,7 +83,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       notesStartAt,
       attackDetune,
       attackPitchInstability,
-      attackBrightnessInstability,
       attackInstabilityFrequency,
       attackDetuneUsesPartialAmplitude,
       attackInstabilityUsesPartialAmplitude,
@@ -111,7 +109,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.notesStartAt = notesStartAt || this.notesStartAt;
     this.attackDetune = attackDetune;
     this.attackPitchInstability = attackPitchInstability;
-    this.attackBrightnessInstability = attackBrightnessInstability;
     this.attackInstabilityFrequency = attackInstabilityFrequency;
     this.attackDetuneUsesPartialAmplitude = attackDetuneUsesPartialAmplitude;
     this.attackInstabilityUsesPartialAmplitude = attackInstabilityUsesPartialAmplitude;
@@ -228,7 +225,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       this.totalAmplitude = 0.0;
 
       // Compute attack instability if needed: it may be used below.
-      if (this.attackPitchInstability !== 0.0 || this.attackBrightnessInstability !== 0.0) {
+      if (this.attackPitchInstability !== 0.0) {
         this.attackInstabilityPhase =
           (this.attackInstabilityPhase + this.attackInstabilityFrequency / sampleRate) % 1.0;
 
@@ -316,16 +313,6 @@ class InstrumentWorklet extends AudioWorkletProcessor {
                 this.attackPitchInstability;
               this.frequencyStates[tuneIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
             }
-
-            if (this.attackBrightnessInstability !== 0.0) {
-              const instability =
-                (this.attackInstabilityUsesPartialAmplitude ? difference : fundamentalDifference) *
-                this.attackInstabilityWave *
-                this.attackBrightnessInstability *
-                partialOffset;
-
-              amplitude *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
-            }
           }
 
           // Apply vibrato if needed
@@ -335,7 +322,11 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           if (this.brightnessVibrato !== 0.0) {
-            const vibrato = fundamentalAmplitude * this.brightnessVibrato * this.vibratoWave * partialOffset;
+            const vibrato =
+              fundamentalAmplitude *
+              this.brightnessVibrato *
+              this.vibratoWave *
+              (partialOffset / this.maxPartialOffset);
             amplitude *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
           }
 

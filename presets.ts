@@ -50,11 +50,12 @@ const fluteEnvelope = {
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
 const brassEnvelope = {
-  ...reedEnvelope,
+  attack: 3.0,
+  release: 3.0,
   defaultSustain: 0.764,
-  // attackBrightnessInstability: 0.013,
-  // attackPitchInstability: 0.5,
-  // attackInstabilityUsesPartialAmplitude: true,
+  attackDetune: -(2.0 ** -6.0),
+  attackPitchInstability: 0.1,
+  attackInstabilityUsesPartialAmplitude: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -64,8 +65,8 @@ const bowedStringEnvelope = {
   decay: Math.SQRT2,
   release: 2.0,
   defaultSustain: 0.91,
-  // TODO: probably needs a tiny bit of attack noise instead of this
-  attackBrightnessInstability: 0.09,
+  attackDetune: 2.0 ** -8.0,
+  attackDetuneUsesPartialAmplitude: true,
 };
 
 // Guitar transients
@@ -78,7 +79,7 @@ const pluckedStringEnvelope = {
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -5.0,
-  attackBrightnessInstability: 0.021,
+  attackPitchInstability: 0.056,
   attackDetuneUsesPartialAmplitude: true,
   attackInstabilityUsesPartialAmplitude: true,
 };
@@ -90,7 +91,7 @@ const hammeredStringEnvelope = {
   release: 1.236,
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -6.0,
-  // attackBrightnessInstability: 0.056,
+  attackPitchInstability: 0.09,
 };
 
 export const drumEnvelope = {
@@ -98,9 +99,10 @@ export const drumEnvelope = {
   decay: 20.0,
   defaultSustain: 0.0,
   release: 1.618,
-  attackDetune: 2.0 ** -2.0,
-  attackBrightnessInstability: 1.0,
-  attackPitchInstability: 4.0,
+  attackDetune: 2.0 ** -3.0,
+  attackPitchInstability: 2.0,
+  attackInstabilityUsesPartialAmplitude: true,
+  // TODO: needs better noise
 };
 
 export const idiophoneEnvelope = {
@@ -108,9 +110,9 @@ export const idiophoneEnvelope = {
   decay: 19.0,
   defaultSustain: 0.0,
   release: 1.618,
-  attackDetune: 2.0 ** -5.0,
-  attackBrightnessInstability: 0.146,
-  attackPitchInstability: 0.056,
+  attackDetune: 2.0 ** -6.0,
+  attackPitchInstability: 0.09,
+  attackInstabilityUsesPartialAmplitude: true,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
