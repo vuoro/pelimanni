@@ -178,20 +178,19 @@ export class Instrument {
     /** how velocity affects loudness: 0.5 means all notes are quite loud, 1.0 means default, 2.0 means very quiet  */
     dynamics = 1.0,
   ) {
-    (await this.node).port.postMessage(
-      Float32Array.of(
-        0,
-        note,
-        velocity,
-        sustain,
-        attackMultiplier,
-        amplitudeVibrato * 4.0,
-        brightnessVibrato * 6.0,
-        2.0 ** (pitchVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
-        vibratoFrequency,
-        dynamics,
-      ),
+    const message = Float32Array.of(
+      0,
+      note,
+      velocity,
+      sustain,
+      attackMultiplier,
+      amplitudeVibrato * 4.0,
+      brightnessVibrato * 6.0,
+      2.0 ** (pitchVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
+      vibratoFrequency,
+      dynamics,
     );
+    (await this.node).port.postMessage(message, [message.buffer]);
   }
 
   async release(
@@ -200,15 +199,16 @@ export class Instrument {
     /** multiplies release time */
     releaseMultiplier = 1.0,
   ) {
-    (await this.node).port.postMessage(Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier));
+    const message = Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier);
+    (await this.node).port.postMessage(message, [message.buffer]);
   }
 
   async destroy() {
-    (await this.node).disconnect();
-
     // FIXME: this can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
     // https://issues.chromium.org/issues/41435286
-    (await this.node).port.postMessage(Float32Array.of(666));
+    const message = Float32Array.of(666);
+    (await this.node).port.postMessage(message, [message.buffer]);
+    (await this.node).disconnect();
   }
 
   async connect(where: AudioNode, output?: number, input?: number) {
@@ -217,7 +217,8 @@ export class Instrument {
 
   // TODO: add command for reconfiguring the instrument
   // async configure(processorOptions) {
-  //   (await this.node).port.postMessage(Float32Array.of(3, processorOptions));
+  //   const messageFloat32Array.of(3, processorOptions)
+  //   (await this.node).port.postMessage(message, [message.buffer]);
   // }
 }
 
