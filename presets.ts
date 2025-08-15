@@ -11,6 +11,7 @@ const addBasicEnvelope = (partials: [number, number?, number?, number?][], attac
       amplitude,
       partialRatio,
       Math.sqrt(attackSpeed * (1.0 / (partialRatio + (Math.exp(1.0 - amplitude) - 1.0)))),
+      // TODO: should there be a decaySpeed here too?
       Math.sqrt(releaseSpeed * (partialRatio + (Math.exp(1.0 - amplitude) - 1.0))),
     ];
   }

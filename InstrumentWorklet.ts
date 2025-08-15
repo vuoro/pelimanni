@@ -40,6 +40,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   noteCount = 0;
 
   notesStartAt = 0;
+  notesEndAt = 1;
   cutoff = 0.0001;
   totalAmplitude = 0.0;
 
@@ -60,11 +61,18 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   attackDetuneUsesPartialAmplitude: false;
   attackInstabilityUsesPartialAmplitude: false;
 
-  notes: Float64Array;
+  pitchEffectOnAttack: number;
+  pitchEffectOnDecay: number;
+  pitchEffectOnRelease: number;
+  pitchEffectOnBrightness: number;
+  homeFrequency: number;
+  attack: number;
+  decay: number;
+  release: number;
+
   partials: Float64Array;
   frequencies: Float64Array;
 
-  noteStates: Float64Array;
   partialStates: Float64Array;
   frequencyStates: Float64Array;
 
@@ -76,29 +84,38 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     const customOptions: InstrumentWorklet = options.processorOptions;
 
     const {
-      notes,
       partials,
       frequencies,
 
       notesStartAt,
+      notesEndAt,
       attackDetune,
       attackPitchInstability,
       attackInstabilityFrequency,
       attackDetuneUsesPartialAmplitude,
       attackInstabilityUsesPartialAmplitude,
+
+      pitchEffectOnAttack,
+      pitchEffectOnDecay,
+      pitchEffectOnRelease,
+      pitchEffectOnBrightness,
+      homeFrequency,
+      attack,
+      decay,
+      release,
     } = customOptions;
 
-    // Create buffers
-    this.notes = notes;
-    this.partials = partials;
-    this.frequencies = frequencies;
+    this.noteCount = notesEndAt - notesStartAt + 1;
 
-    this.noteCount = notes.length / 4;
+    // partialAmplitude, partialOffset, partialAttack, partialRelease
+    this.partials = partials;
     this.partialCount = partials.length / 4;
+
+    this.frequencies = frequencies;
     this.frequencyCount = frequencies.length / 2;
 
-    this.noteStates = new Float64Array(this.noteCount * 1);
-    this.partialStates = new Float64Array(this.noteCount * this.partialCount * 3);
+    // amplitude, amplitudeTarget, sustain, attack, decay, release
+    this.partialStates = new Float64Array(this.noteCount * this.partialCount * 6);
     this.frequencyStates = new Float64Array(this.frequencyCount * 3);
 
     for (let index = 0; index < this.frequencyCount; index++) {
@@ -112,6 +129,16 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.attackInstabilityFrequency = attackInstabilityFrequency;
     this.attackDetuneUsesPartialAmplitude = attackDetuneUsesPartialAmplitude;
     this.attackInstabilityUsesPartialAmplitude = attackInstabilityUsesPartialAmplitude;
+
+    this.pitchEffectOnAttack = pitchEffectOnAttack;
+    this.pitchEffectOnDecay = pitchEffectOnDecay;
+    this.pitchEffectOnRelease = pitchEffectOnRelease;
+    this.pitchEffectOnBrightness = pitchEffectOnBrightness;
+    this.homeFrequency = homeFrequency;
+    this.attack = attack;
+    this.decay = decay;
+    this.release = release;
+
     this.maxPartialOffset = partials[partials.length - 1 - 2];
 
     // Handle messages
@@ -146,6 +173,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         case 0: {
           // attack
           const loudness = velocity ** dynamics;
+          const fundamentalFrequency = this.frequencies[noteIndex * 10 * 2 + 0];
 
           for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
             const partialOffset = this.partials[partialIndex * 4 + 1];
@@ -154,24 +182,55 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             // Skip if out of range
             if (frequencyIndex > this.frequencyCount - 1 || frequencyIndex < 0) continue;
 
-            const amplitude = this.partials[partialIndex * 4 + 0];
+            // Compute envelope dynamics
+            const partialAmplitude = this.partials[partialIndex * 4 + 0];
+            const partialAttack = this.partials[partialIndex * 4 + 2];
+            const partialRelease = this.partials[partialIndex * 4 + 3];
+
+            const frequency = this.frequencies[frequencyIndex * 2 + 0];
             const frequencyAmplitude = this.frequencies[frequencyIndex * 2 + 1];
 
-            // Notes vary brightness by frequency and velocity
-            let brightness = this.notes[noteIndex * 4 + 3] * partialOffset;
-            brightness *= 0.618 + velocity ** Math.SQRT2;
-            brightness = brightness < 0.0 ? 1.0 / (1.0 - brightness) : 1.0 + brightness;
+            const {
+              pitchEffectOnAttack,
+              pitchEffectOnDecay,
+              pitchEffectOnRelease,
+              pitchEffectOnBrightness,
+              homeFrequency,
+              attack,
+              decay,
+              release,
+            } = this;
 
-            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 3;
+            const fundamentalFrequencyDifference = Math.log2(fundamentalFrequency) - Math.log2(homeFrequency);
+            const frequencyDifference = Math.log2(frequency) - Math.log2(homeFrequency);
+            const dynamicFrequencyDifference = (fundamentalFrequencyDifference + frequencyDifference) / 2.0;
+
+            const dynamicAttack =
+              (attack * partialAttack * 2.0 ** (velocity + pitchEffectOnAttack * dynamicFrequencyDifference)) /
+              sampleRate;
+            const dynamicDecay =
+              (decay * partialRelease * 2.0 ** (pitchEffectOnDecay * dynamicFrequencyDifference)) / sampleRate;
+            const dynamicRelease =
+              (release * partialRelease * 2.0 ** (pitchEffectOnRelease * dynamicFrequencyDifference)) / sampleRate;
+
+            const dynamicBrightness = 2.0 ** (-velocity * 2.0 - pitchEffectOnBrightness * dynamicFrequencyDifference);
+
+            // Set new states
+            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
+            // const amplitudeIndex = partialStateIndex + 0;
             const amplitudeTargetIndex = partialStateIndex + 1;
             const sustainIndex = partialStateIndex + 2;
+            const attackIndex = partialStateIndex + 3;
+            const decayIndex = partialStateIndex + 4;
+            const releaseIndex = partialStateIndex + 5;
 
-            this.partialStates[amplitudeTargetIndex] = amplitude * frequencyAmplitude * loudness * brightness;
+            this.partialStates[amplitudeTargetIndex] =
+              partialAmplitude ** dynamicBrightness * frequencyAmplitude * loudness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
+            this.partialStates[attackIndex] = dynamicAttack * multiplier;
+            this.partialStates[decayIndex] = dynamicDecay;
+            this.partialStates[releaseIndex] = dynamicRelease;
           }
-
-          const multiplierIndex = noteIndex * 1 + 0;
-          this.noteStates[multiplierIndex] = multiplier * (0.618 + velocity ** 1.382);
 
           this.amplitudeVibrato = amplitudeVibrato;
           this.brightnessVibrato = brightnessVibrato;
@@ -183,16 +242,14 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         case 1: {
           // release
           for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 3;
+            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
             const amplitudeTargetIndex = partialStateIndex + 1;
             const sustainIndex = partialStateIndex + 2;
 
             this.partialStates[amplitudeTargetIndex] = 0.0;
             this.partialStates[sustainIndex] = 0.0;
+            // TODO: apply release multiplier somehow
           }
-
-          const multiplierIndex = noteIndex * 1 + 0;
-          this.noteStates[multiplierIndex] = multiplier;
           break;
         }
         case 666: {
@@ -253,39 +310,33 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         let fundamentalAmplitude = 0.0;
         let fundamentalDifference = 0.0;
 
-        const attack = this.notes[noteIndex * 4 + 0];
-        const decay = this.notes[noteIndex * 4 + 1];
-        const release = this.notes[noteIndex * 4 + 2];
-        const multiplierIndex = noteIndex * 1 + 0;
-        const multiplier = this.noteStates[multiplierIndex];
-
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-          const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 3;
+          const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
           const amplitudeIndex = partialStateIndex + 0;
           const amplitudeTargetIndex = partialStateIndex + 1;
-          const sustainIndex = partialStateIndex + 2;
 
           // Skip if dormant
           if (this.partialStates[amplitudeIndex] + this.partialStates[amplitudeTargetIndex] < this.cutoff) continue;
           allDormant = false;
 
+          const sustainIndex = partialStateIndex + 2;
+          const attackIndex = partialStateIndex + 3;
+          const decayIndex = partialStateIndex + 4;
+          const releaseIndex = partialStateIndex + 5;
+
           const partialOffset = this.partials[partialIndex * 4 + 1];
-          const partialAttack = this.partials[partialIndex * 4 + 2];
-          const partialRelease = this.partials[partialIndex * 4 + 3];
 
           const frequencyIndex = (noteIndex * 10 + partialOffset) * 3;
           const frequencyAmplitudeIndex = frequencyIndex + 0;
           const tuneIndex = frequencyIndex + 1;
 
           // Note amplitude heads towards target, attacking or releasing
-          const likelyReleased = this.partialStates[amplitudeTargetIndex] === 0.0;
+          // const likelyReleased = this.partialStates[amplitudeTargetIndex] === 0.0;
           const goingDown = this.partialStates[amplitudeTargetIndex] < this.partialStates[amplitudeIndex];
 
           this.partialStates[amplitudeIndex] +=
             (this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex]) *
-            ((goingDown ? release : attack) *
-              (goingDown ? partialRelease : partialAttack) *
-              (likelyReleased || !goingDown ? multiplier : 1.0));
+            (goingDown ? this.partialStates[releaseIndex] : this.partialStates[attackIndex]);
 
           // Save fundamental frequency amplitude
           const difference = Math.abs(this.partialStates[amplitudeIndex] - this.partialStates[amplitudeTargetIndex]);
@@ -341,7 +392,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Decay amplitude target towards sustain level
           this.partialStates[amplitudeTargetIndex] +=
-            (this.partialStates[sustainIndex] - this.partialStates[amplitudeTargetIndex]) * decay;
+            (this.partialStates[sustainIndex] - this.partialStates[amplitudeTargetIndex]) *
+            this.partialStates[decayIndex];
         }
       }
 
