@@ -107,9 +107,9 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
     this.noteCount = notesEndAt - notesStartAt + 1;
 
-    // partialAmplitude, partialOffset, partialAttack, partialRelease
+    // partialAmplitude, partialOffset
     this.partials = partials;
-    this.partialCount = partials.length / 4;
+    this.partialCount = partials.length / 2;
 
     this.frequencies = frequencies;
     this.frequencyCount = frequencies.length / 2;
@@ -139,7 +139,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.decay = decay;
     this.release = release;
 
-    this.maxPartialOffset = partials[partials.length - 1 - 2];
+    this.maxPartialOffset = partials[partials.length - 1];
 
     // Handle messages
     // TODO: type this message
@@ -175,17 +175,18 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const loudness = velocity ** dynamics;
           const fundamentalFrequency = this.frequencies[noteIndex * 10 * 2 + 0];
 
+          const logHomeFrequency = Math.log2(this.homeFrequency);
+          const logFundamentalFrequency = Math.log2(fundamentalFrequency);
+
           for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-            const partialOffset = this.partials[partialIndex * 4 + 1];
+            const partialOffset = this.partials[partialIndex * 2 + 1];
             const frequencyIndex = noteIndex * 10 + partialOffset;
 
             // Skip if out of range
             if (frequencyIndex > this.frequencyCount - 1 || frequencyIndex < 0) continue;
 
             // Compute envelope dynamics
-            const partialAmplitude = this.partials[partialIndex * 4 + 0];
-            const partialAttack = this.partials[partialIndex * 4 + 2];
-            const partialRelease = this.partials[partialIndex * 4 + 3];
+            const partialAmplitude = this.partials[partialIndex * 2 + 0];
 
             const frequency = this.frequencies[frequencyIndex * 2 + 0];
             const frequencyAmplitude = this.frequencies[frequencyIndex * 2 + 1];
@@ -195,28 +196,31 @@ class InstrumentWorklet extends AudioWorkletProcessor {
               pitchEffectOnDecay,
               pitchEffectOnRelease,
               pitchEffectOnBrightness,
-              homeFrequency,
               attack,
               decay,
               release,
             } = this;
 
-            const fundamentalFrequencyDifference = Math.log2(fundamentalFrequency) - Math.log2(homeFrequency);
-            const frequencyDifference = Math.log2(frequency) - Math.log2(homeFrequency);
-            const dynamicFrequencyDifference = (fundamentalFrequencyDifference + frequencyDifference) / 2.0;
+            const logFrequency = Math.log2(frequency);
 
-            const logVelocity = Math.log2(1.0 + velocity);
+            const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
+            const frequencyDifference = logFrequency - logHomeFrequency;
+            const partialDifference = logFrequency - logFundamentalFrequency;
+
+            // TODO: make partialDifference impact configurable
+            const differenceForAttackAndDecay = frequencyDifference - partialDifference * (2.0 - partialAmplitude);
+            const differenceForRelease = frequencyDifference;
+            const differenceForBrightness = (frequencyDifference + fundamentalFrequencyDifference) / 2.0;
+            const velocityImpact = 1.618 - velocity;
 
             const dynamicAttack =
-              (attack * partialAttack * 2.0 ** (logVelocity + pitchEffectOnAttack * dynamicFrequencyDifference)) /
-              sampleRate;
+              ((attack * 2.0 ** (pitchEffectOnAttack * differenceForAttackAndDecay)) / sampleRate) * velocityImpact;
             const dynamicDecay =
-              (decay * partialAttack * 2.0 ** (logVelocity + pitchEffectOnDecay * dynamicFrequencyDifference)) /
-              sampleRate;
-            const dynamicRelease =
-              (release * partialRelease * 2.0 ** (pitchEffectOnRelease * dynamicFrequencyDifference)) / sampleRate;
+              ((decay * 2.0 ** (pitchEffectOnDecay * differenceForAttackAndDecay)) / sampleRate) * velocityImpact;
+            const dynamicRelease = (release * 2.0 ** (pitchEffectOnRelease * differenceForRelease)) / sampleRate;
 
-            const dynamicBrightness = 2.0 ** (-logVelocity - pitchEffectOnBrightness * dynamicFrequencyDifference);
+            const dynamicBrightness =
+              2.0 ** (-pitchEffectOnBrightness * differenceForBrightness + Math.log2(velocityImpact));
 
             // Set new states
             const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
@@ -231,7 +235,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
               partialAmplitude ** dynamicBrightness * frequencyAmplitude * loudness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
             this.partialStates[attackIndex] = dynamicAttack * multiplier;
-            this.partialStates[decayIndex] = dynamicDecay;
+            this.partialStates[decayIndex] = dynamicDecay * multiplier;
             this.partialStates[releaseIndex] = dynamicRelease;
           }
 
@@ -327,7 +331,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           const decayIndex = partialStateIndex + 4;
           const releaseIndex = partialStateIndex + 5;
 
-          const partialOffset = this.partials[partialIndex * 4 + 1];
+          const partialOffset = this.partials[partialIndex * 2 + 1];
 
           const frequencyIndex = (noteIndex * 10 + partialOffset) * 3;
           const frequencyAmplitudeIndex = frequencyIndex + 0;

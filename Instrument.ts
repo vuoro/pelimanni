@@ -2,8 +2,8 @@ import InstrumentWorklet from "./InstrumentWorklet.ts?url";
 import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.js";
 
 export type InstrumentPreset = {
-  /** List of partials: [amplitude, frequencyRatio, attackMultiplier, releaseMultiplier]. */
-  partials: [number, number, number, number][];
+  /** List of partials: [amplitude, frequencyRatio]. */
+  partials: [number, number?][];
 
   /** The lowest note this instrument can play, in MIDI numbers */
   notesStartAt?: number;
@@ -69,10 +69,10 @@ export class Instrument {
       decay = Math.SQRT2,
       release = 2.0,
       defaultSustain = 1.0,
-      pitchEffectOnAttack = 0.146,
-      pitchEffectOnDecay = 0.146,
-      pitchEffectOnRelease = 0.618,
-      pitchEffectOnBrightness = -0.75,
+      pitchEffectOnAttack = 0.236,
+      pitchEffectOnDecay = pitchEffectOnAttack,
+      pitchEffectOnRelease = 0.764,
+      pitchEffectOnBrightness = -1.0,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -87,15 +87,13 @@ export class Instrument {
   ) {
     this.audioContext = audioContext;
 
-    const partials = new Float64Array(partialList.length * 4);
+    const partials = new Float64Array(partialList.length * 2);
 
     for (let index = 0; index < partialList.length; index++) {
-      const [amplitude, partialRatio, attack, release] = partialList[index];
+      const [amplitude, partialRatio = index + 1] = partialList[index];
 
-      partials[index * 4 + 0] = amplitude;
-      partials[index * 4 + 1] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
-      partials[index * 4 + 2] = attack;
-      partials[index * 4 + 3] = release;
+      partials[index * 2 + 0] = amplitude;
+      partials[index * 2 + 1] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
     }
 
     const frequencyList = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
