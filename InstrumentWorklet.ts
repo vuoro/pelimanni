@@ -205,15 +205,18 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             const frequencyDifference = Math.log2(frequency) - Math.log2(homeFrequency);
             const dynamicFrequencyDifference = (fundamentalFrequencyDifference + frequencyDifference) / 2.0;
 
+            const logVelocity = Math.log2(1.0 + velocity);
+
             const dynamicAttack =
-              (attack * partialAttack * 2.0 ** (velocity + pitchEffectOnAttack * dynamicFrequencyDifference)) /
+              (attack * partialAttack * 2.0 ** (logVelocity + pitchEffectOnAttack * dynamicFrequencyDifference)) /
               sampleRate;
             const dynamicDecay =
-              (decay * partialRelease * 2.0 ** (pitchEffectOnDecay * dynamicFrequencyDifference)) / sampleRate;
+              (decay * partialAttack * 2.0 ** (logVelocity + pitchEffectOnDecay * dynamicFrequencyDifference)) /
+              sampleRate;
             const dynamicRelease =
               (release * partialRelease * 2.0 ** (pitchEffectOnRelease * dynamicFrequencyDifference)) / sampleRate;
 
-            const dynamicBrightness = 2.0 ** (-velocity * 2.0 - pitchEffectOnBrightness * dynamicFrequencyDifference);
+            const dynamicBrightness = 2.0 ** (-logVelocity - pitchEffectOnBrightness * dynamicFrequencyDifference);
 
             // Set new states
             const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;

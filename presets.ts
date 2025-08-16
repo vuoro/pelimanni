@@ -46,7 +46,7 @@ const fluteEnvelope = {
   attack: 4.0,
   decay: Math.SQRT2,
   defaultSustain: 0.91,
-  release: 4.0,
+  release: 3.0,
   attackDetune: -(2.0 ** -6.0),
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
@@ -55,7 +55,7 @@ const brassEnvelope = {
   release: 3.0,
   defaultSustain: 0.764,
   attackDetune: -(2.0 ** -6.0),
-  attackPitchInstability: 0.1,
+  attackPitchInstability: 0.146,
   attackInstabilityUsesPartialAmplitude: true,
 };
 
@@ -96,11 +96,11 @@ const hammeredStringEnvelope = {
 };
 
 export const drumEnvelope = {
-  attack: 20.0,
-  decay: 20.0,
+  attack: 19.0,
+  decay: 19.0,
   defaultSustain: 0.0,
-  release: 1.618,
-  attackDetune: 2.0 ** -3.0,
+  release: 2.0,
+  attackDetune: 0.122462,
   attackPitchInstability: 2.0,
   attackInstabilityUsesPartialAmplitude: true,
   // TODO: needs better noise
@@ -602,7 +602,7 @@ export const bell: InstrumentPreset = {
 
 const fractalPartials: [number, number][] = [];
 
-for (let index = 1, gain = 1; index < 9; index *= 2.0, gain /= 2.0) {
+for (let index = 1, gain = 1; index < 512; index *= 2.0, gain /= 2.0) {
   fractalPartials.push([gain, index]);
 }
 
@@ -618,18 +618,17 @@ const primes = [
 const primePartials: [number, number][] = [];
 const primelessPartials: [number, number][] = [];
 
-for (let index = 1; index < 16; index++) {
-  if (!primes.includes(index)) primelessPartials.push([Math.SQRT2 ** -(index - 1), index]);
+for (let index = 1; index < 31; index++) {
+  if (!primes.includes(index)) primelessPartials.push([Math.SQRT2 ** -(index / Math.SQRT2), index]);
 }
 
 for (let index = 0; index < primes.length; index++) {
-  primePartials.push([Math.exp(-index), primes[index]]);
+  primePartials.push([Math.SQRT2 ** -(primes[index] / Math.SQRT2), primes[index]]);
 }
 
 export const primeBell: InstrumentPreset = {
   partials: addBasicEnvelope(primePartials),
   ...idiophoneEnvelope,
-  release: idiophoneEnvelope.release * 0.618,
 };
 
 export const primelessCello: InstrumentPreset = {
@@ -643,12 +642,12 @@ const PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
 const fibonacciPartials: [number, number][] = [];
 const fibonaccilessPartials: [number, number][] = [];
 
-for (let index = 1; index < 32; index++) {
-  if (!fibonacciSeries.includes(index)) fibonaccilessPartials.push([PHI ** -(index - 4), index]);
+for (let index = 1; index < 34; index++) {
+  if (!fibonacciSeries.includes(index)) fibonaccilessPartials.push([PHI ** (-(index - 4) / PHI), index]);
 }
 
 for (let index = 0; index < fibonacciSeries.length; index++) {
-  fibonacciPartials.push([(1.0 / PHI) ** (index * 2), fibonacciSeries[index]]);
+  fibonacciPartials.push([(1.0 / PHI) ** (index / PHI), fibonacciSeries[index]]);
 }
 
 export const fibonacciHarp: InstrumentPreset = {
