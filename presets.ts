@@ -46,7 +46,7 @@ const brassEnvelope = {
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 const bowedStringEnvelope = {
-  attack: 3.0,
+  attack: 2.618,
   decay: Math.SQRT2,
   release: 2.0,
   defaultSustain: 0.91,

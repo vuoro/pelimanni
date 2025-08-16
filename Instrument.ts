@@ -69,10 +69,10 @@ export class Instrument {
       decay = Math.SQRT2,
       release = 2.0,
       defaultSustain = 1.0,
-      pitchEffectOnAttack = 0.236,
+      pitchEffectOnAttack = 0.146,
       pitchEffectOnDecay = pitchEffectOnAttack,
       pitchEffectOnRelease = 0.764,
-      pitchEffectOnBrightness = -1.0,
+      pitchEffectOnBrightness = -0.618,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -234,7 +234,10 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency =
   for (const frequency of frequencies) {
     // Make all the frequencies matching the chosen formant note stronger, and also the frequencies exactly between them.
     // As a result the instrument "body" itself "resonates" a harmonic chord.
-    amplitudes.push(0.764 + 0.236 * Math.cos((Math.log2(frequency) - Math.log2(formantFrequency)) * 4.0 * Math.PI));
+    amplitudes.push(
+      Math.SQRT1_2 +
+        (1.0 - Math.SQRT1_2) * Math.cos((Math.log2(frequency) - Math.log2(formantFrequency)) * 4.0 * Math.PI),
+    );
     // amplitudes.push(1.0);
   }
 

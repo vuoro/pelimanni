@@ -210,8 +210,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             // TODO: make partialDifference impact configurable
             const differenceForAttackAndDecay = frequencyDifference - partialDifference * (2.0 - partialAmplitude);
             const differenceForRelease = frequencyDifference;
-            const differenceForBrightness = (frequencyDifference + fundamentalFrequencyDifference) / 2.0;
-            const velocityImpact = 1.618 - velocity;
+            const differenceForBrightness = frequencyDifference * 0.382 + 0.618 * fundamentalFrequencyDifference;
+            const velocityImpact = 1.618 - velocity ** Math.SQRT2;
 
             const dynamicAttack =
               ((attack * 2.0 ** (pitchEffectOnAttack * differenceForAttackAndDecay)) / sampleRate) * velocityImpact;
