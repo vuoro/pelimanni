@@ -248,14 +248,27 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         }
         case 1: {
           // release
+          const logHomeFrequency = Math.log2(this.homeFrequency);
+
           for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
+            const partialOffset = this.partials[partialIndex * 2 + 1];
+            const frequencyIndex = noteIndex * 10 + partialOffset;
+            const frequency = this.frequencies[frequencyIndex * 2 + 0];
+
             const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
             const amplitudeTargetIndex = partialStateIndex + 1;
             const sustainIndex = partialStateIndex + 2;
+            const releaseIndex = partialStateIndex + 5;
+
+            const logFrequency = Math.log2(frequency);
+
+            const frequencyDifference = logFrequency - logHomeFrequency;
+            const differenceForRelease = frequencyDifference;
+            const dynamicRelease = (release * 2.0 ** (pitchEffectOnRelease * differenceForRelease)) / sampleRate;
 
             this.partialStates[amplitudeTargetIndex] = 0.0;
             this.partialStates[sustainIndex] = 0.0;
-            // TODO: apply release multiplier somehow
+            this.partialStates[releaseIndex] = dynamicRelease * multiplier;
           }
           break;
         }
