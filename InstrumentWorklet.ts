@@ -359,7 +359,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
             (goingDown ? this.partialStates[releaseIndex] : this.partialStates[attackIndex]);
 
           // Save fundamental frequency amplitude
-          const difference = Math.abs(this.partialStates[amplitudeIndex] - this.partialStates[amplitudeTargetIndex]);
+          const difference = this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
+          const goingUp = difference > 0.0;
 
           if (partialIndex === 0) {
             fundamentalAmplitude = this.partialStates[amplitudeIndex];
@@ -370,20 +371,21 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           let amplitude = this.partialStates[amplitudeIndex];
 
           // Apply instability and detune if needed
-          if (!goingDown) {
-            if (this.attackDetune !== 0.0) {
-              const detune =
-                (this.attackDetuneUsesPartialAmplitude ? amplitude : fundamentalDifference) * this.attackDetune;
-              this.frequencyStates[tuneIndex] *= detune < 0.0 ? 1.0 / (1.0 - detune) : 1.0 + detune;
-            }
+          if (goingUp && this.attackDetune !== 0.0) {
+            const detune =
+              Math.max(0.0, this.attackDetuneUsesPartialAmplitude ? difference : fundamentalDifference) *
+              this.attackDetune;
+            // fun fact: (difference / fundamentalDifference) creates an uncomfortably wet blip
+            this.frequencyStates[tuneIndex] *= detune < 0.0 ? 1.0 / (1.0 - detune) : 1.0 + detune;
+          }
 
-            if (this.attackPitchInstability !== 0.0) {
-              const instability =
-                (this.attackInstabilityUsesPartialAmplitude ? difference : fundamentalDifference) *
-                this.attackInstabilityWave *
-                this.attackPitchInstability;
-              this.frequencyStates[tuneIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
-            }
+          if (goingUp && this.attackPitchInstability !== 0.0) {
+            const instability =
+              Math.max(0.0, this.attackInstabilityUsesPartialAmplitude ? difference : fundamentalDifference) *
+              // fun fact: (difference / fundamentalDifference) creates an uncomfortably wet blip
+              this.attackInstabilityWave *
+              this.attackPitchInstability;
+            this.frequencyStates[tuneIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
           }
 
           // Apply vibrato if needed

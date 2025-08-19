@@ -58,8 +58,8 @@ const bowedStringEnvelope = {
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 16.0,
-  decay: 16.0,
+  attack: 17.0,
+  decay: 17.0,
   release: 1.618,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
