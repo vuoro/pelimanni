@@ -42,9 +42,7 @@ export type InstrumentPreset = {
 
   /** Passed to getFrequencies. */
   inharmonicity?: number;
-  /** Passed to getFrequencyAmplitudes. */
-  formantFrequency?: number;
-  /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `pitchEffectOnAttack` etc. start taking effect. */
+  /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `pitchEffectOnAttack` etc. start taking effect. Also used as a formant frequency. Passed to getFrequencyAmplitudes. */
   homeFrequency?: number;
 
   /** Makes each partial of the note detune individually, instead of following the fundamental. */
@@ -72,12 +70,11 @@ export class Instrument {
       pitchEffectOnAttack = 0.146,
       pitchEffectOnDecay = pitchEffectOnAttack,
       pitchEffectOnRelease = 0.764,
-      pitchEffectOnBrightness = -0.618,
+      pitchEffectOnBrightness = -1.0,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
       inharmonicity = 0.0,
-      formantFrequency = midiToFrequency(65),
       homeFrequency = midiToFrequency(60),
       notesStartAt = 21,
       notesEndAt = 108,
@@ -97,7 +94,7 @@ export class Instrument {
     }
 
     const frequencyList = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
-    const frequencyAmplitudeList = getFrequencyAmplitudes(frequencyList, formantFrequency);
+    const frequencyAmplitudeList = getFrequencyAmplitudes(frequencyList, homeFrequency);
 
     const frequencies = new Float64Array(frequencyList.length * 2);
 
@@ -221,7 +218,7 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
   return frequencies;
 };
 
-const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency = midiToFrequency(60)) => {
+const defaultGetFrequencyAmplitudes = (frequencies: number[], homeFrequency = midiToFrequency(60)) => {
   const amplitudes = [];
 
   // I get my values mostly from these sources:
@@ -235,8 +232,7 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], formantFrequency =
     // Make all the frequencies matching the chosen formant note stronger, and also the frequencies exactly between them.
     // As a result the instrument "body" itself "resonates" a harmonic chord.
     amplitudes.push(
-      Math.SQRT1_2 +
-        (1.0 - Math.SQRT1_2) * Math.cos((Math.log2(frequency) - Math.log2(formantFrequency)) * 4.0 * Math.PI),
+      Math.SQRT1_2 + (1.0 - Math.SQRT1_2) * Math.cos((Math.log2(frequency) - Math.log2(homeFrequency)) * 4.0 * Math.PI),
     );
     // amplitudes.push(1.0);
   }

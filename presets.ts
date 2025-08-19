@@ -106,7 +106,7 @@ export const flute: InstrumentPreset = {
   partials: [[1.0], [0.382], [0.618], [0.146], [0.236], [0.056], [0.09], [0.013], [0.034], [0.005], [0.013], [0.002]],
   ...fluteEnvelope,
   inharmonicity: 0.0003,
-  formantFrequency: midiToFrequency(69),
+  homeFrequency: midiToFrequency(69),
 };
 
 // https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/emr76_jmm536/emr76_jmm536/index.html
@@ -129,7 +129,7 @@ export const oboe: InstrumentPreset = {
   partials: [[0.618], [0.382], [0.764], [1.0], [0.618], [0.236], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
   ...reedEnvelope,
   inharmonicity: 0.0005,
-  formantFrequency: midiToFrequency(65),
+  homeFrequency: midiToFrequency(65),
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -153,6 +153,7 @@ export const bassoon: InstrumentPreset = {
     [0.008],
     [0.005],
   ],
+  homeFrequency: midiToFrequency(65 - 12),
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -177,7 +178,7 @@ export const clarinet: InstrumentPreset = {
   ],
   ...reedEnvelope,
   inharmonicity: 0.0008,
-  formantFrequency: midiToFrequency(62),
+  homeFrequency: midiToFrequency(62),
 };
 
 // FIXME: saxophone seems to be a very dynamic instrument, so this is probably all off
@@ -205,7 +206,7 @@ export const clarinet: InstrumentPreset = {
 //   ]),
 //   ...reedEnvelope,
 //   attackInstability: brassEnvelope.attackInstability,
-//   formantFrequency: midiToFrequency(64),
+//   homeFrequency: midiToFrequency(64),
 // };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -213,7 +214,7 @@ export const clarinet: InstrumentPreset = {
 export const trumpet: InstrumentPreset = {
   partials: [[0.764], [1.0], [0.764], [0.382], [0.382], [0.146], [0.09], [0.056], [0.056], [0.021], [0.013], [0.008]],
   ...brassEnvelope,
-  formantFrequency: midiToFrequency(67),
+  homeFrequency: midiToFrequency(67),
 };
 
 // https://www.researchgate.net/figure/Power-spectrum-of-flute-trombone-and-their-mixture_fig3_226825024
@@ -222,7 +223,7 @@ export const trumpet: InstrumentPreset = {
 export const trombone: InstrumentPreset = {
   partials: [[0.764], [1.0], [0.854], [0.618], [0.236], [0.09], [0.034], [0.013], [0.005], [0.002]],
   ...brassEnvelope,
-  formantFrequency: midiToFrequency(60),
+  homeFrequency: midiToFrequency(60),
 };
 
 // https://www.researchgate.net/figure/Spectrum-comparison-of-different-instrument-objects-On-the-left-hand-side-C-Trumpet-C_fig7_225163040
@@ -230,14 +231,14 @@ export const trombone: InstrumentPreset = {
 export const frenchHorn: InstrumentPreset = {
   partials: [[1.0], [0.618], [0.382], [0.236], [0.146], [0.09], [0.056], [0.034], [0.021], [0.013], [0.008], [0.005]],
   ...brassEnvelope,
-  formantFrequency: midiToFrequency(65),
+  homeFrequency: midiToFrequency(65),
 };
 
 // https://www.rickdenney.com/the_tuba_sound.htm
 export const tuba: InstrumentPreset = {
   partials: [[0.764], [0.854], [0.764], [1.0], [0.382], [0.618], [0.382], [0.146], [0.056], [0.021], [0.008], [0.003]],
   ...brassEnvelope,
-  formantFrequency: midiToFrequency(65),
+  homeFrequency: midiToFrequency(65 - 12),
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -266,7 +267,7 @@ export const violin: InstrumentPreset = {
     [0.003],
   ],
   ...bowedStringEnvelope,
-  formantFrequency: midiToFrequency(65),
+  homeFrequency: midiToFrequency(65),
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -294,7 +295,7 @@ export const viola: InstrumentPreset = {
     [0.003],
   ],
   ...bowedStringEnvelope,
-  formantFrequency: midiToFrequency(69),
+  homeFrequency: midiToFrequency(69 - 12),
 };
 
 // https://musiccrashcourses.com/lessons/harmonic_series.html
@@ -321,7 +322,7 @@ export const cello: InstrumentPreset = {
     [0.003],
   ],
   ...bowedStringEnvelope,
-  formantFrequency: midiToFrequency(71),
+  homeFrequency: midiToFrequency(71 - 12),
 };
 
 // Guessed based on cello
@@ -345,7 +346,7 @@ export const contrabass: InstrumentPreset = {
     [0.001],
   ],
   ...bowedStringEnvelope,
-  formantFrequency: midiToFrequency(60),
+  homeFrequency: midiToFrequency(60 - 12),
 };
 
 export const pluckedViolin: InstrumentPreset = {
@@ -399,7 +400,7 @@ export const piano: InstrumentPreset = {
     [0.056 * 2.0 ** -4.0],
   ],
   ...hammeredStringEnvelope,
-  formantFrequency: midiToFrequency(60),
+  homeFrequency: midiToFrequency(60),
 };
 
 // Guessed based on piano
@@ -422,7 +423,7 @@ export const hammeredDulcimer: InstrumentPreset = {
     [0.013 * 2.0 ** -2.0],
   ],
   ...hammeredStringEnvelope,
-  formantFrequency: midiToFrequency(69),
+  homeFrequency: midiToFrequency(69),
 };
 
 // https://www.youtube.com/watch?v=0_WJbOpG0Fg
