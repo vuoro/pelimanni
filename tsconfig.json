@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "types": ["vite/client"],
+
     //========== Target and module ==========
     // Nothing is ever transpiled
     "target": "ESNext", // sets up "lib" accordingly

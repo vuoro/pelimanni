@@ -29,18 +29,18 @@ const fluteEnvelope = {
   decay: Math.SQRT2,
   defaultSustain: 0.91,
   release: 3.0,
-  attackDetune: -(2.0 ** -6.0),
-  attackPitchInstability: 0.021,
-  attackInstabilityUsesPartialAmplitude: true,
+  attackDetune: -(2.0 ** -7.0),
+  attackDetuneUsesPartialAmplitude: true,
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
 const brassEnvelope = {
   attack: 3.0,
   release: 3.0,
   defaultSustain: 0.764,
-  attackDetune: -(2.0 ** -5.0),
+  attackDetune: -(2.0 ** -6.0),
   attackPitchInstability: 0.146,
   attackInstabilityUsesPartialAmplitude: true,
+  attackDetuneUsesPartialAmplitude: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -73,9 +73,9 @@ const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
   attack: 19.0,
   decay: 19.0,
-  release: 1.236,
+  release: 1.382,
   attackDetune: 2.0 ** -6.0,
-  attackPitchInstability: 0.09,
+  attackPitchInstability: 0.056,
 };
 
 export const drumEnvelope = {

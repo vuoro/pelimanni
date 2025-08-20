@@ -32,7 +32,7 @@ if (!globalThis.SharedArrayBuffer) {
   throw new Error("SharedArrayBuffer is not supported in your browser.");
 }
 
-class InstrumentWorklet extends AudioWorkletProcessor {
+export class InstrumentWorklet extends AudioWorkletProcessor {
   isAlive = true;
   isSleeping = false;
   partialCount = 0;
@@ -50,7 +50,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
 
   amplitudeVibrato = 0.0;
   brightnessVibrato = 0.0;
-  pitchVibrato = 0.0;
+  frequencyVibrato = 0.0;
 
   maxPartialOffset = 0.0;
   attackDetune = 0.0;
@@ -58,17 +58,21 @@ class InstrumentWorklet extends AudioWorkletProcessor {
   attackInstabilityFrequency = 80.0;
   attackInstabilityWave = 0.0;
   attackInstabilityPhase = 0.0;
-  attackDetuneUsesPartialAmplitude: false;
-  attackInstabilityUsesPartialAmplitude: false;
+  attackDetuneUsesPartialAmplitude: boolean;
+  attackInstabilityUsesPartialAmplitude: boolean;
 
-  pitchEffectOnAttack: number;
-  pitchEffectOnDecay: number;
-  pitchEffectOnRelease: number;
-  pitchEffectOnBrightness: number;
   homeFrequency: number;
   attack: number;
   decay: number;
   release: number;
+
+  frequencyEffectOnAttack: number;
+  frequencyEffectOnDecay: number;
+  frequencyEffectOnRelease: number;
+  frequencyEffectOnBrightness: number;
+  partialEffectOnAttack: number;
+  partialEffectOnDecay: number;
+  partialEffectOnRelease: number;
 
   partials: Float64Array;
   frequencies: Float64Array;
@@ -95,14 +99,17 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       attackDetuneUsesPartialAmplitude,
       attackInstabilityUsesPartialAmplitude,
 
-      pitchEffectOnAttack,
-      pitchEffectOnDecay,
-      pitchEffectOnRelease,
-      pitchEffectOnBrightness,
       homeFrequency,
       attack,
       decay,
       release,
+      frequencyEffectOnAttack,
+      frequencyEffectOnDecay,
+      frequencyEffectOnRelease,
+      frequencyEffectOnBrightness,
+      partialEffectOnAttack,
+      partialEffectOnDecay,
+      partialEffectOnRelease,
     } = customOptions;
 
     this.noteCount = notesEndAt - notesStartAt + 1;
@@ -130,21 +137,46 @@ class InstrumentWorklet extends AudioWorkletProcessor {
     this.attackDetuneUsesPartialAmplitude = attackDetuneUsesPartialAmplitude;
     this.attackInstabilityUsesPartialAmplitude = attackInstabilityUsesPartialAmplitude;
 
-    this.pitchEffectOnAttack = pitchEffectOnAttack;
-    this.pitchEffectOnDecay = pitchEffectOnDecay;
-    this.pitchEffectOnRelease = pitchEffectOnRelease;
-    this.pitchEffectOnBrightness = pitchEffectOnBrightness;
     this.homeFrequency = homeFrequency;
     this.attack = attack;
     this.decay = decay;
     this.release = release;
 
+    this.frequencyEffectOnAttack = frequencyEffectOnAttack;
+    this.frequencyEffectOnDecay = frequencyEffectOnDecay;
+    this.frequencyEffectOnRelease = frequencyEffectOnRelease;
+    this.frequencyEffectOnBrightness = frequencyEffectOnBrightness;
+    this.partialEffectOnAttack = partialEffectOnAttack;
+    this.partialEffectOnDecay = partialEffectOnDecay;
+    this.partialEffectOnRelease = partialEffectOnRelease;
+
     this.maxPartialOffset = partials[partials.length - 1];
 
     // Handle messages
     // TODO: type this message
-    this.port.addEventListener("message", ({ data }) => {
-      const [
+    this.port.addEventListener("message", ({ data }) => this.handleMessage(data as Float32Array));
+
+    this.port.start();
+
+    if (import.meta.env.DEV) console.log(this);
+  }
+
+  handleMessage([
+    type,
+    note,
+    velocity,
+    sustain,
+    multiplier = 1.0,
+    amplitudeVibrato = this.amplitudeVibrato,
+    brightnessVibrato = this.brightnessVibrato,
+    frequencyVibrato = this.frequencyVibrato,
+    vibratoFrequency = this.vibratoFrequency,
+    dynamics = 1.0,
+  ]: Float32Array) {
+    const noteIndex = note - this.notesStartAt;
+
+    if (import.meta.env.DEV) {
+      console.log({
         type,
         note,
         velocity,
@@ -152,139 +184,121 @@ class InstrumentWorklet extends AudioWorkletProcessor {
         multiplier,
         amplitudeVibrato,
         brightnessVibrato,
-        pitchVibrato,
+        frequencyVibrato,
         vibratoFrequency,
         dynamics,
-      ] = data as Float32Array;
-      const noteIndex = note - this.notesStartAt;
-
-      console.log({
-        type,
-        note,
-        velocity,
-        sustain,
-        multiplier,
-        dynamics,
       });
+    }
 
-      this.isSleeping = false;
+    this.isSleeping = false;
 
-      switch (data[0]) {
-        case 0: {
-          // attack
-          const loudness = velocity ** dynamics;
-          const fundamentalFrequency = this.frequencies[noteIndex * 10 * 2 + 0];
+    const {
+      attack,
+      decay,
+      release,
+      frequencyEffectOnAttack,
+      frequencyEffectOnDecay,
+      frequencyEffectOnRelease,
+      frequencyEffectOnBrightness,
+      partialEffectOnAttack,
+      partialEffectOnDecay,
+      partialEffectOnRelease,
+    } = this;
 
-          const logHomeFrequency = Math.log2(this.homeFrequency);
-          const logFundamentalFrequency = Math.log2(fundamentalFrequency);
+    switch (type) {
+      case 0:
+      case 1: {
+        // attack or release
+        const loudness = velocity ** dynamics;
+        const fundamentalFrequency = this.frequencies[noteIndex * 10 * 2 + 0];
 
-          for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-            const partialOffset = this.partials[partialIndex * 2 + 1];
-            const frequencyIndex = noteIndex * 10 + partialOffset;
+        const logHomeFrequency = Math.log2(this.homeFrequency);
+        const logFundamentalFrequency = Math.log2(fundamentalFrequency);
+        const velocityImpactOnBrightness = velocity * 0.618 - 1.0;
+        const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
-            // Skip if out of range
-            if (frequencyIndex > this.frequencyCount - 1 || frequencyIndex < 0) continue;
+        for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
+          const partialOffset = this.partials[partialIndex * 2 + 1];
+          const frequencyIndex = noteIndex * 10 + partialOffset;
 
-            // Compute envelope dynamics
-            const partialAmplitude = this.partials[partialIndex * 2 + 0];
+          // Skip if out of range
+          if (frequencyIndex > this.frequencyCount - 1 || frequencyIndex < 0) continue;
 
-            const frequency = this.frequencies[frequencyIndex * 2 + 0];
-            const frequencyAmplitude = this.frequencies[frequencyIndex * 2 + 1];
+          // Compute envelope dynamics
+          const partialAmplitude = this.partials[partialIndex * 2 + 0];
 
-            const {
-              pitchEffectOnAttack,
-              pitchEffectOnDecay,
-              pitchEffectOnRelease,
-              pitchEffectOnBrightness,
-              attack,
-              decay,
-              release,
-            } = this;
+          const frequency = this.frequencies[frequencyIndex * 2 + 0];
+          const frequencyAmplitude = this.frequencies[frequencyIndex * 2 + 1];
 
-            const logFrequency = Math.log2(frequency);
+          const logFrequency = Math.log2(frequency);
+          // const frequencyDifference = logFrequency - logHomeFrequency;
+          const partialDifference = logFrequency - logFundamentalFrequency;
 
-            const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
-            const frequencyDifference = logFrequency - logHomeFrequency;
-            const partialDifference = logFrequency - logFundamentalFrequency;
+          const dynamicAttack =
+            (attack *
+              2.0 **
+                (frequencyEffectOnAttack * fundamentalFrequencyDifference +
+                  partialEffectOnAttack * partialDifference * (2.0 - partialAmplitude))) /
+            sampleRate;
 
-            // TODO: make partialDifference impact configurable
-            const differenceForAttackAndDecay = frequencyDifference - partialDifference * (2.0 - partialAmplitude);
-            const differenceForRelease = frequencyDifference;
-            const differenceForBrightness = frequencyDifference * 0.382 + 0.618 * fundamentalFrequencyDifference;
-            const velocityImpact = 1.618 - velocity ** Math.SQRT2;
+          const dynamicDecay =
+            (decay *
+              2.0 **
+                (frequencyEffectOnDecay * fundamentalFrequencyDifference + partialEffectOnDecay * partialDifference)) /
+            sampleRate;
 
-            const dynamicAttack =
-              ((attack * 2.0 ** (pitchEffectOnAttack * differenceForAttackAndDecay)) / sampleRate) * velocityImpact;
-            const dynamicDecay =
-              ((decay * 2.0 ** (pitchEffectOnDecay * differenceForAttackAndDecay)) / sampleRate) * velocityImpact;
-            const dynamicRelease = (release * 2.0 ** (pitchEffectOnRelease * differenceForRelease)) / sampleRate;
+          const dynamicRelease =
+            (release *
+              2.0 **
+                (frequencyEffectOnRelease * fundamentalFrequencyDifference +
+                  partialEffectOnRelease * partialDifference)) /
+            sampleRate;
 
-            const dynamicBrightness =
-              2.0 ** (-pitchEffectOnBrightness * differenceForBrightness + Math.log2(velocityImpact));
+          const darkness = Math.log2(
+            1.0 +
+              2.0 **
+                ((-frequencyEffectOnBrightness * fundamentalFrequencyDifference - velocityImpactOnBrightness) *
+                  partialDifference),
+          );
 
-            // Set new states
-            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
-            // const amplitudeIndex = partialStateIndex + 0;
-            const amplitudeTargetIndex = partialStateIndex + 1;
-            const sustainIndex = partialStateIndex + 2;
-            const attackIndex = partialStateIndex + 3;
-            const decayIndex = partialStateIndex + 4;
-            const releaseIndex = partialStateIndex + 5;
+          const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
+          // const amplitudeIndex = partialStateIndex + 0;
+          const amplitudeTargetIndex = partialStateIndex + 1;
+          const sustainIndex = partialStateIndex + 2;
+          const attackIndex = partialStateIndex + 3;
+          const decayIndex = partialStateIndex + 4;
+          const releaseIndex = partialStateIndex + 5;
 
-            this.partialStates[amplitudeTargetIndex] =
-              partialAmplitude ** dynamicBrightness * frequencyAmplitude * loudness;
+          if (type === 0) {
+            // Attack
+            this.partialStates[amplitudeTargetIndex] = partialAmplitude ** darkness * frequencyAmplitude * loudness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
             this.partialStates[attackIndex] = dynamicAttack * multiplier;
             this.partialStates[decayIndex] = dynamicDecay * multiplier;
             this.partialStates[releaseIndex] = dynamicRelease;
-          }
-
-          this.amplitudeVibrato = amplitudeVibrato;
-          this.brightnessVibrato = brightnessVibrato;
-          this.pitchVibrato = pitchVibrato;
-          this.vibratoFrequency = vibratoFrequency;
-
-          break;
-        }
-        case 1: {
-          // release
-          const logHomeFrequency = Math.log2(this.homeFrequency);
-
-          for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
-            const partialOffset = this.partials[partialIndex * 2 + 1];
-            const frequencyIndex = noteIndex * 10 + partialOffset;
-            const frequency = this.frequencies[frequencyIndex * 2 + 0];
-
-            const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
-            const amplitudeTargetIndex = partialStateIndex + 1;
-            const sustainIndex = partialStateIndex + 2;
-            const releaseIndex = partialStateIndex + 5;
-
-            const logFrequency = Math.log2(frequency);
-
-            const frequencyDifference = logFrequency - logHomeFrequency;
-            const differenceForRelease = frequencyDifference;
-            const dynamicRelease = (release * 2.0 ** (pitchEffectOnRelease * differenceForRelease)) / sampleRate;
-
+          } else if (type === 1) {
+            // Release
             this.partialStates[amplitudeTargetIndex] = 0.0;
             this.partialStates[sustainIndex] = 0.0;
             this.partialStates[releaseIndex] = dynamicRelease * multiplier;
           }
-          break;
         }
-        case 666: {
-          // destroy
-          // FIXME: this whole thing can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
-          // https://issues.chromium.org/issues/41435286
-          this.isAlive = false;
-          break;
-        }
+
+        this.amplitudeVibrato = amplitudeVibrato;
+        this.brightnessVibrato = brightnessVibrato;
+        this.frequencyVibrato = frequencyVibrato;
+        this.vibratoFrequency = vibratoFrequency;
+
+        return;
       }
-    });
-
-    this.port.start();
-
-    console.log(this);
+      case 666: {
+        // destroy
+        // FIXME: this whole thing can be removed once Chrome starts supporting AudioWorklets that get cleaned up automatically.
+        // https://issues.chromium.org/issues/41435286
+        this.isAlive = false;
+        return;
+      }
+    }
   }
 
   process(_inputs: Float32Array[][], outputs: Float32Array[][], _parameters: Record<string, Float32Array>) {
@@ -313,7 +327,7 @@ class InstrumentWorklet extends AudioWorkletProcessor {
       if (
         this.amplitudeVibrato > this.cutoff ||
         this.brightnessVibrato > this.cutoff ||
-        this.pitchVibrato > this.cutoff
+        this.frequencyVibrato > this.cutoff
       ) {
         // Smoothstep vibrato speed
         const vibratoMin = -0.25;
@@ -389,8 +403,8 @@ class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           // Apply vibrato if needed
-          if (this.pitchVibrato !== 0.0) {
-            const vibrato = fundamentalAmplitude * this.pitchVibrato * this.vibratoWave;
+          if (this.frequencyVibrato !== 0.0) {
+            const vibrato = fundamentalAmplitude * this.frequencyVibrato * this.vibratoWave;
             this.frequencyStates[tuneIndex] *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
           }
 

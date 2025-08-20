@@ -1,4 +1,5 @@
-import InstrumentWorklet from "./InstrumentWorklet.ts?url";
+import type { InstrumentWorklet } from "./InstrumentWorklet.ts";
+import InstrumentWorkletUrl from "./InstrumentWorklet.ts?url";
 import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.js";
 
 export type InstrumentPreset = {
@@ -15,11 +16,11 @@ export type InstrumentPreset = {
   /** Returns the loudnesses of the frequencies this instrument can play */
   getFrequencyAmplitudes?: typeof defaultGetFrequencyAmplitudes;
 
-  /** How quickly should notes reach full volume */
+  /** How quickly should notes reach full volume (larger number = faster) */
   attack?: number;
-  /** How quickly should notes drop to sustain level */
+  /** How quickly should notes drop to sustain level (larger number = faster) */
   decay?: number;
-  /** How quickly should notes die off after being released */
+  /** How quickly should notes die off after being released (larger number = faster) */
   release?: number;
   /** How loud should notes be, by default, after the initial attack (0.0–1.0) */
   defaultSustain?: number;
@@ -32,17 +33,24 @@ export type InstrumentPreset = {
   attackInstabilityFrequency?: number;
 
   /** How much faster should higher notes attack */
-  pitchEffectOnAttack?: number;
+  frequencyEffectOnAttack?: number;
   /** How much faster should higher notes decay */
-  pitchEffectOnDecay?: number;
+  frequencyEffectOnDecay?: number;
   /** How much faster should higher notes release */
-  pitchEffectOnRelease?: number;
+  frequencyEffectOnRelease?: number;
   /** How much much louder should the overtones of higher notes be */
-  pitchEffectOnBrightness?: number;
+  frequencyEffectOnBrightness?: number;
+
+  /** How much faster should overtones attack */
+  partialEffectOnAttack?: number;
+  /** How much faster should overtones decay */
+  partialEffectOnDecay?: number;
+  /** How much faster should overtones release */
+  partialEffectOnRelease?: number;
 
   /** Passed to getFrequencies. */
   inharmonicity?: number;
-  /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `pitchEffectOnAttack` etc. start taking effect. Also used as a formant frequency. Passed to getFrequencyAmplitudes. */
+  /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `frequencyEffectOnAttack` etc. start taking effect. Also used as a formant frequency. Passed to getFrequencyAmplitudes. */
   homeFrequency?: number;
 
   /** Makes each partial of the note detune individually, instead of following the fundamental. */
@@ -67,10 +75,13 @@ export class Instrument {
       decay = Math.SQRT2,
       release = 2.0,
       defaultSustain = 1.0,
-      pitchEffectOnAttack = 0.146,
-      pitchEffectOnDecay = pitchEffectOnAttack,
-      pitchEffectOnRelease = 0.764,
-      pitchEffectOnBrightness = -1.0,
+      frequencyEffectOnAttack = 0.236,
+      frequencyEffectOnDecay = frequencyEffectOnAttack,
+      frequencyEffectOnRelease = 0.764,
+      frequencyEffectOnBrightness = -0.382,
+      partialEffectOnAttack = -frequencyEffectOnAttack,
+      partialEffectOnDecay = partialEffectOnAttack,
+      partialEffectOnRelease = 1.0,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -103,7 +114,7 @@ export class Instrument {
       frequencies[index * 2 + 1] = frequencyAmplitudeList[index];
     }
 
-    const processorOptions: InstrumentWorklet = {
+    const processorOptions: Partial<InstrumentWorklet> = {
       partials,
       frequencies,
 
@@ -118,14 +129,17 @@ export class Instrument {
       attack,
       decay,
       release,
-      pitchEffectOnAttack,
-      pitchEffectOnDecay,
-      pitchEffectOnRelease,
-      pitchEffectOnBrightness,
+      frequencyEffectOnAttack,
+      frequencyEffectOnDecay,
+      frequencyEffectOnRelease,
+      frequencyEffectOnBrightness,
+      partialEffectOnAttack,
+      partialEffectOnDecay,
+      partialEffectOnRelease,
       homeFrequency,
     };
 
-    this.node = audioContext.audioWorklet.addModule(InstrumentWorklet).then(() => {
+    this.node = audioContext.audioWorklet.addModule(InstrumentWorkletUrl).then(() => {
       const node = new AudioWorkletNode(audioContext, "Instrument", {
         processorOptions,
       });
@@ -143,14 +157,14 @@ export class Instrument {
     velocity: number,
     /** uses `defaultSustain` if left undefined */
     sustain = this.defaultSustain,
-    /** multiplies attack time */
+    /** multiplies attack speed */
     attackMultiplier = 1.0,
     /** vibrates all partials in unison */
     amplitudeVibrato = 0.0,
     /** vibrates only overtones */
     brightnessVibrato = 0.0,
-    /** vibrates pitch, in cents: 200 = 2 semitones and so on */
-    pitchVibrato = 0.0,
+    /** vibrates frequency, in cents: 200 = 2 semitones and so on */
+    frequencyVibrato = 0.0,
     /** in hertz: 6.0 by default */
     vibratoFrequency = 6.0,
     /** how velocity affects loudness: 0.5 means all notes are quite loud, 2.0 means very quiet  */
@@ -164,7 +178,7 @@ export class Instrument {
       attackMultiplier,
       amplitudeVibrato * 4.0,
       brightnessVibrato * 6.0,
-      2.0 ** (pitchVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
+      2.0 ** (frequencyVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)
       vibratoFrequency,
       dynamics,
     );
@@ -174,7 +188,7 @@ export class Instrument {
   async release(
     /** MIDI number */
     note: number,
-    /** multiplies release time */
+    /** multiplies release speed */
     releaseMultiplier = 1.0,
   ) {
     const message = Float32Array.of(1, note, 0.0, 0.0, releaseMultiplier);
