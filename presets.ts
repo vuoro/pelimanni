@@ -22,7 +22,6 @@ const fluteEnvelope = {
   defaultSustain: 0.854,
   release: 3.0,
   attackDetune: -(2.0 ** -6.0),
-  attackDetuneUsesPartialAmplitude: true,
 };
 const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.8 };
 const brassEnvelope = {
@@ -30,10 +29,8 @@ const brassEnvelope = {
   attack: 2.618,
   release: 2.618,
   defaultSustain: 0.764,
-  attackDetune: -(2.0 ** -6.0),
   attackPitchInstability: 0.146,
   attackInstabilityUsesPartialAmplitude: true,
-  attackDetuneUsesPartialAmplitude: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -43,16 +40,14 @@ const bowedStringEnvelope = {
   decay: Math.SQRT2,
   release: 2.0,
   defaultSustain: 0.91,
-  attackDetune: 2.0 ** -8.0,
-  attackDetuneUsesPartialAmplitude: true,
 };
 
 // Guitar transients
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 64.0,
-  decay: 64.0,
+  attack: 32.0,
+  decay: 32.0,
   release: 2.0,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
@@ -64,11 +59,8 @@ const pluckedStringEnvelope = {
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
-  attack: 32.0,
-  decay: 32.0,
   release: Math.SQRT2,
   attackDetune: 2.0 ** -6.0,
-  attackPitchInstability: 0.056,
 };
 
 export const drumEnvelope = {
