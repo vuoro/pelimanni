@@ -1,41 +1,34 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-// const addSympatheticStrings = (partials: [number, number, number, number][], volume = 0.09) => {
-//   const length = partials.length;
+const addSympatheticStrings = (partials: [number, number?][], volume = 1.0, iterations = 2) => {
+  const length = partials.length;
 
-//   for (let index = 0; index < length; index++) {
-//     const [amplitude, partialRatio = index + 1.0, attack, release] = partials[index];
+  for (let index = 0; index < length; index++) {
+    const [amplitude, partialRatio = index + 1.0] = partials[index];
 
-//     partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio / 3.0, attack, release]);
-//     partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio / 2.0, attack, release]);
-//     partials.push([amplitude * volume * 2.0 ** -2.0, partialRatio * 2.0, attack, release]);
-//     partials.push([amplitude * volume * 2.0 ** -3.0, partialRatio * 3.0, attack, release]);
-//   }
+    for (let index = 1; index <= iterations; index++) {
+      partials.push([amplitude * volume * 2.0 ** -index, partialRatio / (1.0 + index)]);
+      partials.push([amplitude * volume * 2.0 ** -index, partialRatio * (1.0 + index)]);
+    }
+  }
 
-//   return partials;
-// };
-
-// attack: 1.0,
-// decay: 1.618,
-// release: Math.SQRT2,
-
-// attack: 2.0,
-// decay: Math.SQRT2,
-// release: 2.0,
+  return partials;
+};
 
 const fluteEnvelope = {
   attack: 4.0,
   decay: Math.SQRT2,
-  defaultSustain: 0.91,
+  defaultSustain: 0.854,
   release: 3.0,
-  attackDetune: -(2.0 ** -7.0),
+  attackDetune: -(2.0 ** -6.0),
   attackDetuneUsesPartialAmplitude: true,
 };
-const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.854 };
+const reedEnvelope = { ...fluteEnvelope, defaultSustain: 0.8 };
 const brassEnvelope = {
-  attack: 3.0,
-  release: 3.0,
+  ...reedEnvelope,
+  attack: 2.618,
+  release: 2.618,
   defaultSustain: 0.764,
   attackDetune: -(2.0 ** -6.0),
   attackPitchInstability: 0.146,
@@ -105,7 +98,6 @@ export const idiophoneEnvelope = {
 export const flute: InstrumentPreset = {
   partials: [[1.0], [0.382], [0.618], [0.146], [0.236], [0.056], [0.09], [0.013], [0.034], [0.005], [0.013], [0.002]],
   ...fluteEnvelope,
-  inharmonicity: 0.0003,
   homeFrequency: midiToFrequency(69),
 };
 
@@ -120,7 +112,6 @@ export const ocarina: InstrumentPreset = {
     [0.008, 9],
   ],
   ...fluteEnvelope,
-  inharmonicity: 0.0003,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
@@ -248,24 +239,21 @@ export const tuba: InstrumentPreset = {
 // https://vibrationresearch.com/resources/overtone-comparison-obserview/
 // http://psasir.upm.edu.my/id/eprint/3841/1/Time-Varying_Spectral_Modelling_of_the_Solo_Violin_Tone.pdf
 export const violin: InstrumentPreset = {
-  partials: [
-    [1.0],
-    [0.764],
-    [0.618],
-    [0.236],
-    [0.382], // 5
-    [0.146],
-    [0.236], // 7
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.005],
-    [0.003],
-  ],
+  partials: addSympatheticStrings(
+    [
+      [1.0],
+      [0.764],
+      [0.618],
+      [0.236],
+      [0.382], // 5
+      [0.146],
+      [0.236], // 7
+      [0.146],
+      [0.09],
+    ],
+    0.034,
+    2,
+  ),
   ...bowedStringEnvelope,
   homeFrequency: midiToFrequency(65),
 };
@@ -275,25 +263,21 @@ export const violin: InstrumentPreset = {
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1032&context=musicstudent
 export const viola: InstrumentPreset = {
-  partials: [
-    [1.0],
-    [0.854],
-    [0.382],
-    [0.618], // 4
-    [0.236],
-    [0.236],
-    [0.382], // 7
-    [0.236],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.005],
-    [0.003],
-  ],
+  partials: addSympatheticStrings(
+    [
+      [1.0],
+      [0.854],
+      [0.382],
+      [0.618], // 4
+      [0.236],
+      [0.236],
+      [0.382], // 7
+      [0.236],
+      [0.146],
+    ],
+    0.034,
+    2,
+  ),
   ...bowedStringEnvelope,
   homeFrequency: midiToFrequency(69 - 12),
 };
@@ -303,48 +287,40 @@ export const viola: InstrumentPreset = {
 // http://www.mathstudio.co.uk/pitch_perception.htm
 // https://vobarian.com/celloanly/index.html
 export const cello: InstrumentPreset = {
-  partials: [
-    [1.0],
-    [0.618],
-    [0.382],
-    [0.618], // 4
-    [0.382],
-    [0.09],
-    [0.236], // 7
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.005],
-    [0.003],
-  ],
+  partials: addSympatheticStrings(
+    [
+      [1.0],
+      [0.618],
+      [0.382],
+      [0.618], // 4
+      [0.382],
+      [0.09],
+      [0.236], // 7
+      [0.146],
+    ],
+    0.034,
+    2,
+  ),
   ...bowedStringEnvelope,
   homeFrequency: midiToFrequency(71 - 12),
 };
 
 // Guessed based on cello
 export const contrabass: InstrumentPreset = {
-  partials: [
-    [1.0],
-    [0.618],
-    [0.382],
-    [0.5], // 4
-    [0.236],
-    [0.09],
-    [0.09], // 7
-    [0.056],
-    [0.034],
-    [0.021],
-    [0.013],
-    [0.008],
-    [0.005],
-    [0.003],
-    [0.002],
-    [0.001],
-  ],
+  partials: addSympatheticStrings(
+    [
+      [1.0],
+      [0.618],
+      [0.382],
+      [0.5], // 4
+      [0.236],
+      [0.09],
+      [0.09], // 7
+      [0.056],
+    ],
+    0.034,
+    2,
+  ),
   ...bowedStringEnvelope,
   homeFrequency: midiToFrequency(60 - 12),
 };
@@ -384,21 +360,19 @@ export const pluckedContrabass: InstrumentPreset = {
 // later key/hammer noise: 914 hz, 10–20ms attack, strong
 // also body, soundboard, and keybed noises: 38, 100 and 250 Hz (xylophone-like?)
 export const piano: InstrumentPreset = {
-  partials: [
-    [1.0], // First 4 are quite high and often in a U shape
-    [0.854],
-    [0.382],
-    [0.414],
-    [0.09], // Then there's a pair arcing up
-    [0.146],
-    [0.002], // And 7th is weak because the hammer hits the 1/7th point of the string
-    [0.034],
-    [0.056 * 2.0 ** -0.0], // here they start dropping quickly
-    [0.056 * 2.0 ** -1.0],
-    [0.056 * 2.0 ** -2.0],
-    [0.056 * 2.0 ** -3.0],
-    [0.056 * 2.0 ** -4.0],
-  ],
+  partials: addSympatheticStrings(
+    [
+      [1.0], // First 4 are quite high and often in a U shape
+      [0.854],
+      [0.382],
+      [0.414],
+      [0.09], // Then there's a pair arcing up
+      [0.146],
+      [0.056, 8], // And 7th is missing because the hammer strikes the 1/7th point of the string
+    ],
+    0.056,
+    3,
+  ),
   ...hammeredStringEnvelope,
   homeFrequency: midiToFrequency(60),
 };
@@ -406,23 +380,26 @@ export const piano: InstrumentPreset = {
 // Guessed based on piano
 // also has the hammer and body noises, but the body noises are probably higher?
 export const hammeredDulcimer: InstrumentPreset = {
-  partials: [
-    // Similar to piano, but the strings are not probably struck 1/7th of the way in
-    [1.0],
-    [0.764],
-    [0.382],
-    [0.236],
-    [0.09],
-    [0.146],
-    [0.09],
-    [0.056],
-    [0.013],
-    [0.001], // maybe struck around here
-    [0.013 * 2.0 ** -0.0],
-    [0.013 * 2.0 ** -1.0],
-    [0.013 * 2.0 ** -2.0],
-  ],
+  partials: addSympatheticStrings(
+    [
+      // Similar to piano, but the strings are not probably struck 1/7th of the way in
+      [1.0],
+      [0.764],
+      [0.382],
+      [0.236],
+      [0.09],
+      [0.146],
+      [0.09],
+      [0.056],
+      // string maybe struck around here, 9th or 10th of the way in
+    ],
+    0.056,
+    2,
+  ),
   ...hammeredStringEnvelope,
+  attack: hammeredStringEnvelope.attack * 0.91,
+  decay: hammeredStringEnvelope.decay * 0.91,
+  release: hammeredStringEnvelope.release * 1.382,
   homeFrequency: midiToFrequency(69),
 };
 

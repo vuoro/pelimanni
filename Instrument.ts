@@ -77,9 +77,9 @@ export class Instrument {
       decay = Math.SQRT2,
       release = 2.0,
       defaultSustain = 1.0,
-      frequencyEffectOnAttack = 0.236,
+      frequencyEffectOnAttack = 0.2,
       frequencyEffectOnDecay = frequencyEffectOnAttack,
-      frequencyEffectOnRelease = 0.764,
+      frequencyEffectOnRelease = Math.SQRT1_2,
       frequencyEffectOnBrightness = -1.0,
       partialEffectOnAttack = -frequencyEffectOnAttack,
       partialEffectOnDecay = partialEffectOnAttack,
@@ -98,13 +98,28 @@ export class Instrument {
   ) {
     this.audioContext = audioContext;
 
-    const partials = new Float64Array(partialList.length * 2);
+    const partialMap = new Map();
 
     for (let index = 0; index < partialList.length; index++) {
       const [amplitude, partialRatio = index + 1] = partialList[index];
 
-      partials[index * 2 + 0] = amplitude;
-      partials[index * 2 + 1] = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
+      const midi10Number = frequencyToMidi10(440 * partialRatio) - frequencyToMidi10(440);
+
+      partialMap.set(midi10Number, (partialMap.get(midi10Number) || 0.0) + amplitude);
+    }
+
+    const partialsSorted = [...partialMap.entries()].sort(([midi10NumberA], [midi10NumberB]) =>
+      Math.abs(midi10NumberB - midi10NumberA),
+    );
+    const partials = new Float64Array(partialsSorted.length * 2);
+
+    {
+      let index = 0;
+      for (const [midi10Number, amplitude] of partialsSorted) {
+        partials[index * 2 + 0] = amplitude;
+        partials[index * 2 + 1] = midi10Number;
+        index++;
+      }
     }
 
     const frequencyList = getFrequencies(notesStartAt, audioContext.sampleRate, inharmonicity);
@@ -162,7 +177,7 @@ export class Instrument {
     /** uses `defaultSustain` if left undefined */
     sustain = this.defaultSustain,
     /** multiplies attack and decay speed */
-    multiplier = 0.618 + velocity,
+    multiplier = 1.0,
     /** vibrates all partials in unison */
     amplitudeVibrato = 0.0,
     /** vibrates only overtones */
