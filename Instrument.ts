@@ -38,8 +38,10 @@ export type InstrumentPreset = {
   frequencyEffectOnDecay?: number;
   /** How much faster should higher notes release */
   frequencyEffectOnRelease?: number;
-  /** How much much louder should the overtones of higher notes be */
+  /** How much louder should the overtones of higher notes be */
   frequencyEffectOnBrightness?: number;
+  /** How much quieter should low-velocity notes be */
+  velocityImpactOnBrightness?: number;
 
   /** How much faster should overtones attack */
   partialEffectOnAttack?: number;
@@ -78,10 +80,11 @@ export class Instrument {
       frequencyEffectOnAttack = 0.236,
       frequencyEffectOnDecay = frequencyEffectOnAttack,
       frequencyEffectOnRelease = 0.764,
-      frequencyEffectOnBrightness = -0.382,
+      frequencyEffectOnBrightness = -1.0,
       partialEffectOnAttack = -frequencyEffectOnAttack,
       partialEffectOnDecay = partialEffectOnAttack,
-      partialEffectOnRelease = 1.0,
+      partialEffectOnRelease = frequencyEffectOnRelease,
+      velocityImpactOnBrightness = 4.0,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -136,6 +139,7 @@ export class Instrument {
       partialEffectOnAttack,
       partialEffectOnDecay,
       partialEffectOnRelease,
+      velocityImpactOnBrightness,
       homeFrequency,
     };
 
@@ -157,8 +161,8 @@ export class Instrument {
     velocity: number,
     /** uses `defaultSustain` if left undefined */
     sustain = this.defaultSustain,
-    /** multiplies attack speed */
-    attackMultiplier = 1.0,
+    /** multiplies attack and decay speed */
+    multiplier = 0.618 + velocity,
     /** vibrates all partials in unison */
     amplitudeVibrato = 0.0,
     /** vibrates only overtones */
@@ -167,15 +171,15 @@ export class Instrument {
     frequencyVibrato = 0.0,
     /** in hertz: 6.0 by default */
     vibratoFrequency = 6.0,
-    /** how velocity affects loudness: 0.5 means all notes are quite loud, 2.0 means very quiet  */
-    dynamics = Math.SQRT1_2,
+    /** how much velocity affects loudness: 0.5 means all notes are quite loud, 2.0 means quite quiet */
+    dynamics = 0.8,
   ) {
     const message = Float32Array.of(
       0,
       note,
       velocity,
       sustain,
-      attackMultiplier,
+      multiplier,
       amplitudeVibrato * 4.0,
       brightnessVibrato * 6.0,
       2.0 ** (frequencyVibrato / 100.0 / 12.0) - 1.0, // convert cents to ratio (worklet handles the +/- conversion)

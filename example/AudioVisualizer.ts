@@ -16,16 +16,14 @@ export const AudioVisualizer = new Magic(() => {
 
   analyser.fftSize = 2 ** 15;
   analyser.maxDecibels = -24.0;
-  analyser.minDecibels = -96.0;
+  analyser.minDecibels = -80.0;
   // analyser.smoothingTimeConstant = 0.8;
 
   const minFrequency = 440 / 2 ** 4;
   const maxFrequency = 14080;
   const logMaxFrequency = Math.log(maxFrequency);
 
-  const binCount = Math.floor(
-    analyser.frequencyBinCount * (maxFrequency / (audioSystem.audioContext.sampleRate / 2)),
-  );
+  const binCount = Math.floor(analyser.frequencyBinCount * (maxFrequency / (audioSystem.audioContext.sampleRate / 2)));
 
   const frequencyData = new Uint8Array(binCount);
   const timeData = new Float32Array(binCount);
@@ -57,18 +55,8 @@ export const AudioVisualizer = new Magic(() => {
       const relativeEnd = Math.log(end - minFrequency) / logMaxFrequency;
       const brightness = (0.5 + 0.5 * highness) * 255;
       drawer.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
-      drawer.fillRect(
-        relativeStart * width,
-        0,
-        relativeEnd * width - relativeStart * width,
-        height,
-      );
-      drawer.strokeRect(
-        relativeStart * width,
-        0,
-        relativeEnd * width - relativeStart * width,
-        height,
-      );
+      drawer.fillRect(relativeStart * width, 0, relativeEnd * width - relativeStart * width, height);
+      drawer.strokeRect(relativeStart * width, 0, relativeEnd * width - relativeStart * width, height);
     }
 
     // Frequency graph
@@ -81,8 +69,7 @@ export const AudioVisualizer = new Magic(() => {
       // const barScale = Math.log(i) / logBinCount;
       // const nextBarScale = Math.log(i + 1) / logBinCount;
       const barScale = Math.log((i / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
-      const nextBarScale =
-        Math.log(((i + 1) / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
+      const nextBarScale = Math.log(((i + 1) / binCount) * maxFrequency - minFrequency) / logMaxFrequency;
       const barOffset = width * barScale;
       const barWidth = nextBarScale * width - barOffset;
 

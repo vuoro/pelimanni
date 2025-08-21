@@ -18,7 +18,7 @@ import { midiToFrequency } from "./notes.js";
 
 // attack: 1.0,
 // decay: 1.618,
-// release: 1.618,
+// release: Math.SQRT2,
 
 // attack: 2.0,
 // decay: Math.SQRT2,
@@ -58,9 +58,9 @@ const bowedStringEnvelope = {
 // https://quod.lib.umich.edu/cgi/p/pod/dod-idx/synthesis-of-transients-in-guitar-sounds.pdf?c=icmc&format=pdf&idno=bbp2372.1997.051
 // body tap: 104, ~562 (5.4x), and ~780 (7.5x) hz
 const pluckedStringEnvelope = {
-  attack: 17.0,
-  decay: 17.0,
-  release: 1.618,
+  attack: 64.0,
+  decay: 64.0,
+  release: 2.0,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -5.0,
@@ -71,18 +71,18 @@ const pluckedStringEnvelope = {
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
-  attack: 19.0,
-  decay: 19.0,
-  release: 1.382,
+  attack: 32.0,
+  decay: 32.0,
+  release: Math.SQRT2,
   attackDetune: 2.0 ** -6.0,
   attackPitchInstability: 0.056,
 };
 
 export const drumEnvelope = {
-  attack: 19.0,
-  decay: 19.0,
+  attack: 32.0,
+  decay: 32.0,
   defaultSustain: 0.0,
-  release: 1.618,
+  release: Math.SQRT2,
   attackDetune: 0.122462,
   attackPitchInstability: 2.0,
   attackInstabilityUsesPartialAmplitude: true,
@@ -90,10 +90,10 @@ export const drumEnvelope = {
 };
 
 export const idiophoneEnvelope = {
-  attack: 19.0,
-  decay: 19.0,
+  attack: 32.0,
+  decay: 32.0,
   defaultSustain: 0.0,
-  release: 1.618,
+  release: Math.SQRT2,
   attackDetune: 2.0 ** -6.0,
   attackPitchInstability: 0.09,
   attackInstabilityUsesPartialAmplitude: true,
