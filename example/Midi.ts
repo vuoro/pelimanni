@@ -1,5 +1,5 @@
 import { Instrument } from "../Instrument.ts";
-import { piano } from "../presets.ts";
+import { hammeredDulcimer } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
@@ -55,5 +55,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, piano);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, hammeredDulcimer);
 tempInstrument.connect(AudioSystem.get().input);

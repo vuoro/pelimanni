@@ -236,7 +236,8 @@ export class Instrument {
 const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonicity = 0.0) => {
   const frequencies = [];
 
-  // There are 10 frequencies for every note. Best have enough to reach half the sampling rate, for overtone use.
+  // There are 10 frequencies for every note. All played notes and their partials are rounded to these frequencies.
+  // This causes slight rounding errors in overtones, the worst being -3.910002 cents for the 9th overtone.
   for (let index = notesStartAt * 10; index < 150 * 10; index++) {
     let frequency = midiToFrequency10(index);
 
@@ -244,6 +245,7 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
     const fromMiddle = Math.log2(frequency) - Math.log2(midiToFrequency(60));
     frequency *= 1.0 + Math.abs(fromMiddle) ** 2.0 * Math.sign(fromMiddle) * inharmonicity;
 
+    // Best have enough to reach half the sampling rate, or the common human hearing limit.
     if (frequency > sampleRate / 2.0 || frequency > 20000) break;
     frequencies.push(frequency);
   }
@@ -254,7 +256,15 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
 const defaultGetFrequencyAmplitudes = (frequencies: number[], homeFrequency = midiToFrequency(60)) => {
   const amplitudes = [];
 
-  // I get my values mostly from these sources:
+  // Sets up a repeating "formant" using the home frequency. The home frequency whichever ones the `formantRatio` wave hits are louder.
+  // As a result the instrument "body" kind of "resonates" a harmonic chord, I think? Sounds nice anyway.
+  const formantAmplitude = 0.5 / 2.0;
+
+  // const formantRatio = 1.0; // every octave, sounds rational but boring
+  const formantRatio = 2.0; // every octave and every perfect fifth, sounds great
+  // const formantRatio = 2.0 / 3.0; // every octave + perfect fifth, sounds nice but hollow
+
+  // I guesstimate homeFrequencies mostly from these sources:
   // http://hyperphysics.phy-astr.gsu.edu/hbase/Music/orchins.html
   // https://alexiy.nl/eq_chart/
   // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -262,12 +272,11 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], homeFrequency = mi
   // https://sengpielaudio.com/VowelDiagram.htm
 
   for (const frequency of frequencies) {
-    // Make all the frequencies matching the chosen formant note stronger, and also the frequencies exactly between them.
-    // As a result the instrument "body" itself "resonates" a harmonic chord.
     amplitudes.push(
-      Math.SQRT1_2 + (1.0 - Math.SQRT1_2) * Math.cos((Math.log2(frequency) - Math.log2(homeFrequency)) * 4.0 * Math.PI),
+      1.0 -
+        formantAmplitude +
+        formantAmplitude * Math.cos((Math.log2(frequency) - Math.log2(homeFrequency)) * formantRatio * 2.0 * Math.PI),
     );
-    // amplitudes.push(1.0);
   }
 
   return amplitudes;
