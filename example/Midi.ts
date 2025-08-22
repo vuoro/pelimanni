@@ -1,24 +1,51 @@
 import { Instrument } from "../Instrument.ts";
-import { hammeredDulcimer } from "../presets.ts";
+import { pluckedCello } from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
+
+let sustainPedal = 0.0;
+let vibrato = 0.0;
 
 function onMIDIMessage(event: MIDIMessageEvent) {
   if (!event.data) return;
 
-  const [command, midiNumber, velocity] = event.data;
+  const [command] = event.data;
 
   if (command === 248) return;
 
-  // console.log(event.data);
-
   switch (command) {
     case 144: {
+      // Note
+      const [, midiNumber, velocity] = event.data;
       if (velocity === 0) {
-        tempInstrument.release(midiNumber);
+        tempInstrument.release(midiNumber, 1.0 + sustainPedal * 6.0);
       } else {
-        tempInstrument.attack(midiNumber, velocity / 127.0);
+        tempInstrument.attack(
+          midiNumber,
+          velocity / 127.0,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          vibrato * 200.0,
+        );
       }
+      break;
+    }
+    case 176: {
+      // Control change
+      const [, channel, value] = event.data;
+      switch (channel) {
+        case 64: {
+          sustainPedal = value / 127.0;
+          break;
+        }
+        case 1: {
+          vibrato = value / 127.0;
+          break;
+        }
+      }
+      break;
     }
   }
 }
@@ -55,5 +82,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, hammeredDulcimer);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, pluckedCello);
 tempInstrument.connect(AudioSystem.get().input);

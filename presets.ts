@@ -51,7 +51,7 @@ const pluckedStringEnvelope = {
   release: 2.0,
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
-  attackDetune: 2.0 ** -5.0,
+  attackDetune: 2.0 ** -4.0,
   attackPitchInstability: 0.056,
   attackDetuneUsesPartialAmplitude: true,
   attackInstabilityUsesPartialAmplitude: true,

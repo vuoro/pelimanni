@@ -153,7 +153,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     this.partialEffectOnRelease = partialEffectOnRelease;
     this.velocityImpactOnBrightness = velocityImpactOnBrightness;
 
-    this.maxPartialOffset = partials[partials.length - 1];
+    this.maxPartialOffset = Math.abs(partials[partials.length - 1]);
 
     // Handle messages
     // TODO: type this message
@@ -328,11 +328,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Compute vibrato if needed: it may be used below.
-      if (
-        this.amplitudeVibrato > this.cutoff ||
-        this.brightnessVibrato > this.cutoff ||
-        this.frequencyVibrato > this.cutoff
-      ) {
+      if (this.amplitudeVibrato !== 0.0 || this.brightnessVibrato !== 0.0 || this.frequencyVibrato !== 0.0) {
         // Smoothstep vibrato speed
         const vibratoMin = -0.25;
         const vibratoMax = 0.25;
@@ -385,8 +381,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
             fundamentalDifference = difference;
           }
 
-          // Apply effects
+          // Normalise while taking into account effects
           let amplitude = this.partialStates[amplitudeIndex];
+          const maxPossibleAmplitude =
+            amplitude * (1.0 + fundamentalAmplitude * (this.brightnessVibrato + this.amplitudeVibrato));
+          this.totalAmplitude += maxPossibleAmplitude;
 
           // Apply instability and detune if needed
           if (goingUp && this.attackDetune !== 0.0) {
@@ -413,22 +412,21 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           if (this.brightnessVibrato !== 0.0) {
-            const vibrato =
+            const brightnessVibrato =
               fundamentalAmplitude *
               this.brightnessVibrato *
               this.vibratoWave *
               (partialOffset / this.maxPartialOffset);
-            amplitude *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+            amplitude *= brightnessVibrato < 0.0 ? 1.0 / (1.0 - brightnessVibrato) : 1.0 + brightnessVibrato;
           }
 
           if (this.amplitudeVibrato !== 0.0) {
-            const vibrato = fundamentalAmplitude * this.amplitudeVibrato * this.vibratoWave;
-            amplitude *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+            const amplitudeVibrato = fundamentalAmplitude * this.amplitudeVibrato * this.vibratoWave;
+            amplitude *= amplitudeVibrato < 0.0 ? 1.0 / (1.0 - amplitudeVibrato) : 1.0 + amplitudeVibrato;
           }
 
           // Add amplitude to frequencies
           this.frequencyStates[frequencyAmplitudeIndex] += amplitude;
-          this.totalAmplitude += amplitude;
 
           // Decay amplitude target towards sustain level
           this.partialStates[amplitudeTargetIndex] +=
@@ -441,11 +439,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       let frameAmplitude = 0.0;
 
       for (let frequencyIndex = 0; frequencyIndex < this.frequencyCount; frequencyIndex++) {
-        const frequencyAmplitudeIndex = frequencyIndex * 3 + 0;
+        const amplitudeIndex = frequencyIndex * 3 + 0;
         const tuneIndex = frequencyIndex * 3 + 1;
         const phaseIndex = frequencyIndex * 3 + 2;
 
-        const amplitude = this.frequencyStates[frequencyAmplitudeIndex];
+        const amplitude = this.frequencyStates[amplitudeIndex];
         if (amplitude < this.cutoff) continue; // skip if dormant
 
         // Increase phase
@@ -454,12 +452,13 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         this.frequencyStates[phaseIndex] =
           (this.frequencyStates[phaseIndex] + (frequency * this.frequencyStates[tuneIndex]) / sampleRate) % 1.0;
 
-        // Play sine, amplified by amplitude
-        frameAmplitude += Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0)) * amplitude;
-        // frameAmplitude += this.attackInstabilityWave * amplitude;
+        // Play sine, with optional distortion, amplified by amplitude
+        let wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
+        // wave = Math.tanh(wave * (1.0 + 16.0)); // TODO
+        frameAmplitude += wave * amplitude;
 
         // Nullify for next frame
-        this.frequencyStates[frequencyAmplitudeIndex] = 0.0;
+        this.frequencyStates[amplitudeIndex] = 0.0;
         this.frequencyStates[tuneIndex] = 1.0;
       }
 
