@@ -218,7 +218,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
-        const velocityBrightness = (Math.log2(1.0 + velocity) - 1.0) * velocityImpactOnBrightness;
+        const velocityBrightness = (Math.log2(1.0 + velocity) * Math.SQRT2 - 1.0) * velocityImpactOnBrightness; // totally vibes-based
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
@@ -271,7 +271,9 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
             // FIXME: this is messy and vibes-based
             let darkness =
-              (frequencyEffectOnBrightness * fundamentalFrequencyDifference + velocityBrightness) * partialDifference;
+              (frequencyEffectOnBrightness * fundamentalFrequencyDifference +
+                velocityBrightness * Math.sign(partialDifference)) *
+              partialDifference;
             // darkness = darkness < 0.0 ? 1.0 / (1.0 - darkness) : 1.0 + darkness;
             darkness = Math.log2(1.0 + 2.0 ** darkness);
 
@@ -453,7 +455,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           (this.frequencyStates[phaseIndex] + (frequency * this.frequencyStates[tuneIndex]) / sampleRate) % 1.0;
 
         // Play sine, with optional distortion, amplified by amplitude
-        let wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
+        const wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
         // wave = Math.tanh(wave * (1.0 + 16.0)); // TODO
         frameAmplitude += wave * amplitude;
 
