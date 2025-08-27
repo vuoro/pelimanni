@@ -125,6 +125,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
     // amplitude, amplitudeTarget, sustain, attack, decay, release
     this.partialStates = new Float64Array(this.noteCount * this.partialCount * 6);
+    // amplitude, tune, phase
     this.frequencyStates = new Float64Array(this.frequencyCount * 3);
 
     for (let index = 0; index < this.frequencyCount; index++) {
@@ -353,7 +354,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Skip if dormant
           if (this.partialStates[amplitudeIndex] + this.partialStates[amplitudeTargetIndex] < this.cutoff) continue;
-          allDormant = false;
+          if (allDormant) allDormant = false;
 
           const sustainIndex = partialStateIndex + 2;
           const attackIndex = partialStateIndex + 3;
@@ -440,16 +441,20 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         }
       }
 
-      // Frequencies play sine waves
-      let frameAmplitude = 0.0;
+      // If no notes play, it's safe to sleep until the next message and save some CPU.
+      if (allDormant) {
+        this.isSleeping = true;
+      }
 
+      // Frequencies play sine waves
       for (let frequencyIndex = 0; frequencyIndex < this.frequencyCount; frequencyIndex++) {
         const amplitudeIndex = frequencyIndex * 3 + 0;
-        const tuneIndex = frequencyIndex * 3 + 1;
-        const phaseIndex = frequencyIndex * 3 + 2;
 
         const amplitude = this.frequencyStates[amplitudeIndex];
         if (amplitude < this.cutoff) continue; // skip if dormant
+
+        const tuneIndex = frequencyIndex * 3 + 1;
+        const phaseIndex = frequencyIndex * 3 + 2;
 
         // Increase phase
         const frequency = this.frequencies[frequencyIndex * 2 + 0];
@@ -460,7 +465,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         // Play sine, with optional distortion, amplified by amplitude
         const wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
         // wave = Math.tanh(wave * (1.0 + 16.0)); // TODO
-        frameAmplitude += wave * amplitude;
+        channel[index] += wave * amplitude;
 
         // Nullify for next frame
         this.frequencyStates[amplitudeIndex] = 0.0;
@@ -468,13 +473,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Normalize by total playing amplitude
-      // channel[index] = amplitude / (this.totalAmplitude + Math.exp(-this.totalAmplitude));
-      channel[index] = frameAmplitude / (1.0 + this.totalAmplitude);
-
-      // If no notes play, it's safe to sleep until the next message and save some CPU.
-      if (allDormant) {
-        this.isSleeping = true;
-      }
+      // channel[index] /= Math.exp(-this.totalAmplitude) + this.totalAmplitude;
+      channel[index] /= 1.0 + this.totalAmplitude;
     }
 
     // FIXME: according to the spec this should return false.
