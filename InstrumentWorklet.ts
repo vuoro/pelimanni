@@ -28,10 +28,6 @@ interface AudioWorkletProcessorConstructor {
 declare function registerProcessor(name: string, processorCtor: AudioWorkletProcessorConstructor): void;
 declare const sampleRate: number;
 
-if (!globalThis.SharedArrayBuffer) {
-  throw new Error("SharedArrayBuffer is not supported in your browser.");
-}
-
 export class InstrumentWorklet extends AudioWorkletProcessor {
   isAlive = true;
   isSleeping = false;
