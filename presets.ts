@@ -1,15 +1,15 @@
 import type { InstrumentPreset } from "./Instrument.ts";
 import { midiToFrequency } from "./notes.js";
 
-const addSympatheticStrings = (partials: [number, number?][], volume = 1.0, iterations = 2) => {
+const addSympatheticStrings = (partials: [number, number?][], volume: number, iterations: number) => {
   const length = partials.length;
 
   for (let index = 0; index < length; index++) {
     const [amplitude, partialRatio = index + 1.0] = partials[index];
 
-    for (let index = 1; index <= iterations; index++) {
-      partials.push([amplitude * volume * 2.0 ** -index, partialRatio / (1.0 + index)]);
-      partials.push([amplitude * volume * 2.0 ** -index, partialRatio * (1.0 + index)]);
+    for (let iteration = 1; iteration <= iterations; iteration++) {
+      partials.push([amplitude * volume * 2.0 ** -iteration, partialRatio / (1.0 + iteration)]);
+      partials.push([amplitude * volume * 2.0 ** -iteration, partialRatio * (1.0 + iteration)]);
     }
   }
 
@@ -362,8 +362,8 @@ export const piano: InstrumentPreset = {
       [0.146],
       [0.056, 8], // And 7th is missing because the hammer strikes the 1/7th point of the string
     ],
-    0.056,
-    3,
+    0.034,
+    5,
   ),
   ...hammeredStringEnvelope,
   homeFrequency: midiToFrequency(60),
@@ -385,8 +385,8 @@ export const hammeredDulcimer: InstrumentPreset = {
       [0.056],
       // string maybe struck around here, 9th or 10th of the way in
     ],
-    0.056,
-    2,
+    0.034,
+    3,
   ),
   ...hammeredStringEnvelope,
   attack: hammeredStringEnvelope.attack * 0.91,

@@ -218,7 +218,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
-        const velocityBrightness = (Math.log2(1.0 + velocity) * Math.SQRT2 - 1.0) * velocityImpactOnBrightness; // totally vibes-based
+        const velocityBrightness = (velocity * Math.SQRT2 - 1.0) * velocityImpactOnBrightness; // totally vibes-based
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
@@ -431,9 +431,12 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           this.frequencyStates[frequencyAmplitudeIndex] += amplitude;
 
           // Decay amplitude target towards sustain level
-          this.partialStates[amplitudeTargetIndex] +=
-            (this.partialStates[sustainIndex] - this.partialStates[amplitudeTargetIndex]) *
-            this.partialStates[decayIndex];
+          this.partialStates[amplitudeTargetIndex] = Math.max(
+            0.0,
+            this.partialStates[amplitudeTargetIndex] +
+              (this.partialStates[sustainIndex] - this.partialStates[amplitudeTargetIndex]) *
+                this.partialStates[decayIndex],
+          );
         }
       }
 
