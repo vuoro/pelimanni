@@ -215,7 +215,10 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
-        const velocityBrightness = (velocity * Math.SQRT2 - 1.0) * velocityImpactOnBrightness; // totally vibes-based
+        // FIXME: totally vibes-based
+        const velocityBrightness =
+          Math.log2(1.0 + velocity * Math.SQRT2 * velocityImpactOnBrightness) -
+          Math.log2(1.0 + velocityImpactOnBrightness);
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
@@ -266,15 +269,14 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
                     partialEffectOnDecay * partialDifference)) /
               sampleRate;
 
-            // FIXME: this is messy and vibes-based
-            let darkness =
+            // FIXME: this is also vibes-based
+            const darkness =
               (frequencyEffectOnBrightness * fundamentalFrequencyDifference +
                 velocityBrightness * Math.sign(partialDifference)) *
               partialDifference;
-            // darkness = darkness < 0.0 ? 1.0 / (1.0 - darkness) : 1.0 + darkness;
-            darkness = Math.log2(1.0 + 2.0 ** darkness);
+            const brightness = 2.0 ** darkness;
 
-            this.partialStates[amplitudeTargetIndex] = partialAmplitude * darkness * frequencyAmplitude * loudness;
+            this.partialStates[amplitudeTargetIndex] = partialAmplitude * brightness * frequencyAmplitude * loudness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
             this.partialStates[attackIndex] = dynamicAttack * multiplier;
             this.partialStates[decayIndex] = dynamicDecay * multiplier;

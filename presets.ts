@@ -360,7 +360,9 @@ export const piano: InstrumentPreset = {
       [0.414],
       [0.09], // Then there's a pair arcing up
       [0.146],
-      [0.056, 8], // And 7th is missing because the hammer strikes the 1/7th point of the string
+      // And 7th is missing because the hammer strikes the 1/7th point of the string
+      [0.056, 8],
+      [0.034, 9],
     ],
     0.034,
     5,
