@@ -68,6 +68,7 @@ export class Instrument {
   audioContext: AudioContext;
 
   defaultSustain: number;
+  velocityExponent = 0.8;
 
   constructor(
     audioContext: AudioContext,
@@ -191,12 +192,12 @@ export class Instrument {
     /** in hertz: 6.0 by default */
     vibratoFrequency = 6.0,
     /** how much velocity affects loudness: 0.5 means all notes are quite loud, 2.0 means quite quiet */
-    dynamics = 0.8,
+    dynamics = 1.0,
   ) {
     const message = Float32Array.of(
       0,
       note,
-      velocity,
+      velocity ** this.velocityExponent,
       sustain,
       multiplier,
       amplitudeVibrato * 4.0,

@@ -220,7 +220,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
         const velocityBrightness =
-          minimumVelocityBrightness + (maximumVelocityBrightness - minimumVelocityBrightness) * velocity ** 0.8;
+          minimumVelocityBrightness + (maximumVelocityBrightness - minimumVelocityBrightness) * velocity;
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
