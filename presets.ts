@@ -361,11 +361,12 @@ export const piano: InstrumentPreset = {
       [0.09], // Then there's a pair arcing up
       [0.146],
       // And 7th is missing because the hammer strikes the 1/7th point of the string
-      [0.056, 8],
+      [0.021, 8],
       [0.034, 9],
+      [0.013, 10],
     ],
     0.034,
-    5,
+    4,
   ),
   ...hammeredStringEnvelope,
   homeFrequency: midiToFrequency(60),
@@ -378,13 +379,13 @@ export const hammeredDulcimer: InstrumentPreset = {
     [
       // Similar to piano, but the strings are not probably struck 1/7th of the way in
       [1.0],
-      [0.764],
       [0.382],
-      [0.236],
+      [0.618], // strong 3rd, maybe
+      [0.382],
       [0.09],
       [0.146],
-      [0.09],
       [0.056],
+      [0.034],
       // string maybe struck around here, 9th or 10th of the way in
     ],
     0.034,
