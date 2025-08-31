@@ -16,7 +16,7 @@ export const AudioVisualizer = new Magic(() => {
 
   analyser.fftSize = 2 ** 15;
   analyser.maxDecibels = -24.0;
-  analyser.minDecibels = -80.0;
+  analyser.minDecibels = -100.0;
   // analyser.smoothingTimeConstant = 0.8;
 
   const minFrequency = 440 / 2 ** 4;
