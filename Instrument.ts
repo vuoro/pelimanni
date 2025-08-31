@@ -40,8 +40,10 @@ export type InstrumentPreset = {
   frequencyEffectOnRelease?: number;
   /** How much louder should the overtones of higher notes be */
   frequencyEffectOnBrightness?: number;
-  /** How much quieter should low-velocity notes be */
-  velocityImpactOnBrightness?: number;
+  /** Minimum velocity notes should add this much to brightness */
+  minimumVelocityBrightness: number;
+  /** Maximum velocity notes should add this much to brightness */
+  maximumVelocityBrightness: number;
 
   /** How much faster should overtones attack */
   partialEffectOnAttack?: number;
@@ -84,7 +86,8 @@ export class Instrument {
       partialEffectOnAttack = -frequencyEffectOnAttack,
       partialEffectOnDecay = partialEffectOnAttack,
       partialEffectOnRelease = frequencyEffectOnRelease,
-      velocityImpactOnBrightness = 2.0 ** 4.0,
+      minimumVelocityBrightness = -4.0,
+      maximumVelocityBrightness = 0.125,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -154,7 +157,8 @@ export class Instrument {
       partialEffectOnAttack,
       partialEffectOnDecay,
       partialEffectOnRelease,
-      velocityImpactOnBrightness,
+      minimumVelocityBrightness,
+      maximumVelocityBrightness,
       homeFrequency,
     };
 

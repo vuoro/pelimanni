@@ -69,7 +69,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
   partialEffectOnAttack: number;
   partialEffectOnDecay: number;
   partialEffectOnRelease: number;
-  velocityImpactOnBrightness: number;
+  minimumVelocityBrightness: number;
+  maximumVelocityBrightness: number;
 
   partials: Float64Array;
   frequencies: Float64Array;
@@ -107,7 +108,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       partialEffectOnAttack,
       partialEffectOnDecay,
       partialEffectOnRelease,
-      velocityImpactOnBrightness,
+      minimumVelocityBrightness,
+      maximumVelocityBrightness,
     } = customOptions;
 
     this.noteCount = notesEndAt - notesStartAt + 1;
@@ -148,7 +150,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     this.partialEffectOnAttack = partialEffectOnAttack;
     this.partialEffectOnDecay = partialEffectOnDecay;
     this.partialEffectOnRelease = partialEffectOnRelease;
-    this.velocityImpactOnBrightness = velocityImpactOnBrightness;
+    this.minimumVelocityBrightness = minimumVelocityBrightness;
+    this.maximumVelocityBrightness = maximumVelocityBrightness;
 
     this.maxPartialOffset = Math.abs(partials[partials.length - 1]);
 
@@ -203,7 +206,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       partialEffectOnAttack,
       partialEffectOnDecay,
       partialEffectOnRelease,
-      velocityImpactOnBrightness,
+      minimumVelocityBrightness,
+      maximumVelocityBrightness,
     } = this;
 
     switch (type) {
@@ -215,10 +219,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
-        // FIXME: totally vibes-based
         const velocityBrightness =
-          Math.log2(1.0 + velocity * Math.SQRT2 * velocityImpactOnBrightness) -
-          Math.log2(1.0 + velocityImpactOnBrightness);
+          minimumVelocityBrightness + (maximumVelocityBrightness - minimumVelocityBrightness) * velocity ** 0.8;
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
