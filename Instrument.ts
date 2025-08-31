@@ -41,9 +41,9 @@ export type InstrumentPreset = {
   /** How much louder should the overtones of higher notes be */
   frequencyEffectOnBrightness?: number;
   /** Minimum velocity notes should add this much to brightness */
-  minimumVelocityBrightness: number;
+  minimumVelocityBrightness?: number;
   /** Maximum velocity notes should add this much to brightness */
-  maximumVelocityBrightness: number;
+  maximumVelocityBrightness?: number;
 
   /** How much faster should overtones attack */
   partialEffectOnAttack?: number;
