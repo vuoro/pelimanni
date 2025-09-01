@@ -1,5 +1,5 @@
+import InstrumentWorkletUrl from "./InstrumentWorklet?worker&url";
 import type { InstrumentWorklet } from "./InstrumentWorklet.ts";
-import InstrumentWorkletUrl from "./InstrumentWorklet.ts?worker&url";
 import { frequencyToMidi10, midiToFrequency, midiToFrequency10 } from "./notes.js";
 
 export type InstrumentPreset = {
