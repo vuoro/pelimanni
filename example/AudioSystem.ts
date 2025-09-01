@@ -1,6 +1,6 @@
 import * as instrumentPresets from "../instrument-presets.js";
 import type { createInstrument } from "../instruments.js";
-import dattorroReverb from "./dattorro-reverb.js?url";
+import dattorroReverb from "./dattorro-reverb.js?worker&url";
 import { Magic } from "./magic.ts";
 
 const allInstruments = new Map(Object.entries(instrumentPresets).map(([name, preset]) => [preset, name]));
