@@ -14,4 +14,7 @@ export default {
     target: "esnext",
     assetsInlineLimit: 0,
   },
+  worker: {
+    format: "es",
+  },
 } satisfies UserConfig;
