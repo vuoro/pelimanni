@@ -56,11 +56,6 @@ export type InstrumentPreset = {
   inharmonicity?: number;
   /** At this frequency the instrument's attack, decay, release, and brightness are at the specified levels. Above or below it `frequencyEffectOnAttack` etc. start taking effect. Also used as a formant frequency. Passed to getFrequencyAmplitudes. */
   homeFrequency?: number;
-
-  /** Makes each partial of the note detune individually, instead of following the fundamental. */
-  attackDetuneUsesPartialAmplitude?: boolean;
-  /** Makes each partial of the note instabilise individually, instead of following the fundamental. */
-  attackInstabilityUsesPartialAmplitude?: boolean;
 };
 
 export class Instrument {
@@ -96,8 +91,6 @@ export class Instrument {
       homeFrequency = midiToFrequency(60),
       notesStartAt = 21,
       notesEndAt = 108,
-      attackDetuneUsesPartialAmplitude = false,
-      attackInstabilityUsesPartialAmplitude = false,
     }: InstrumentPreset,
   ) {
     this.audioContext = audioContext;
@@ -145,8 +138,6 @@ export class Instrument {
       attackDetune,
       attackPitchInstability,
       attackInstabilityFrequency,
-      attackDetuneUsesPartialAmplitude,
-      attackInstabilityUsesPartialAmplitude,
 
       attack,
       decay,

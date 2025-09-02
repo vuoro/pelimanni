@@ -30,7 +30,6 @@ const brassEnvelope = {
   release: 2.618,
   defaultSustain: 0.764,
   attackPitchInstability: 0.146,
-  attackInstabilityUsesPartialAmplitude: true,
 };
 
 // https://www.soundonsound.com/techniques/practical-bowed-string-synthesis
@@ -53,14 +52,13 @@ const pluckedStringEnvelope = {
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -4.0,
   attackPitchInstability: 0.056,
-  attackDetuneUsesPartialAmplitude: true,
-  attackInstabilityUsesPartialAmplitude: true,
 };
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
   release: Math.SQRT2,
-  attackDetune: 2.0 ** -6.0,
+  attackDetune: 2.0 ** -5.0,
+  attackPitchInstability: 0.09,
 };
 
 export const drumEnvelope = {
@@ -70,7 +68,6 @@ export const drumEnvelope = {
   release: Math.SQRT2,
   attackDetune: 0.122462,
   attackPitchInstability: 2.0,
-  attackInstabilityUsesPartialAmplitude: true,
   // TODO: needs better noise
 };
 
@@ -81,7 +78,6 @@ export const idiophoneEnvelope = {
   release: Math.SQRT2,
   attackDetune: 2.0 ** -6.0,
   attackPitchInstability: 0.09,
-  attackInstabilityUsesPartialAmplitude: true,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/
