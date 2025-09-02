@@ -458,8 +458,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Normalize by total playing amplitude
-      // channel[index] /= Math.exp(-this.totalAmplitude) + this.totalAmplitude;
-      channel[index] /= 1.0 + this.totalAmplitude;
+      channel[index] /= Math.exp(-this.totalAmplitude) + this.totalAmplitude;
+      // channel[index] /= 1.0 - Math.exp(this.totalAmplitude);
     }
 
     // FIXME: according to the spec this should return false.
