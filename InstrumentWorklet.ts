@@ -361,15 +361,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           const frequencyAmplitudeIndex = frequencyIndex + 0;
           const tuneIndex = frequencyIndex + 1;
 
-          // Note amplitude heads towards target, attacking or releasing
-          // const likelyReleased = this.partialStates[amplitudeTargetIndex] === 0.0;
-          const goingDown = this.partialStates[amplitudeTargetIndex] < this.partialStates[amplitudeIndex];
-
-          this.partialStates[amplitudeIndex] +=
-            (this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex]) *
-            (goingDown ? this.partialStates[releaseIndex] : this.partialStates[attackIndex]);
-
-          // Save fundamental frequency amplitude
+          // Save fundamental amplitude for effects below
           const difference = this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
           const goingUp = difference > 0.0;
 
@@ -377,6 +369,14 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
             fundamentalAmplitude = this.partialStates[amplitudeIndex];
             fundamentalDifference = difference;
           }
+
+          // Note amplitude heads towards target, attacking or releasing
+          // const likelyReleased = this.partialStates[amplitudeTargetIndex] === 0.0;
+          const goingDown = this.partialStates[amplitudeTargetIndex] < this.partialStates[amplitudeIndex];
+
+          this.partialStates[amplitudeIndex] +=
+            (this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex]) *
+            (goingDown ? this.partialStates[releaseIndex] : this.partialStates[attackIndex]);
 
           // Normalise while taking into account effects
           let amplitude = this.partialStates[amplitudeIndex];
