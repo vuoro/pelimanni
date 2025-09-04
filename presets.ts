@@ -51,14 +51,13 @@ const pluckedStringEnvelope = {
   defaultSustain: 0.0,
   inharmonicity: 0.0008,
   attackDetune: 2.0 ** -4.0,
-  attackPitchInstability: 0.056,
+  attackPitchInstability: 0.034,
 };
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
   release: Math.SQRT2,
-  attackDetune: 2.0 ** -5.0,
-  attackPitchInstability: 0.09,
+  attackDetune: 2.0 ** -7.0,
 };
 
 export const drumEnvelope = {
@@ -66,7 +65,7 @@ export const drumEnvelope = {
   decay: 32.0,
   defaultSustain: 0.0,
   release: Math.SQRT2,
-  attackDetune: 0.122462,
+  attackDetune: 2.0 ** -3.0,
   attackPitchInstability: 2.0,
   // TODO: needs better noise
 };
@@ -77,7 +76,7 @@ export const idiophoneEnvelope = {
   defaultSustain: 0.0,
   release: Math.SQRT2,
   attackDetune: 2.0 ** -6.0,
-  attackPitchInstability: 0.09,
+  attackPitchInstability: 0.056,
 };
 
 // https://northwoodsoboe.com/the-oboes-overtones-why-does-the-oboe-sound-so-unique/

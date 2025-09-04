@@ -1,5 +1,15 @@
 import { Instrument } from "../Instrument.ts";
-import { clarinet, frenchHorn, hammeredDulcimer, oboe, ocarina, piano } from "../presets.ts";
+import {
+  bassDrum,
+  clarinet,
+  frenchHorn,
+  hammeredDulcimer,
+  oboe,
+  ocarina,
+  piano,
+  pluckedCello,
+  taikoDrum,
+} from "../presets.ts";
 import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
@@ -82,5 +92,5 @@ export const Midi = new Magic(
   },
 );
 
-const tempInstrument = new Instrument(AudioSystem.get().audioContext, piano);
+const tempInstrument = new Instrument(AudioSystem.get().audioContext, hammeredDulcimer);
 tempInstrument.connect(AudioSystem.get().input);
