@@ -39,6 +39,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
   notesEndAt = 1;
   cutoff = 0.0001;
   totalAmplitude = 0.0;
+  dynamics = 0.618;
 
   vibratoPhase = 0.0;
   vibratoFrequency = 0.0;
@@ -460,8 +461,9 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Normalize by total playing amplitude
-      // channel[index] /= Math.exp(-this.totalAmplitude) + this.totalAmplitude;
-      channel[index] /= 1.0 + this.totalAmplitude;
+      // channel[index] /= 1.0 + this.totalAmplitude;
+      if (channel[index] !== 0.0)
+        channel[index] /= this.totalAmplitude / Math.tanh(this.totalAmplitude * this.dynamics);
     }
 
     // FIXME: according to the spec this should return false.
