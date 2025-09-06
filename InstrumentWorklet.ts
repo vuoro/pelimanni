@@ -314,7 +314,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     const previousTotalAmplitude = this.totalAmplitude;
 
     for (let index = 0; index < channel.length; index++) {
-      let allDormant = true;
+      let lowestFrequencyIndex = this.frequencyCount;
+      let highestFrequencyIndex = -1;
       this.totalAmplitude = 0.0;
 
       // Compute attack instability if needed: it may be used below.
@@ -349,7 +350,6 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Skip if dormant
           if (this.partialStates[amplitudeIndex] + this.partialStates[amplitudeTargetIndex] < this.cutoff) continue;
-          if (allDormant) allDormant = false;
 
           const sustainIndex = partialStateIndex + 2;
           const attackIndex = partialStateIndex + 3;
@@ -358,9 +358,12 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
           const partialOffset = this.partials[partialIndex * 2 + 1];
 
-          const frequencyIndex = (noteIndex * 10 + partialOffset) * 3;
-          const frequencyAmplitudeIndex = frequencyIndex + 0;
-          const tuneIndex = frequencyIndex + 1;
+          const frequencyIndex = noteIndex * 10 + partialOffset;
+          const frequencyAmplitudeIndex = frequencyIndex * 3 + 0;
+          const tuneIndex = frequencyIndex * 3 + 1;
+
+          lowestFrequencyIndex = Math.min(frequencyIndex, lowestFrequencyIndex);
+          highestFrequencyIndex = Math.max(frequencyIndex, highestFrequencyIndex);
 
           // Save fundamental amplitude for effects below
           const difference = this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
@@ -430,12 +433,12 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // If no notes play, it's safe to sleep until the next message and save some CPU.
-      if (allDormant) {
+      if (highestFrequencyIndex === -1) {
         this.isSleeping = true;
       }
 
       // Frequencies play sine waves
-      for (let frequencyIndex = 0; frequencyIndex < this.frequencyCount; frequencyIndex++) {
+      for (let frequencyIndex = lowestFrequencyIndex; frequencyIndex <= highestFrequencyIndex; frequencyIndex++) {
         const amplitudeIndex = frequencyIndex * 3 + 0;
 
         const amplitude = this.frequencyStates[amplitudeIndex];
