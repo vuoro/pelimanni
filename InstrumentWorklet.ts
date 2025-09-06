@@ -311,11 +311,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     const output = outputs[0];
     const channel = output[0];
 
-    const previousTotalAmplitude = this.totalAmplitude;
-
     for (let index = 0; index < channel.length; index++) {
       let lowestFrequencyIndex = this.frequencyCount;
       let highestFrequencyIndex = -1;
+
+      const previousTotalAmplitude = this.totalAmplitude;
       this.totalAmplitude = 0.0;
 
       // Compute attack instability if needed: it may be used below.
