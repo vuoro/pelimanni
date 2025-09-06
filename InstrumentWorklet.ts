@@ -307,13 +307,9 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     if (!this.isAlive) return false;
     if (this.isSleeping) return true;
 
-    // TODO: figure out if this should support multiple outputs and/or channels
-    const output = outputs[0];
-    const channel = output[0];
-
-    for (let index = 0; index < channel.length; index++) {
-      let lowestFrequencyIndex = this.frequencyCount;
-      let highestFrequencyIndex = -1;
+    for (let frameIndex = 0, frameCount = outputs[0][0].length; frameIndex < frameCount; frameIndex++) {
+      let lowestFrequencyIndexInUse = this.frequencyCount;
+      let highestFrequencyIndexInUse = -1;
 
       const previousTotalAmplitude = this.totalAmplitude;
       this.totalAmplitude = 0.0;
@@ -362,8 +358,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           const frequencyAmplitudeIndex = frequencyIndex * 3 + 0;
           const tuneIndex = frequencyIndex * 3 + 1;
 
-          lowestFrequencyIndex = Math.min(frequencyIndex, lowestFrequencyIndex);
-          highestFrequencyIndex = Math.max(frequencyIndex, highestFrequencyIndex);
+          lowestFrequencyIndexInUse = Math.min(frequencyIndex, lowestFrequencyIndexInUse);
+          highestFrequencyIndexInUse = Math.max(frequencyIndex, highestFrequencyIndexInUse);
 
           // Save fundamental amplitude for effects below
           const difference = this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
@@ -432,13 +428,18 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         }
       }
 
-      // If no notes play, it's safe to sleep until the next message and save some CPU.
-      if (highestFrequencyIndex === -1) {
+      // If nothing plays, it's safe to sleep until the next message to save some CPU.
+      if (highestFrequencyIndexInUse === -1) {
         this.isSleeping = true;
+        return true;
       }
 
       // Frequencies play sine waves
-      for (let frequencyIndex = lowestFrequencyIndex; frequencyIndex <= highestFrequencyIndex; frequencyIndex++) {
+      for (
+        let frequencyIndex = lowestFrequencyIndexInUse;
+        frequencyIndex <= highestFrequencyIndexInUse;
+        frequencyIndex++
+      ) {
         const amplitudeIndex = frequencyIndex * 3 + 0;
 
         const amplitude = this.frequencyStates[amplitudeIndex];
@@ -456,7 +457,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         // Play sine, with optional distortion, amplified by amplitude
         const wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
         // wave = Math.tanh(wave * (1.0 + 16.0)); // TODO
-        channel[index] += wave * amplitude;
+
+        for (let channelIndex = 0, channelCount = outputs[0].length; channelIndex < channelCount; channelIndex++) {
+          // TODO: divide amplitude between channels based on a frequencyPan effect
+          outputs[0][channelIndex][frameIndex] += wave * amplitude;
+        }
 
         // Nullify for next frame
         this.frequencyStates[amplitudeIndex] = 0.0;
@@ -465,8 +470,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Normalize by total playing amplitude
       // channel[index] /= 1.0 + this.totalAmplitude;
-      if (channel[index] !== 0.0)
-        channel[index] /= this.totalAmplitude / Math.tanh(this.totalAmplitude * this.dynamics);
+
+      for (let channelIndex = 0, channelCount = outputs[0].length; channelIndex < channelCount; channelIndex++) {
+        if (outputs[0][channelIndex][frameIndex] !== 0.0)
+          outputs[0][channelIndex][frameIndex] /= this.totalAmplitude / Math.tanh(this.totalAmplitude * this.dynamics);
+      }
     }
 
     // FIXME: according to the spec this should return false.
