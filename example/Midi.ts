@@ -18,7 +18,7 @@ function onMIDIMessage(event: MIDIMessageEvent) {
       // Note
       const [, midiNumber, velocity] = event.data;
       if (velocity === 0) {
-        tempInstrument.release(midiNumber, 1.0 + sustainPedal * 6.0);
+        tempInstrument.release(midiNumber, 1.0 + (1.0 - sustainPedal) * 6.0);
       } else {
         tempInstrument.attack(
           midiNumber,
