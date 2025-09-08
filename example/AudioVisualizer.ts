@@ -19,8 +19,8 @@ export const AudioVisualizer = new Magic(() => {
   analyser.minDecibels = -100.0;
   // analyser.smoothingTimeConstant = 0.8;
 
-  const minFrequency = 440 / 2 ** 4;
-  const maxFrequency = 14080;
+  const minFrequency = 27.5;
+  const maxFrequency = 20000;
   const logMaxFrequency = Math.log(maxFrequency);
 
   const binCount = Math.floor(analyser.frequencyBinCount * (maxFrequency / (audioSystem.audioContext.sampleRate / 2)));
@@ -83,7 +83,7 @@ export const AudioVisualizer = new Magic(() => {
 
     for (let i = 0; i < binCount; i++) {
       const v = timeData[i];
-      const y = v * (height / 4) + height / 8;
+      const y = v * (height / 2) + height / 4;
 
       if (i === 0) {
         drawer.moveTo(timeX, y);

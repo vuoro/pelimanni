@@ -29,7 +29,6 @@ export const AudioSystem = new Magic(
     // General nodes and reverb
     const audioContext = new AudioContext({ latencyHint: "interactive" });
     const mainGain = new GainNode(audioContext, { gain: 1.0 });
-    const compressor = new DynamicsCompressorNode(audioContext);
     const limiter = new DynamicsCompressorNode(audioContext, {
       threshold: 0,
       ratio: 1,
@@ -59,8 +58,8 @@ export const AudioSystem = new Magic(
     const highPass = new BiquadFilterNode(audioContext, { type: "highpass", frequency: 20 });
     const lowPass = new BiquadFilterNode(audioContext, { type: "lowpass", frequency: 20000 });
 
-    const input = compressor;
-    const output = mainGain;
+    const input = mainGain;
+    const output = limiter;
     const connector = lowPeak;
 
     lowPeak
@@ -69,7 +68,6 @@ export const AudioSystem = new Magic(
       .connect(lowPass)
       .connect(highPass)
       .connect(limiter)
-      .connect(mainGain)
       .connect(audioContext.destination);
 
     audioContext.addEventListener("statechange", onStateChange);
@@ -122,8 +120,9 @@ export const AudioSystem = new Magic(
       console.log("connecting instrument", allInstruments.get(instrument?.preset), "panned by", pan);
 
       const panner = new StereoPannerNode(audioContext, { pan });
+      const compressor = new DynamicsCompressorNode(audioContext);
 
-      instrument.output.connect(panner).connect(input);
+      instrument.output.connect(compressor).connect(panner).connect(input);
     };
 
     return {
@@ -144,7 +143,7 @@ const onStateChange = function (this: AudioContext) {
 };
 
 export const defaultReverbParameters = {
-  preDelay: 2.0 / 60.0, // could be up to 0.04ms before being obvious
+  preDelay: 1.0 / 60.0, // could be up to 0.04ms before being obvious
   bandwidth: 0.618,
   damping: 0.382,
   inputDiffusion1: 0.382,
@@ -152,8 +151,8 @@ export const defaultReverbParameters = {
   decay: 0.146,
   decayDiffusion1: 0.764,
   decayDiffusion2: 0.618,
-  excursionRate: 0.0,
-  excursionDepth: 0.0,
-  dry: 0.764,
-  wet: 0.236,
+  excursionRate: 1 / 13,
+  excursionDepth: 1,
+  dry: 0.8,
+  wet: 0.2,
 };
