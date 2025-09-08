@@ -41,7 +41,7 @@ class DattorroReverb extends globalThis.AudioWorkletProcessor {
 
     this._Delays = [];
     this._pDLength = globalThis.sampleRate + (128 - (globalThis.sampleRate % 128)); // Pre-delay is always one-second long, rounded to the nearest 128-chunk
-    this._preDelay = new Float32Array(this._pDLength);
+    this._preDelay = new Float64Array(this._pDLength);
     this._pDWrite = 0;
     this._lp1 = 0.0;
     this._lp2 = 0.0;
@@ -68,7 +68,7 @@ class DattorroReverb extends globalThis.AudioWorkletProcessor {
     // len, array, write, read, mask
     const len = Math.round(length * globalThis.sampleRate);
     const nextPow2 = 2 ** Math.ceil(Math.log2(len));
-    this._Delays.push([new Float32Array(nextPow2), len - 1, 0 | 0, nextPow2 - 1]);
+    this._Delays.push([new Float64Array(nextPow2), len - 1, 0 | 0, nextPow2 - 1]);
   }
 
   writeDelay(index, data) {
@@ -132,11 +132,10 @@ class DattorroReverb extends globalThis.AudioWorkletProcessor {
       this._preDelay.set(inputs[0][0], this._pDWrite);
       for (let i = 127; i >= 0; i--) outputs[0][0][i] = outputs[0][1][i] = inputs[0][0][i] * dr;
     } else {
-      this._preDelay.set(new Float32Array(128), this._pDWrite);
+      this._preDelay.set(new Float64Array(128), this._pDWrite);
     }
 
-    let i = 0 | 0;
-    while (i < 128) {
+    for (let i = 0, { length } = outputs[0][0]; i < length; i++) {
       let lo = 0.0;
       let ro = 0.0;
 
@@ -152,8 +151,9 @@ class DattorroReverb extends globalThis.AudioWorkletProcessor {
 
       // excursions
       // could be optimized?
-      const exc = ed * (1 + Math.cos(this._excPhase * 6.28));
-      const exc2 = ed * (1 + Math.sin(this._excPhase * 6.2847));
+      const exc = ed * (1 + Math.cos(this._excPhase * Math.PI * 2.0));
+      const exc2 = ed * (1 + Math.sin(this._excPhase * Math.PI * 2.0));
+      this._excPhase = (this._excPhase + ex) % 1;
 
       // left loop
       let temp = this.writeDelay(4, split + dc * this.readDelay(11) + ft * this.readDelayCAt(4, exc)); // tank diffuse 1
@@ -188,10 +188,6 @@ class DattorroReverb extends globalThis.AudioWorkletProcessor {
 
       outputs[0][0][i] += lo * we;
       outputs[0][1][i] += ro * we;
-
-      this._excPhase += ex;
-
-      i++;
 
       for (let j = 0, d = this._Delays[0]; j < this._Delays.length; d = this._Delays[++j]) {
         d[1] = (d[1] + 1) & d[3];
