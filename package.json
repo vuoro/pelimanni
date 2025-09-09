@@ -14,10 +14,13 @@
     "build": "vite build"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.1.4",
+    "@prettier/plugin-oxc": "^0.0.4",
+    "@types/audioworklet": "^0.0.83",
+    "oxlint": "^1.14.0",
+    "oxlint-tsgolint": "^0.1.6",
     "lit-html": "^3.3.1",
     "typescript": "^5.9.2",
-    "vite": "^7.1.2"
+    "vite": "^7.1.5"
   },
-  "packageManager": "pnpm@9.7.0"
+  "packageManager": "pnpm@10.15.1"
 }
