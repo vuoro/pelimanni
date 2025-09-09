@@ -77,13 +77,13 @@ export class Instrument {
       defaultSustain = 1.0,
       frequencyEffectOnAttack = 0.1,
       frequencyEffectOnDecay = frequencyEffectOnAttack,
-      frequencyEffectOnRelease = 0.618,
+      frequencyEffectOnRelease = 0.5,
       frequencyEffectOnBrightness = -0.8,
       partialEffectOnAttack = -frequencyEffectOnAttack,
       partialEffectOnDecay = partialEffectOnAttack,
-      partialEffectOnRelease = frequencyEffectOnRelease,
+      partialEffectOnRelease = frequencyEffectOnRelease * 1.236,
       minimumVelocityBrightness = -4.0,
-      maximumVelocityBrightness = 0.125,
+      maximumVelocityBrightness = 0.5,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -250,7 +250,10 @@ const defaultGetFrequencies = (notesStartAt = 21, sampleRate: number, inharmonic
   return frequencies;
 };
 
-const defaultGetFrequencyAmplitudes = (frequencies: number[], homeFrequency = midiToFrequency(60)) => {
+const defaultGetFrequencyAmplitudes = (
+  frequencies: number[],
+  homeFrequency = midiToFrequency(60),
+) => {
   const amplitudes = [];
 
   // Sets up a repeating "formant" using the home frequency. The home frequency whichever ones the `formantRatio` wave hits are louder.
@@ -272,7 +275,10 @@ const defaultGetFrequencyAmplitudes = (frequencies: number[], homeFrequency = mi
     amplitudes.push(
       1.0 -
         formantAmplitude +
-        formantAmplitude * Math.cos((Math.log2(frequency) - Math.log2(homeFrequency)) * formantRatio * 2.0 * Math.PI),
+        formantAmplitude *
+          Math.cos(
+            (Math.log2(frequency) - Math.log2(homeFrequency)) * formantRatio * 2.0 * Math.PI,
+          ),
     );
   }
 

@@ -56,7 +56,7 @@ const pluckedStringEnvelope = {
 
 const hammeredStringEnvelope = {
   ...pluckedStringEnvelope,
-  release: Math.SQRT2,
+  release: 1.0,
   attackDetune: 2.0 ** -7.0,
 };
 
