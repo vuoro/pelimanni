@@ -16,9 +16,10 @@
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
     "@types/audioworklet": "^0.0.83",
+    "lit-html": "^3.3.1",
     "oxlint": "^1.14.0",
     "oxlint-tsgolint": "^0.1.6",
-    "lit-html": "^3.3.1",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "vite": "^7.1.5"
   },
