@@ -4,7 +4,11 @@ interface AudioWorkletProcessor {
 }
 
 interface AudioWorkletProcessorImpl extends AudioWorkletProcessor {
-  process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean;
+  process(
+    inputs: Float32Array[][],
+    outputs: Float32Array[][],
+    parameters: Record<string, Float32Array>,
+  ): boolean;
 }
 
 declare var AudioWorkletProcessor: {
@@ -25,7 +29,10 @@ interface AudioWorkletProcessorConstructor {
   parameterDescriptors?: AudioParamDescriptor[];
 }
 
-declare function registerProcessor(name: string, processorCtor: AudioWorkletProcessorConstructor): void;
+declare function registerProcessor(
+  name: string,
+  processorCtor: AudioWorkletProcessorConstructor,
+): void;
 declare const sampleRate: number;
 
 export class InstrumentWorklet extends AudioWorkletProcessor {
@@ -215,7 +222,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         const logHomeFrequency = Math.log2(this.homeFrequency);
         const logFundamentalFrequency = Math.log2(fundamentalFrequency);
         const velocityBrightness =
-          minimumVelocityBrightness + (maximumVelocityBrightness - minimumVelocityBrightness) * velocity;
+          minimumVelocityBrightness +
+          (maximumVelocityBrightness - minimumVelocityBrightness) * velocity;
         const fundamentalFrequencyDifference = logFundamentalFrequency - logHomeFrequency;
 
         for (let partialIndex = 0; partialIndex < this.partialCount; partialIndex++) {
@@ -234,12 +242,13 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           const logFrequency = Math.log2(frequency);
           // const frequencyDifference = logFrequency - logHomeFrequency;
           const partialDifference = logFrequency - logFundamentalFrequency;
+          const partialDifferenceWithAmplitude = partialDifference * partialAmplitude ** 0.5;
 
           const dynamicRelease =
             (release *
               2.0 **
                 (frequencyEffectOnRelease * fundamentalFrequencyDifference +
-                  partialEffectOnRelease * partialDifference)) /
+                  partialEffectOnRelease * partialDifferenceWithAmplitude)) /
             sampleRate;
 
           const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
@@ -256,24 +265,22 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
               (attack *
                 2.0 **
                   (frequencyEffectOnAttack * fundamentalFrequencyDifference +
-                    partialEffectOnAttack * partialDifference * (2.0 - partialAmplitude))) /
+                    partialEffectOnAttack * partialDifferenceWithAmplitude)) /
               sampleRate;
 
             const dynamicDecay =
               (decay *
                 2.0 **
                   (frequencyEffectOnDecay * fundamentalFrequencyDifference +
-                    partialEffectOnDecay * partialDifference)) /
+                    partialEffectOnDecay * partialDifferenceWithAmplitude)) /
               sampleRate;
 
-            // FIXME: this is also vibes-based
-            const darkness =
-              (frequencyEffectOnBrightness * fundamentalFrequencyDifference +
-                velocityBrightness * Math.sign(partialDifference)) *
-              partialDifference;
-            const brightness = 2.0 ** darkness;
+            let darkness =
+              -frequencyEffectOnBrightness * fundamentalFrequencyDifference - velocityBrightness;
+            darkness = darkness < 0.0 ? 1.0 / (1.0 - darkness) : 1.0 + darkness;
 
-            this.partialStates[amplitudeTargetIndex] = partialAmplitude * brightness * frequencyAmplitude * loudness;
+            this.partialStates[amplitudeTargetIndex] =
+              partialAmplitude ** darkness * frequencyAmplitude * loudness;
             this.partialStates[sustainIndex] = this.partialStates[amplitudeTargetIndex] * sustain;
             this.partialStates[attackIndex] = dynamicAttack * multiplier;
             this.partialStates[decayIndex] = dynamicDecay * multiplier;
@@ -303,11 +310,19 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
     }
   }
 
-  process(_inputs: Float32Array[][], outputs: Float32Array[][], _parameters: Record<string, Float32Array>) {
+  process(
+    _inputs: Float32Array[][],
+    outputs: Float32Array[][],
+    _parameters: Record<string, Float32Array>,
+  ) {
     if (!this.isAlive) return false;
     if (this.isSleeping) return true;
 
-    for (let frameIndex = 0, frameCount = outputs[0][0].length; frameIndex < frameCount; frameIndex++) {
+    for (
+      let frameIndex = 0, frameCount = outputs[0][0].length;
+      frameIndex < frameCount;
+      frameIndex++
+    ) {
       let lowestFrequencyIndexInUse = this.frequencyCount;
       let highestFrequencyIndexInUse = -1;
 
@@ -323,14 +338,22 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
       }
 
       // Compute vibrato if needed: it may be used below.
-      if (this.amplitudeVibrato !== 0.0 || this.brightnessVibrato !== 0.0 || this.frequencyVibrato !== 0.0) {
+      if (
+        this.amplitudeVibrato !== 0.0 ||
+        this.brightnessVibrato !== 0.0 ||
+        this.frequencyVibrato !== 0.0
+      ) {
         // Smoothstep vibrato speed
         const vibratoMin = -0.25;
         const vibratoMax = 0.25;
-        const t = Math.max(0.0, Math.min(1.0, (previousTotalAmplitude - vibratoMin) / (vibratoMax - vibratoMin)));
+        const t = Math.max(
+          0.0,
+          Math.min(1.0, (previousTotalAmplitude - vibratoMin) / (vibratoMax - vibratoMin)),
+        );
         const vibratoSpeed = Math.max(0.0, Math.min(1.0, t * t * (3.0 - 2.0 * t)));
 
-        this.vibratoPhase = (this.vibratoPhase + (this.vibratoFrequency * vibratoSpeed) / sampleRate) % 1.0;
+        this.vibratoPhase =
+          (this.vibratoPhase + (this.vibratoFrequency * vibratoSpeed) / sampleRate) % 1.0;
         this.vibratoWave = Math.abs(this.vibratoPhase * 2.0 - 1.0) * 2.0 - 1.0;
       }
 
@@ -345,7 +368,11 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           const amplitudeTargetIndex = partialStateIndex + 1;
 
           // Skip if dormant
-          if (this.partialStates[amplitudeIndex] + this.partialStates[amplitudeTargetIndex] < this.cutoff) continue;
+          if (
+            this.partialStates[amplitudeIndex] + this.partialStates[amplitudeTargetIndex] <
+            this.cutoff
+          )
+            continue;
 
           const sustainIndex = partialStateIndex + 2;
           const attackIndex = partialStateIndex + 3;
@@ -362,7 +389,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           highestFrequencyIndexInUse = Math.max(frequencyIndex, highestFrequencyIndexInUse);
 
           // Save fundamental amplitude for effects below
-          const difference = this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
+          const difference =
+            this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex];
           const goingUp = difference > 0.0;
 
           if (partialIndex === 0) {
@@ -372,7 +400,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
           // Note amplitude heads towards target, attacking or releasing
           // const likelyReleased = this.partialStates[amplitudeTargetIndex] === 0.0;
-          const goingDown = this.partialStates[amplitudeTargetIndex] < this.partialStates[amplitudeIndex];
+          const goingDown =
+            this.partialStates[amplitudeTargetIndex] < this.partialStates[amplitudeIndex];
 
           this.partialStates[amplitudeIndex] +=
             (this.partialStates[amplitudeTargetIndex] - this.partialStates[amplitudeIndex]) *
@@ -381,7 +410,8 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           // Normalise while taking into account effects
           let amplitude = this.partialStates[amplitudeIndex];
           const maxPossibleAmplitude =
-            amplitude * (1.0 + fundamentalAmplitude * (this.brightnessVibrato + this.amplitudeVibrato));
+            amplitude *
+            (1.0 + fundamentalAmplitude * (this.brightnessVibrato + this.amplitudeVibrato));
           this.totalAmplitude += maxPossibleAmplitude;
 
           // Apply instability and detune if needed
@@ -391,14 +421,17 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           }
 
           if (goingUp && this.attackPitchInstability !== 0.0) {
-            const instability = fundamentalDifference * this.attackInstabilityWave * this.attackPitchInstability;
-            this.frequencyStates[tuneIndex] *= instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
+            const instability =
+              fundamentalDifference * this.attackInstabilityWave * this.attackPitchInstability;
+            this.frequencyStates[tuneIndex] *=
+              instability < 0.0 ? 1.0 / (1.0 - instability) : 1.0 + instability;
           }
 
           // Apply vibrato if needed
           if (this.frequencyVibrato !== 0.0) {
             const vibrato = fundamentalAmplitude * this.frequencyVibrato * this.vibratoWave;
-            this.frequencyStates[tuneIndex] *= vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
+            this.frequencyStates[tuneIndex] *=
+              vibrato < 0.0 ? 1.0 / (1.0 - vibrato) : 1.0 + vibrato;
           }
 
           if (this.brightnessVibrato !== 0.0) {
@@ -407,12 +440,15 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
               this.brightnessVibrato *
               this.vibratoWave *
               (partialOffset / this.maxPartialOffset);
-            amplitude *= brightnessVibrato < 0.0 ? 1.0 / (1.0 - brightnessVibrato) : 1.0 + brightnessVibrato;
+            amplitude *=
+              brightnessVibrato < 0.0 ? 1.0 / (1.0 - brightnessVibrato) : 1.0 + brightnessVibrato;
           }
 
           if (this.amplitudeVibrato !== 0.0) {
-            const amplitudeVibrato = fundamentalAmplitude * this.amplitudeVibrato * this.vibratoWave;
-            amplitude *= amplitudeVibrato < 0.0 ? 1.0 / (1.0 - amplitudeVibrato) : 1.0 + amplitudeVibrato;
+            const amplitudeVibrato =
+              fundamentalAmplitude * this.amplitudeVibrato * this.vibratoWave;
+            amplitude *=
+              amplitudeVibrato < 0.0 ? 1.0 / (1.0 - amplitudeVibrato) : 1.0 + amplitudeVibrato;
           }
 
           // Add amplitude to frequencies
@@ -452,13 +488,19 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
         const frequency = this.frequencies[frequencyIndex * 2 + 0];
 
         this.frequencyStates[phaseIndex] =
-          (this.frequencyStates[phaseIndex] + (frequency * this.frequencyStates[tuneIndex]) / sampleRate) % 1.0;
+          (this.frequencyStates[phaseIndex] +
+            (frequency * this.frequencyStates[tuneIndex]) / sampleRate) %
+          1.0;
 
         // Play sine, with optional distortion, amplified by amplitude
         const wave = Math.sin(this.frequencyStates[phaseIndex] * (Math.PI * 2.0));
         // wave = Math.tanh(wave * (1.0 + 16.0)); // TODO
 
-        for (let channelIndex = 0, channelCount = outputs[0].length; channelIndex < channelCount; channelIndex++) {
+        for (
+          let channelIndex = 0, channelCount = outputs[0].length;
+          channelIndex < channelCount;
+          channelIndex++
+        ) {
           // TODO: divide amplitude between channels based on a frequencyPan effect
           outputs[0][channelIndex][frameIndex] += wave * amplitude;
         }
@@ -470,10 +512,15 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
 
       // Normalize by total playing amplitude
       // channel[index] /= 1.0 + this.totalAmplitude;
+      const normalizer = this.totalAmplitude / Math.tanh(this.totalAmplitude * this.dynamics);
 
-      for (let channelIndex = 0, channelCount = outputs[0].length; channelIndex < channelCount; channelIndex++) {
+      for (
+        let channelIndex = 0, channelCount = outputs[0].length;
+        channelIndex < channelCount;
+        channelIndex++
+      ) {
         if (outputs[0][channelIndex][frameIndex] !== 0.0)
-          outputs[0][channelIndex][frameIndex] /= this.totalAmplitude / Math.tanh(this.totalAmplitude * this.dynamics);
+          outputs[0][channelIndex][frameIndex] /= normalizer;
       }
     }
 
