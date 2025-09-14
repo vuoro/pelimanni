@@ -242,13 +242,14 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           const logFrequency = Math.log2(frequency);
           // const frequencyDifference = logFrequency - logHomeFrequency;
           const partialDifference = logFrequency - logFundamentalFrequency;
-          const partialDifferenceWithAmplitude = partialDifference * (2.0 - partialAmplitude);
+          const partialDifferenceAmplifiedByExpectedAmplitude =
+            partialDifference * (2.0 ** -Math.abs(partialDifference) / partialAmplitude);
 
           const dynamicRelease =
             (release *
               2.0 **
                 (frequencyEffectOnRelease * fundamentalFrequencyDifference +
-                  partialEffectOnRelease * partialDifferenceWithAmplitude)) /
+                  partialEffectOnRelease * partialDifferenceAmplifiedByExpectedAmplitude)) /
             sampleRate;
 
           const partialStateIndex = (this.partialCount * noteIndex + partialIndex) * 6;
@@ -265,14 +266,14 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
               (attack *
                 2.0 **
                   (frequencyEffectOnAttack * fundamentalFrequencyDifference +
-                    partialEffectOnAttack * partialDifferenceWithAmplitude)) /
+                    partialEffectOnAttack * partialDifferenceAmplifiedByExpectedAmplitude)) /
               sampleRate;
 
             const dynamicDecay =
               (decay *
                 2.0 **
                   (frequencyEffectOnDecay * fundamentalFrequencyDifference +
-                    partialEffectOnDecay * partialDifferenceWithAmplitude)) /
+                    partialEffectOnDecay * partialDifferenceAmplifiedByExpectedAmplitude)) /
               sampleRate;
 
             let darkness =
