@@ -243,7 +243,7 @@ export class InstrumentWorklet extends AudioWorkletProcessor {
           // const frequencyDifference = logFrequency - logHomeFrequency;
           const partialDifference = logFrequency - logFundamentalFrequency;
           const partialDifferenceAmplifiedByExpectedAmplitude =
-            partialDifference * (2.0 ** -Math.abs(partialDifference) / partialAmplitude);
+            partialDifference * (2.0 ** -Math.abs(partialDifference) / partialAmplitude) ** 0.8;
 
           const dynamicRelease =
             (release *
