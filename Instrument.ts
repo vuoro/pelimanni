@@ -77,13 +77,13 @@ export class Instrument {
       defaultSustain = 1.0,
       frequencyEffectOnAttack = 0.125,
       frequencyEffectOnDecay = frequencyEffectOnAttack,
-      frequencyEffectOnRelease = 0.5,
+      frequencyEffectOnRelease = 2.0 / 3.0,
       frequencyEffectOnBrightness = -8.0 / 5.0,
       partialEffectOnAttack = -0.5 * frequencyEffectOnAttack,
       partialEffectOnDecay = partialEffectOnAttack,
       partialEffectOnRelease = frequencyEffectOnRelease * 1.25,
-      minimumVelocityBrightness = -3.0,
-      maximumVelocityBrightness = 0.125,
+      minimumVelocityBrightness = -5.0,
+      maximumVelocityBrightness = 0.25,
       attackDetune = 0.0,
       attackPitchInstability = 0.0,
       attackInstabilityFrequency = 80.0,
@@ -183,8 +183,8 @@ export class Instrument {
     frequencyVibrato = 0.0,
     /** in hertz: 6.0 by default */
     vibratoFrequency = 6.0,
-    /** how much velocity affects loudness: 0.5 means all notes are quite loud, 2.0 means quite quiet */
-    dynamics = 1.0,
+    /** how much velocity affects loudness: 0.5 means all but the quietest notes are quite loud, 2.0 means all but the strongest are quite quiet */
+    dynamics = 0.8,
   ) {
     const message = Float32Array.of(
       0,

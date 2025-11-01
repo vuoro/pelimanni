@@ -4,7 +4,7 @@ import { AudioSystem } from "./AudioSystem.ts";
 import { Magic } from "./magic.ts";
 
 const instrument = piano;
-let sustainPedal = 0.0;
+let sustainPedal = 1.0;
 let vibrato = 0.0;
 
 function onMIDIMessage(event: MIDIMessageEvent) {
@@ -19,7 +19,10 @@ function onMIDIMessage(event: MIDIMessageEvent) {
       // Note
       const [, midiNumber, velocity] = event.data;
       if (velocity === 0) {
-        tempInstrument.release(midiNumber, 1.0 + (1.0 - sustainPedal) * (-1.0 + 6.0 / (instrument?.release ?? Math.SQRT2)));
+        tempInstrument.release(
+          midiNumber,
+          1.0 + (1.0 - sustainPedal) * (-1.0 + 6.0 / (instrument?.release ?? Math.SQRT2)),
+        );
       } else {
         tempInstrument.attack(
           midiNumber,
@@ -53,7 +56,10 @@ function onMIDIMessage(event: MIDIMessageEvent) {
 
 export const Midi = new Magic(
   (
-    state: { enabled: boolean; midiAccess: null | MIDIAccess } = { enabled: false, midiAccess: null },
+    state: { enabled: boolean; midiAccess: null | MIDIAccess } = {
+      enabled: false,
+      midiAccess: null,
+    },
     message?: true | false,
   ) => {
     if (message !== undefined && state.enabled !== message) {
